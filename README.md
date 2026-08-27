@@ -23,7 +23,15 @@ Alles is statische HTML — geen build-stap, geen server nodig. Direct te hosten
 2. Ga op GitHub naar **Settings → Pages**.
 3. Kies bij *Source*: **Deploy from a branch**, branch `main`, folder `/ (root)`.
 4. Na ±1 minuut staat de site live op `https://<jouw-gebruikersnaam>.github.io/Newspaper-BloopUniverse/`.
-5. (Optioneel) Koppel een eigen domein zoals `bloopuniverse.com` onder dezelfde Pages-instellingen.
+
+### Stap 1b — Eigen domein kopen en koppelen
+
+1. Koop een domein (±€10–15/jaar) bij bijv. [Namecheap](https://www.namecheap.com), [Cloudflare Registrar](https://www.cloudflare.com/products/registrar/) of TransIP. Suggesties: `bloopuniverse.com`, `blooptimes.com`, `thebloopertimes.com` — check wat vrij is.
+2. Bij je domein-aanbieder, voeg deze DNS-records toe:
+   - **CNAME**-record: naam `www`, waarde `<jouw-gebruikersnaam>.github.io`
+   - Vier **A**-records op de apex (`@`): `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+3. Op GitHub: **Settings → Pages → Custom domain** → vul je domein in en zet **Enforce HTTPS** aan (kan tot 24 uur duren voordat DNS doorwerkt).
+4. Geef mij het gekochte domein door — dan zet ik het `CNAME`-bestand in de repo en werk ik alle links bij.
 
 ### Stap 2 — Stripe-betaallink maken (€9,99/maand)
 
@@ -49,17 +57,17 @@ Simpelste werkwijze om mee te starten (geen techniek nodig):
 
 Wil je later een échte inlogmuur (alleen betalende leden kunnen lezen)? Dan is de volgende stap een dienst als **Memberstack**, **Outseta** of **Ghost** — of een klein backendje met Stripe Checkout. Dat kunnen we in een vervolgsessie bouwen.
 
-### Stap 4 — Wekelijkse routine (±45 min per week)
+### Stap 4 — Wekelijkse routine (grotendeels automatisch)
 
-| Dag | Actie |
-|---|---|
-| Ma | Kopieer `template/edition-template.html` naar `editions/JJJJ-MM-DD/index.html` |
-| Ma | Vul in: nieuwe video's van de week, views-cijfers, één "Behind the Bloop"-verhaal, quiz, beste fan-comment |
-| Di | Nalezen, koppen aanscherpen, thumbnail-URL's checken |
-| Wo | Commit + push → editie staat live. Mail de link naar je abonnees |
-| Wo | Promo: community-post op YouTube + vermelding in je nieuwste video |
+De krant verschijnt elke **vrijdag**. Een wekelijkse Claude-routine bereidt op **donderdagochtend** automatisch een concepteditie voor: verse kanaalcijfers, nieuwe uploads van de week, een "Behind the Bloop"-verhaal en een quiz. Het concept komt als draft-PR op GitHub te staan.
 
-De weekcijfers (views, nieuwe uploads) kun je elke week opnieuw door Claude laten ophalen en de editie laten voorschrijven — jij hoeft alleen nog te redigeren.
+| Dag | Actie | Wie |
+|---|---|---|
+| Do | Concepteditie schrijven op basis van verse kanaaldata (draft-PR) | Claude (automatisch) |
+| Vr | Concept nalezen, aanpassen waar nodig, PR mergen → editie staat live | Jij (±20 min) |
+| Vr | Link mailen naar abonnees + community-post op YouTube | Jij (±10 min) |
+
+Wil je iets aanpassen aan het concept? Open de sessie van de draft-PR en geef je wijzigingen door — of pas de bestanden zelf aan in de PR.
 
 ### Stap 5 — Promotie
 
