@@ -1,0 +1,8 @@
+# Caddy reverse proxy: automatische HTTPS voor het CMS.
+# Vervang cms.bloopuniverse.com door je eigen (sub)domein dat via een
+# A-record naar het IP van je VPS wijst.
+cms.bloopuniverse.com {
+	reverse_proxy localhost:3000 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

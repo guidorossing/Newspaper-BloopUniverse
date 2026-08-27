@@ -1,0 +1,7 @@
+# Runtime data — bevat kanaalinformatie en versleutelde wachtwoorden.
+# NOOIT committen.
+data/
+discord-bot/node_modules/
+node_modules/
+.env
+*.log

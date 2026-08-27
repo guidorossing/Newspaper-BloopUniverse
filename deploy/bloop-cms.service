@@ -1,0 +1,19 @@
+# systemd-unit voor het Bloop Universe CMS
+# Installatie: zie docs/deploy-vps.md
+[Unit]
+Description=Bloop Universe CMS
+After=network.target
+
+[Service]
+Type=simple
+User=bloop
+WorkingDirectory=/opt/bloop-universe
+ExecStart=/usr/bin/node server/index.js
+Restart=always
+RestartSec=3
+Environment=PORT=3000
+# Optioneel: vaste vault-sleutel via env i.p.v. data/vault.key
+# Environment=BLOOP_VAULT_KEY=<64 hex tekens>
+
+[Install]
+WantedBy=multi-user.target
