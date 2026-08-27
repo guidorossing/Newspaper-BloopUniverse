@@ -1,20 +1,26 @@
 // Bloop Universe Discord-bot ("Discord Robot")
 //
-// Wat deze bot doet:
-//   /status            — overzicht van alle video's in de pipeline
-//   /checkpoints       — alles wat op goedkeuring wacht, mét knoppen
-//   ✅ / ❌ knoppen     — admin keurt direct vanuit Discord goed of af
+// Freelancers werken volledig via Discord:
+//   /koppel <code>     — koppel je Discord-account aan je CMS-account
+//                        (code krijg je van de admin via het Team-tabblad)
+//   /mijntaken         — jouw open taken, deadlines en laatste feedback
+//   /inleveren         — werk inleveren: kies je taak, plak je link, klaar
+//   /status            — pipeline-overzicht van alle video's in productie
+//   /checkpoints       — alles wat op goedkeuring wacht, mét ✅/❌-knoppen
 //   /deadlines         — wat (bijna) te laat is
-//   elke ochtend 09:00 — automatische deadline-reminder in het ingestelde kanaal
+//   elke ochtend 09:00 — automatische reminder in het ingestelde kanaal
 //
-// De bot praat met de CMS-API (server/index.js) en logt in als een
-// CMS-gebruiker met manager- of admin-rol. Alleen Discord-leden met de
-// rol "CMS Admin" mogen de goedkeuringsknoppen gebruiken.
+// De bot praat met de CMS-API via een bot-token (Instellingen -> genereer
+// bot-token). Bij /inleveren handelt de API namens de gekoppelde freelancer
+// (X-Discord-User header), dus alle rolregels van het CMS blijven gelden.
+// Alleen Discord-leden met de rol "CMS Admin" mogen de keurknoppen gebruiken.
 //
 // Instellen: kopieer .env.example naar .env en vul in, dan `npm install && npm start`.
 import {
   Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder,
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags
+  ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags,
+  ModalBuilder, TextInputBuilder, TextInputStyle,
+  StringSelectMenuBuilder
 } from 'discord.js';
 import fs from 'node:fs';
 
@@ -33,41 +39,39 @@ const {
   DISCORD_ADMIN_ROLE = 'CMS Admin', // Discord-rol die mag goed-/afkeuren
   DISCORD_REMINDER_CHANNEL_ID = '', // kanaal voor de ochtend-reminder
   CMS_URL = 'http://localhost:3000',
-  CMS_EMAIL,            // CMS-account van de bot (rol: manager of admin)
-  CMS_PASSWORD
+  CMS_BOT_TOKEN         // Instellingen -> "Genereer bot-token" in het CMS
 } = process.env;
 
-if (!DISCORD_TOKEN || !DISCORD_CLIENT_ID || !CMS_EMAIL || !CMS_PASSWORD) {
-  console.error('Vul .env in (zie .env.example). Ontbrekend: token, client id of CMS-login.');
+if (!DISCORD_TOKEN || !DISCORD_CLIENT_ID || !CMS_BOT_TOKEN) {
+  console.error('Vul .env in (zie .env.example). Ontbrekend: Discord-token, client-id of CMS_BOT_TOKEN.');
   process.exit(1);
 }
 
-// --- CMS-API-client met cookie-sessie -------------------------------------
-let cmsCookie = null;
-
-async function cms(path, opts = {}) {
-  const doe = async () => fetch(`${CMS_URL}${path}`, {
+// --- CMS-API-client ---------------------------------------------------------
+// discordUserId meesturen = de API handelt namens die gekoppelde gebruiker.
+async function cms(path, opts = {}, discordUserId = null) {
+  const res = await fetch(`${CMS_URL}${path}`, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', ...(cmsCookie ? { Cookie: cmsCookie } : {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Bot-Token': CMS_BOT_TOKEN,
+      ...(discordUserId ? { 'X-Discord-User': discordUserId } : {})
+    },
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
-  let res = await doe();
-  if (res.status === 401) {
-    const login = await fetch(`${CMS_URL}/api/login`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: CMS_EMAIL, password: CMS_PASSWORD })
-    });
-    if (!login.ok) throw new Error('Bot kan niet inloggen op het CMS — check CMS_EMAIL/CMS_PASSWORD');
-    cmsCookie = (login.headers.get('set-cookie') || '').split(';')[0];
-    res = await doe();
-  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `CMS-fout ${res.status}`);
   return data;
 }
 
+const STATUS_LABEL = { bezig: '🟣 bezig', afgekeurd: '🔴 revisie nodig', ter_goedkeuring: '🟡 wacht op goedkeuring' };
+
 // --- slash-commands registreren -------------------------------------------
 const commands = [
+  new SlashCommandBuilder().setName('koppel').setDescription('Koppel je Discord-account aan je CMS-account')
+    .addStringOption(o => o.setName('code').setDescription('Koppelcode van de admin').setRequired(true)),
+  new SlashCommandBuilder().setName('mijntaken').setDescription('Jouw open taken, deadlines en feedback'),
+  new SlashCommandBuilder().setName('inleveren').setDescription('Lever werk in voor een van je taken'),
   new SlashCommandBuilder().setName('status').setDescription('Pipeline-overzicht van alle video\'s in productie'),
   new SlashCommandBuilder().setName('checkpoints').setDescription('Alles wat op goedkeuring wacht, met knoppen'),
   new SlashCommandBuilder().setName('deadlines').setDescription('Deadlines die (bijna) verlopen zijn')
@@ -107,8 +111,55 @@ async function checkpointEmbeds() {
 
 client.on('interactionCreate', async interaction => {
   try {
+    // ---------- slash-commands ----------
     if (interaction.isChatInputCommand()) {
-      if (interaction.commandName === 'status') {
+      const cmd = interaction.commandName;
+
+      if (cmd === 'koppel') {
+        const { naam, functie } = await cms('/api/discord/koppel', {
+          method: 'POST',
+          body: { code: interaction.options.getString('code'), discordUserId: interaction.user.id, discordNaam: interaction.user.username }
+        });
+        return interaction.reply({ content: `🔗 Gelukt! Je bent gekoppeld als **${naam}** (${functie}). Gebruik /mijntaken om je werk te zien.`, flags: MessageFlags.Ephemeral });
+      }
+
+      if (cmd === 'mijntaken') {
+        const { taken, naam } = await cms('/api/mijn-taken', {}, interaction.user.id);
+        if (naam === 'Discord-bot') {
+          return interaction.reply({ content: 'Je account is nog niet gekoppeld. Vraag de admin om een koppelcode en gebruik /koppel.', flags: MessageFlags.Ephemeral });
+        }
+        if (!taken.length) return interaction.reply({ content: `📭 Geen open taken, ${naam}. Lekker bezig!`, flags: MessageFlags.Ephemeral });
+        const regels = taken.map(t =>
+          `${STATUS_LABEL[t.status] || t.status} — **${t.stap}** voor *${t.werktitel}* (${t.kanaal})${t.deadline ? ` · 📅 ${t.deadline}` : ''}${t.feedback && t.status === 'afgekeurd' ? `\n   ↳ 💬 ${t.feedback}` : ''}`);
+        return interaction.reply({
+          embeds: [new EmbedBuilder().setTitle(`📋 Taken van ${naam}`).setDescription(regels.join('\n')).setColor(0x7c5cff)],
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      if (cmd === 'inleveren') {
+        const { taken, naam } = await cms('/api/mijn-taken', {}, interaction.user.id);
+        if (naam === 'Discord-bot') {
+          return interaction.reply({ content: 'Je account is nog niet gekoppeld. Vraag de admin om een koppelcode en gebruik /koppel.', flags: MessageFlags.Ephemeral });
+        }
+        const inleverbaar = taken.filter(t => t.status === 'bezig' || t.status === 'afgekeurd');
+        if (!inleverbaar.length) return interaction.reply({ content: 'Je hebt niets om in te leveren.', flags: MessageFlags.Ephemeral });
+        const menu = new StringSelectMenuBuilder()
+          .setCustomId('inleveren:kies')
+          .setPlaceholder('Welke taak lever je in?')
+          .addOptions(inleverbaar.slice(0, 25).map(t => ({
+            label: `${t.stap} — ${t.werktitel}`.slice(0, 100),
+            description: t.kanaal.slice(0, 100),
+            value: `${t.videoId}:${t.stapKey}`
+          })));
+        return interaction.reply({
+          content: 'Kies de taak die je wilt inleveren:',
+          components: [new ActionRowBuilder().addComponents(menu)],
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      if (cmd === 'status') {
         const [{ videos }, { channels }] = await Promise.all([cms('/api/videos'), cms('/api/channels')]);
         const actief = videos.filter(v => !v.afgerond);
         if (!actief.length) return interaction.reply('Geen video\'s in productie.');
@@ -119,10 +170,12 @@ client.on('interactionCreate', async interaction => {
         });
         return interaction.reply({ embeds: [new EmbedBuilder().setTitle('📊 Pipeline-status').setDescription(regels.join('\n')).setColor(0x7c5cff)] });
       }
-      if (interaction.commandName === 'checkpoints') {
+
+      if (cmd === 'checkpoints') {
         return interaction.reply(await checkpointEmbeds());
       }
-      if (interaction.commandName === 'deadlines') {
+
+      if (cmd === 'deadlines') {
         const d = await cms('/api/dashboard');
         if (!d.deadlines.length) return interaction.reply('⏰ Geen deadlines in gevaar.');
         const regels = d.deadlines.map(x =>
@@ -131,25 +184,71 @@ client.on('interactionCreate', async interaction => {
       }
     }
 
+    // ---------- taak gekozen -> modal voor de opleverlink ----------
+    if (interaction.isStringSelectMenu() && interaction.customId === 'inleveren:kies') {
+      const [videoId, stapKey] = interaction.values[0].split(':');
+      const modal = new ModalBuilder()
+        .setCustomId(`inleveren:modal:${videoId}:${stapKey}`)
+        .setTitle('Werk inleveren')
+        .addComponents(new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('link')
+            .setLabel('Link naar je oplevering (Drive, Frame.io, …)')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+        ));
+      return interaction.showModal(modal);
+    }
+
+    // ---------- modal ingestuurd -> inleveren via de CMS-API ----------
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('inleveren:modal:')) {
+      const [, , videoId, stapKey] = interaction.customId.split(':');
+      const link = interaction.fields.getTextInputValue('link');
+      await cms(`/api/videos/${videoId}/stappen/${stapKey}/inleveren`, {
+        method: 'POST', body: { opleverLink: link }
+      }, interaction.user.id);
+      return interaction.reply({ content: '📤 Ingeleverd! De admin krijgt een seintje en keurt je werk zo snel mogelijk.', flags: MessageFlags.Ephemeral });
+    }
+
+    // ---------- keurknoppen (alleen CMS Admin-rol) ----------
     if (interaction.isButton() && interaction.customId.startsWith('keur:')) {
       if (!isCmsAdmin(interaction)) {
         return interaction.reply({ content: `Alleen leden met de rol "${DISCORD_ADMIN_ROLE}" mogen keuren.`, flags: MessageFlags.Ephemeral });
       }
       const [, richting, videoId, stapKey] = interaction.customId.split(':');
       if (richting === 'goed') {
-        await cms(`/api/videos/${videoId}/stappen/${stapKey}/goedkeuren`, { method: 'POST', body: {} });
+        await cms(`/api/videos/${videoId}/stappen/${stapKey}/goedkeuren`, { method: 'POST', body: {} }, interaction.user.id);
         return interaction.reply(`✅ **${interaction.member.displayName}** keurde de stap goed — de pipeline schuift door.`);
-      } else {
-        await cms(`/api/videos/${videoId}/stappen/${stapKey}/afkeuren`, {
-          method: 'POST', body: { feedback: `Afgekeurd via Discord door ${interaction.member.displayName} — details volgen in het stap-kanaal.` }
-        });
-        return interaction.reply(`❌ **${interaction.member.displayName}** keurde de stap af. Zet je feedback voor de freelancer in dit kanaal.`);
       }
+      // Afkeuren: eerst feedback vragen via een modal.
+      const modal = new ModalBuilder()
+        .setCustomId(`afkeuren:modal:${videoId}:${stapKey}`)
+        .setTitle('Afkeuren — wat moet anders?')
+        .addComponents(new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('feedback')
+            .setLabel('Feedback voor de freelancer')
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
+        ));
+      return interaction.showModal(modal);
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('afkeuren:modal:')) {
+      if (!isCmsAdmin(interaction)) {
+        return interaction.reply({ content: `Alleen leden met de rol "${DISCORD_ADMIN_ROLE}" mogen keuren.`, flags: MessageFlags.Ephemeral });
+      }
+      const [, , videoId, stapKey] = interaction.customId.split(':');
+      const feedback = interaction.fields.getTextInputValue('feedback');
+      await cms(`/api/videos/${videoId}/stappen/${stapKey}/afkeuren`, {
+        method: 'POST', body: { feedback }
+      }, interaction.user.id);
+      return interaction.reply(`❌ **${interaction.member.displayName}** keurde de stap af met feedback — de freelancer krijgt een ping.`);
     }
   } catch (e) {
     const antwoord = { content: `⚠️ ${e.message}`, flags: MessageFlags.Ephemeral };
-    if (interaction.deferred || interaction.replied) await interaction.followUp(antwoord);
-    else await interaction.reply(antwoord);
+    if (interaction.deferred || interaction.replied) await interaction.followUp(antwoord).catch(() => {});
+    else await interaction.reply(antwoord).catch(() => {});
   }
 });
 

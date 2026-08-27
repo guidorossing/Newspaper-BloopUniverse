@@ -1,0 +1,17 @@
+# systemd-unit voor de Bloop Universe Discord-bot
+# Installatie: zie docs/deploy-vps.md
+[Unit]
+Description=Bloop Universe Discord-bot
+After=network.target bloop-cms.service
+Wants=bloop-cms.service
+
+[Service]
+Type=simple
+User=bloop
+WorkingDirectory=/opt/bloop-universe/discord-bot
+ExecStart=/usr/bin/node bot.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

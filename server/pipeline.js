@@ -18,7 +18,7 @@ export const STAPPEN = [
 
 export const STAP_STATUS = ['wachtend', 'bezig', 'ter_goedkeuring', 'goedgekeurd', 'afgekeurd'];
 
-export function nieuweVideo({ channelId, werktitel, idee, deadlines = {}, assignees = {} }) {
+export function nieuweVideo({ channelId, werktitel, idee, deadlines = {}, assignees = {}, geplandePublicatie = null }) {
   const db = load();
   const video = {
     id: id(),
@@ -26,6 +26,10 @@ export function nieuweVideo({ channelId, werktitel, idee, deadlines = {}, assign
     werktitel,
     idee: idee || '',
     aangemaakt: new Date().toISOString(),
+    geplandePublicatie: geplandePublicatie || null,
+    youtubeVideoId: '',
+    stats: null, // { views, ctrPct, avdMinuten, impressies, laatstOpgehaald }
+    qc: db.settings.qcItems.map(label => ({ label, done: false })),
     afgerond: false,
     stappen: STAPPEN.map((s, i) => ({
       key: s.key,
@@ -58,6 +62,14 @@ function naamVan(db, userId) {
   return db.users.find(u => u.id === userId)?.naam || 'niemand';
 }
 
+// Naam + Discord-mention (als het account gekoppeld is), zodat de juiste
+// freelancer direct een ping krijgt in het notificatiekanaal.
+function mentionVan(db, userId) {
+  const u = db.users.find(x => x.id === userId);
+  if (!u) return 'niemand';
+  return u.discordUserId ? `${u.naam} <@${u.discordUserId}>` : u.naam;
+}
+
 function kanaalNaam(db, video) {
   return db.channels.find(c => c.id === video.channelId)?.naam || 'onbekend kanaal';
 }
@@ -73,6 +85,14 @@ export async function leverIn(videoId, stapKey, user, opleverLink) {
   }
   if (user.rol === 'freelancer' && stap.assigneeId && stap.assigneeId !== user.id) {
     throw new Error('Deze stap is aan een andere freelancer toegewezen');
+  }
+  // QC-gate: de upload-stap mag pas ingeleverd worden als de hele
+  // kwaliteitschecklist is afgevinkt.
+  if (stapKey === 'upload') {
+    const open = (video.qc || []).filter(q => !q.done);
+    if (open.length) {
+      throw new Error(`QC-checklist nog niet compleet. Open punten: ${open.map(q => q.label).join(' · ')}`);
+    }
   }
   stap.status = 'ter_goedkeuring';
   stap.opleverLink = opleverLink || stap.opleverLink;
@@ -110,7 +130,7 @@ export async function keurGoed(videoId, stapKey, user) {
   if (volgende) {
     await notify('goedgekeurd', `✅ ${stap.naam} goedgekeurd — door naar ${volgende.naam}`,
       [`**Video:** ${video.werktitel} (${kanaalNaam(db, video)})`,
-       `**Volgende stap:** ${volgende.naam} — ${naamVan(db, volgende.assigneeId)}`,
+       `**Volgende stap:** ${volgende.naam} — ${mentionVan(db, volgende.assigneeId)}`,
        volgende.deadline ? `**Deadline:** ${volgende.deadline}` : ''].filter(Boolean));
   } else {
     await notify('goedgekeurd', `🎉 Video afgerond: ${video.werktitel}`,
@@ -132,7 +152,7 @@ export async function keurAf(videoId, stapKey, user, feedbackTekst) {
   logActivity(user.naam, `keurde "${stap.naam}" af voor video "${video.werktitel}"`);
   await notify('afgekeurd', `❌ ${stap.naam} afgekeurd — revisie nodig`,
     [`**Video:** ${video.werktitel} (${kanaalNaam(db, video)})`,
-     `**Voor:** ${naamVan(db, stap.assigneeId)}`,
+     `**Voor:** ${mentionVan(db, stap.assigneeId)}`,
      `**Feedback:** ${feedbackTekst || '(geen toelichting)'}`]);
   return video;
 }

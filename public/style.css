@@ -118,6 +118,26 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; }
 .instructie-body ul, .instructie-body ol { margin: .5rem 0 .8rem 1.4rem; }
 .instructie-body h4 { margin: 1rem 0 .4rem; color: var(--accent); }
 
+/* Kalender */
+.kalender-week { margin-bottom: 1rem; }
+.kalender-rij { display: flex; align-items: center; gap: .7rem; padding: .45rem 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.kalender-rij .videos { color: var(--muted); font-size: .82rem; }
+.badge.op_schema { border-color: var(--green); color: var(--green); }
+.badge.onderbezet { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
+.badge.leeg { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* QC-checklist */
+.qc-lijst { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .2rem .8rem; margin-top: .5rem; }
+.qc-item { display: flex; gap: .5rem; align-items: center; font-size: .82rem; color: var(--muted); }
+.qc-item input { width: auto; }
+.qc-item.done { color: var(--green); }
+
+/* KPI doel vs realisatie */
+.kpi-stoplicht { display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .3rem; }
+.kpi-stoplicht.groen { background: var(--green); }
+.kpi-stoplicht.geel { background: var(--yellow); }
+.kpi-stoplicht.rood { background: var(--red); }
+
 @media (max-width: 800px) {
   #app-view { flex-direction: column; }
   #sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; }

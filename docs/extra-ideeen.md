@@ -31,6 +31,13 @@ laten groeien met Bloop Universe.
 
 ## Extra ideeën — aanbevolen volgende stappen
 
+> **Update:** inmiddels zijn ook gebouwd: **publicatiekalender** (idee 3,
+> met dagelijks Discord-alarm), **QC-checklist vóór upload** (idee 5, als
+> harde gate op de upload-stap), **templatebibliotheek** (idee 6),
+> **KPI-realisatie via de YouTube API** (idee 2, doel-vs-realisatie met
+> stoplichten; CTR handmatig) en een **volledig-via-Discord-workflow**
+> voor freelancers (/koppel, /mijntaken, /inleveren). Zie de README.
+
 ### 1. Ideeënbank met scoring (hoogste prioriteit)
 Een aparte backlog vóór de pipeline: iedereen mag ideeën pitchen (ook via
 Discord in `#ideeen`), jij scoort ze op outlier-potentie (doet dit concept

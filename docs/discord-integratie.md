@@ -26,27 +26,36 @@ JSON-berichten naartoe; er is geen bot-account of hosting nodig.
 Een echte "Discord Robot": een applicatie met eigen account die in de server
 zit, slash-commands aanbiedt en op knoppen reageert.
 
-- **Wat de gebouwde bot kan:**
+- **Freelancers werken volledig via Discord:**
+  - `/koppel <code>` — eenmalig je Discord-account aan je CMS-account
+    koppelen (de admin genereert de code via Team → 🎮 Koppelcode)
+  - `/mijntaken` — je open taken, deadlines en de laatste feedback
+  - `/inleveren` — taak kiezen uit een menu, link plakken in een popup,
+    klaar; de API handelt namens jouw gekoppelde account, dus alle
+    rolregels en de QC-gate blijven gelden
+  - afkeur-feedback komt met een @mention terug in het productiekanaal
+- **Voor de admin:**
   - `/status` — pipeline-overzicht van alle video's in productie
-  - `/checkpoints` — alles wat op goedkeuring wacht, met ✅/❌-knoppen:
-    de admin keurt **direct vanuit Discord** goed of af, en de pipeline
-    schuift automatisch door naar de volgende freelancer
+  - `/checkpoints` — alles wat op goedkeuring wacht, met ✅/❌-knoppen;
+    afkeuren opent een popup waarin je direct de feedback typt
   - `/deadlines` — wat te laat of bijna te laat is
   - dagelijkse 09:00-reminder met openstaand werk en deadlines
 - **Beveiliging:** alleen Discord-leden met de rol `CMS Admin` mogen de
-  knoppen gebruiken; de bot logt zelf in op het CMS met een eigen account.
+  keurknoppen gebruiken; de bot authenticeert bij het CMS met een vast
+  bot-token (Instellingen → Genereer bot-token) en freelancer-acties
+  lopen altijd via hun gekoppelde CMS-account.
 - **Instellen:**
   1. https://discord.com/developers/applications → New Application → Bot →
      token kopiëren.
   2. Onder "Installation"/OAuth2: scope `bot` + `applications.commands`,
      permissies "Send Messages" en "Embed Links"; met de gegenereerde URL
      de bot in je server uitnodigen.
-  3. In het CMS een apart account voor de bot aanmaken (rol **manager** —
-     genoeg om te keuren, geen toegang tot de vault).
-  4. `cd discord-bot && cp .env.example .env` → invullen →
-     `npm install && npm start`.
+  3. In het CMS: Instellingen → **Genereer bot-token**.
+  4. `cd discord-bot && cp .env.example .env` → invullen (Discord-token +
+     CMS_BOT_TOKEN) → `npm install && npm start`.
   5. De bot moet ergens draaien dat altijd aanstaat: dezelfde VPS als het
-     CMS is het simpelst (bijv. beide onder `pm2` of systemd).
+     CMS (zie docs/deploy-vps.md — er staat een kant-en-klare
+     systemd-unit in deploy/).
 
 ### Optie 3 — Discord als identiteitslaag (OAuth2 / Linked Roles) — later
 

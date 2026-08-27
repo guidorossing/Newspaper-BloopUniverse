@@ -115,6 +115,7 @@ const VIEWS = {
       ${channels.map(c => kanaalKaart(c, isManager)).join('') || '<p class="muted">Nog geen kanalen.</p>'}
       ${isManager ? `<h3>Nieuw kanaal</h3><div class="card">${kanaalForm({})}</div>` : ''}`;
     if (isManager) bindKanaalForms();
+    bindYoutubeActies();
   },
 
   pipeline: async () => {
@@ -134,16 +135,18 @@ const VIEWS = {
           <div class="form-row">
             <div><label>Kanaal</label><select id="nv-kanaal">${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
             <div><label>Werktitel</label><input id="nv-titel" placeholder="bijv. Top 10 ruimtemysteries"></div>
+            <div><label>Geplande publicatiedatum</label><input id="nv-publicatie" type="date"></div>
           </div>
           <label>Idee / korte omschrijving</label><textarea id="nv-idee"></textarea>
           <div style="margin-top:.7rem"><button class="btn primary" id="nv-start">Start in pipeline</button> <span class="error" id="nv-error"></span></div>
         </div>` : ''}
       ${actief.map(v => videoKaart(v, isManager)).join('') || '<p class="muted">Geen video\'s in productie.</p>'}
       ${klaar.length ? `<h3>✅ Afgerond (${klaar.length})</h3>${klaar.map(v => `<div class="card"><b>${esc(v.werktitel)}</b> — ${esc(kanaalNaam(v.channelId))} <span class="badge goedgekeurd">afgerond</span></div>`).join('')}` : ''}`;
+    bindVideoExtras();
     if (isManager) {
       $('#nv-start')?.addEventListener('click', async () => {
         try {
-          await api('/api/videos', { method: 'POST', body: { channelId: $('#nv-kanaal').value, werktitel: $('#nv-titel').value, idee: $('#nv-idee').value } });
+          await api('/api/videos', { method: 'POST', body: { channelId: $('#nv-kanaal').value, werktitel: $('#nv-titel').value, idee: $('#nv-idee').value, geplandePublicatie: $('#nv-publicatie').value || null } });
           VIEWS.pipeline();
         } catch (e) { $('#nv-error').textContent = e.message; }
       });
@@ -180,6 +183,76 @@ const VIEWS = {
     });
     document.querySelectorAll('[data-toggle]').forEach(cb =>
       cb.addEventListener('change', async () => { await api(`/api/todos/${cb.dataset.toggle}/toggle`, { method: 'POST' }); VIEWS.todos(); }));
+  },
+
+  kalender: async () => {
+    const [{ weken, inGevaar }, { channels }] = await Promise.all([api('/api/kalender'), api('/api/channels')]);
+    CACHE.channels = channels;
+    $('#content').innerHTML = `
+      <h2>📅 Publicatiekalender</h2>
+      <p class="muted">Bewaakt per kanaal of de uploadfrequentie gehaald wordt. Geef video's een publicatiedatum (Pipeline → bewerken) en de kalender rekent alles uit. Bij gevaar gaat er 's ochtends automatisch een Discord-alarm af.</p>
+      ${inGevaar.length ? `
+        <div class="card" style="border-color:var(--red)">
+          <b>⚠️ Schema in gevaar:</b>
+          ${inGevaar.map(p => `<div class="todo-rij"><span class="badge leeg">${p.ingepland}/${p.benodigd}</span><span><b>${esc(p.kanaal)}</b> — week ${esc(p.week)}</span></div>`).join('')}
+        </div>` : '<div class="card" style="border-color:var(--green)">✅ Alle kanalen liggen op schema voor deze en volgende week.</div>'}
+      ${weken.map(w => `
+        <div class="card kalender-week">
+          <h3 style="margin-top:0">Week ${esc(w.maandag)} t/m ${esc(w.zondag)}</h3>
+          ${w.kanalen.map(k => `
+            <div class="kalender-rij">
+              <span class="badge ${k.status}">${k.gepubliceerd + k.gepland}/${k.benodigd}</span>
+              <b>${esc(k.kanaal)}</b>
+              <span class="videos">${k.videos.map(v => `${v.afgerond ? '✅' : '🎬'} ${esc(v.werktitel)} (${esc(v.datum)})`).join(' · ') || 'niets ingepland'}</span>
+            </div>`).join('') || '<p class="muted">Nog geen kanalen.</p>'}
+        </div>`).join('')}`;
+  },
+
+  templates: async () => {
+    const [{ templates }, { channels }] = await Promise.all([api('/api/templates'), api('/api/channels')]);
+    CACHE.channels = channels;
+    const isManager = magMinstens('manager');
+    const types = { titel: '📝 Titelformules', thumbnail: '🖼️ Thumbnailconcepten', hook: '🪝 Hooks', beschrijving: '📄 Beschrijvingen', script: '✍️ Scriptstructuren' };
+    $('#content').innerHTML = `
+      <h2>🧩 Templatebibliotheek</h2>
+      <p class="muted">Bewezen titelformules, thumbnailconcepten, hooks en beschrijvingen. Werkt iets goed (hoge CTR of AVD)? Sla het hier op — zo wordt het systeem elke maand slimmer.</p>
+      ${Object.entries(types).map(([type, kop]) => {
+        const items = templates.filter(t => t.type === type);
+        if (!items.length) return '';
+        return `<h3>${kop}</h3>${items.map(t => `
+          <div class="card">
+            <b>${esc(t.naam)}</b> ${t.channelId ? `<span class="badge">${esc(kanaalNaam(t.channelId))}</span>` : '<span class="badge">alle kanalen</span>'}
+            ${isManager ? `<button class="btn small red" style="float:right" data-deltemplate="${t.id}">🗑️</button>` : ''}
+            <p style="white-space:pre-wrap;margin-top:.4rem">${esc(t.inhoud)}</p>
+            ${t.prestatie ? `<p class="muted" style="font-size:.82rem">📈 ${esc(t.prestatie)}</p>` : ''}
+          </div>`).join('')}`;
+      }).join('') || '<p class="muted">Nog geen templates.</p>'}
+      ${isManager ? `
+      <h3>Nieuwe template</h3>
+      <div class="card">
+        <div class="form-row">
+          <div><label>Type</label><select id="t-type">${Object.keys(types).map(t => `<option>${t}</option>`).join('')}</select></div>
+          <div><label>Naam</label><input id="t-naam" placeholder="bijv. Getal + mysterie + curiosity gap"></div>
+          <div><label>Kanaal</label><select id="t-kanaal"><option value="">alle kanalen</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
+        </div>
+        <label>Inhoud / formule</label><textarea id="t-inhoud" placeholder="bijv. [Getal] [onderwerpen] die [onverwacht gevolg] — max 55 tekens"></textarea>
+        <label>Prestatie-notitie (waarom werkt dit?)</label><input id="t-prestatie" placeholder="bijv. 8,1% CTR op video X">
+        <div style="margin-top:.7rem"><button class="btn primary" id="t-add">Opslaan</button> <span class="error" id="t-error"></span></div>
+      </div>` : ''}`;
+    $('#t-add')?.addEventListener('click', async () => {
+      try {
+        await api('/api/templates', { method: 'POST', body: {
+          type: $('#t-type').value, naam: $('#t-naam').value, channelId: $('#t-kanaal').value || null,
+          inhoud: $('#t-inhoud').value, prestatie: $('#t-prestatie').value } });
+        VIEWS.templates();
+      } catch (e) { $('#t-error').textContent = e.message; }
+    });
+    document.querySelectorAll('[data-deltemplate]').forEach(b => b.addEventListener('click', async () => {
+      if (confirm('Template verwijderen?')) {
+        await api(`/api/templates/${b.dataset.deltemplate}`, { method: 'DELETE' });
+        VIEWS.templates();
+      }
+    }));
   },
 
   instructies: () => {
@@ -269,7 +342,8 @@ const VIEWS = {
             <tr>
               <td><b>${esc(u.naam)}</b></td><td class="muted">${esc(u.email)}</td>
               <td><span class="badge">${esc(u.rol)}</span></td><td>${esc(u.functie)}</td>
-              <td>${isAdmin && u.id !== ME.id ? `<button class="btn small red" data-deluser="${u.id}">🗑️</button>` : ''}</td>
+              <td>${u.discordUserId ? '<span class="badge" title="Discord gekoppeld">🎮 Discord ✓</span>' : (isAdmin ? `<button class="btn small" data-koppelcode="${u.id}">🎮 Koppelcode</button>` : '')}
+              ${isAdmin && u.id !== ME.id ? `<button class="btn small red" data-deluser="${u.id}">🗑️</button>` : ''}</td>
             </tr>`).join('')}
         </table>
       </div>
@@ -293,6 +367,10 @@ const VIEWS = {
         VIEWS.team();
       } catch (e) { $('#u-error').textContent = e.message; }
     });
+    document.querySelectorAll('[data-koppelcode]').forEach(b => b.addEventListener('click', async () => {
+      const { code, uitleg } = await api(`/api/users/${b.dataset.koppelcode}/koppelcode`, { method: 'POST' });
+      alert(`Koppelcode: ${code}\n\n${uitleg}`);
+    }));
     document.querySelectorAll('[data-deluser]').forEach(b => b.addEventListener('click', async () => {
       if (confirm('Gebruiker verwijderen? Toegang vervalt direct.')) {
         await api(`/api/users/${b.dataset.deluser}`, { method: 'DELETE' });
@@ -312,10 +390,29 @@ const VIEWS = {
         <input id="s-webhook" value="${esc(settings.discordWebhookUrl)}" placeholder="https://discord.com/api/webhooks/…">
         <label><input type="checkbox" id="s-enabled" style="width:auto" ${settings.discordEnabled ? 'checked' : ''}> Notificaties aan</label>
         <div style="margin-top:.7rem">
-          <button class="btn primary" id="s-save">Opslaan</button>
+          <button class="btn primary" id="s-save">Alle instellingen opslaan</button>
           <button class="btn" id="s-test">Test versturen</button>
           <span id="s-msg" class="muted"></span>
         </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Discord-bot</h3>
+        <p class="muted">De bot in <code>discord-bot/</code> logt in op het CMS met dit token. Genereer het één keer en zet het in de <code>.env</code> van de bot als <code>CMS_BOT_TOKEN</code>. Opnieuw genereren maakt het oude token ongeldig.</p>
+        <p>${settings.botToken ? `Huidig token: <code>${esc(settings.botToken)}</code>` : '<span class="muted">Nog geen token gegenereerd.</span>'}</p>
+        <button class="btn" id="s-bottoken">🎮 Genereer ${settings.botToken ? 'nieuw ' : ''}bot-token</button>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">YouTube API</h3>
+        <p class="muted">Voor automatische KPI's (views, AVD, omzet). Maak een OAuth-client aan in de Google Cloud Console (zie docs/youtube-api.md), vul hieronder in, en koppel daarna per kanaal via het Kanalen-tabblad. Thumbnail-CTR geeft YouTube niet via de API — die vul je handmatig in bij een video.</p>
+        <div class="form-row">
+          <div><label>Client-id</label><input id="s-ytclient" value="${esc(settings.youtube?.clientId || '')}" placeholder="xxxx.apps.googleusercontent.com"></div>
+          <div><label>Client-secret ${settings.youtube?.clientSecretIngesteld ? '(ingesteld — alleen invullen om te vervangen)' : ''}</label><input id="s-ytsecret" type="password" placeholder="${settings.youtube?.clientSecretIngesteld ? '••••••••' : 'GOCSPX-…'}"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">QC-checklist (vóór upload)</h3>
+        <p class="muted">Eén regel per checkpunt. Nieuwe video's krijgen deze lijst; de upload-stap kan pas ingeleverd worden als alles is afgevinkt.</p>
+        <textarea id="s-qc" style="min-height:140px">${esc((settings.qcItems || []).join('\n'))}</textarea>
       </div>
       <div class="card">
         <h3 style="margin-top:0">Wachtwoord wijzigen</h3>
@@ -325,8 +422,18 @@ const VIEWS = {
         </div>
       </div>`;
     $('#s-save').addEventListener('click', async () => {
-      await api('/api/settings', { method: 'PUT', body: { discordWebhookUrl: $('#s-webhook').value, discordEnabled: $('#s-enabled').checked } });
+      await api('/api/settings', { method: 'PUT', body: {
+        discordWebhookUrl: $('#s-webhook').value,
+        discordEnabled: $('#s-enabled').checked,
+        qcItems: $('#s-qc').value.split('\n').map(s => s.trim()).filter(Boolean),
+        youtube: { clientId: $('#s-ytclient').value, clientSecret: $('#s-ytsecret').value }
+      } });
       $('#s-msg').textContent = 'Opgeslagen ✔';
+    });
+    $('#s-bottoken').addEventListener('click', async () => {
+      if (!confirm('Nieuw bot-token genereren? Een eventueel oud token stopt direct met werken.')) return;
+      await api('/api/settings/bot-token', { method: 'POST' });
+      VIEWS.instellingen();
     });
     $('#s-test').addEventListener('click', async () => {
       try { await api('/api/settings/discord-test', { method: 'POST' }); $('#s-msg').textContent = 'Testbericht verstuurd ✔'; }
@@ -361,8 +468,53 @@ function kanaalKaart(c, isManager) {
       ${c.thumbnailFormat ? `<p><b>Thumbnailformat:</b> <span class="muted">${esc(c.thumbnailFormat)}</span></p>` : ''}
       ${c.concurrenten?.length ? `<p><b>Concurrenten:</b> ${c.concurrenten.map(x => `<span class="badge">${esc(x)}</span>`).join(' ')}</p>` : ''}
       ${c.notities ? `<p class="muted">${esc(c.notities)}</p>` : ''}
+      ${youtubeBlok(c, isManager)}
       ${isManager ? `<details style="margin-top:.6rem"><summary class="muted" style="cursor:pointer">Bewerken</summary>${kanaalForm(c)}</details>` : ''}
     </div>`;
+}
+
+// Doel vs. realisatie: groen = doel gehaald, geel = >75%, rood = eronder.
+function stoplicht(realisatie, doel, hogerIsBeter = true) {
+  if (realisatie == null || doel == null) return '';
+  const ratio = hogerIsBeter ? realisatie / doel : doel / realisatie;
+  const kleur = ratio >= 1 ? 'groen' : ratio >= 0.75 ? 'geel' : 'rood';
+  return `<span class="kpi-stoplicht ${kleur}"></span>`;
+}
+
+function youtubeBlok(c, isManager) {
+  const yt = c.youtube;
+  const s = c.youtubeStats;
+  const k = c.kpis || {};
+  if (!isManager && !s) return '';
+  const avdMin = s?.avdSeconden != null ? Number((s.avdSeconden / 60).toFixed(2)) : null;
+  return `
+    <div style="border-top:1px solid var(--border);margin-top:.8rem;padding-top:.6rem">
+      ${yt?.youtubeChannelId
+        ? `<p style="font-size:.85rem">▶️ Gekoppeld aan <b>${esc(yt.youtubeNaam || yt.youtubeChannelId)}</b>
+            ${s ? `<span class="muted">· ${esc(s.periode)}: <b>${s.views}</b> views · ${stoplicht(avdMin, k.avdMinuten)}AVD <b>${avdMin ?? '?'} min</b> (doel ${k.avdMinuten ?? '–'}) · +${s.abonneesErbij} abonnees${s.omzetUsd != null ? ` · $${Number(s.omzetUsd).toFixed(2)}` : ''}</span>` : '<span class="muted">· nog geen cijfers — druk op Sync</span>'}
+           </p>`
+        : (isManager ? '<p class="muted" style="font-size:.85rem">▶️ Nog niet aan YouTube gekoppeld — cijfers komen dan automatisch binnen.</p>' : '')}
+      ${magMinstens('admin') && !yt?.youtubeChannelId ? `<button class="btn small" data-ytkoppel="${c.id}">▶️ Koppel YouTube</button>` : ''}
+      ${isManager && yt?.youtubeChannelId ? `<button class="btn small" data-ytsync="1">🔄 Sync cijfers</button>` : ''}
+    </div>`;
+}
+
+function bindYoutubeActies() {
+  document.querySelectorAll('[data-ytkoppel]').forEach(b => b.addEventListener('click', async () => {
+    try {
+      const { url } = await api(`/api/youtube/koppel?channelId=${b.dataset.ytkoppel}`);
+      window.open(url, '_blank');
+      alert('Log in met het Google-account van dit YouTube-kanaal. Kom daarna terug en druk op "Sync cijfers".');
+    } catch (e) { alert(e.message); }
+  }));
+  document.querySelectorAll('[data-ytsync]').forEach(b => b.addEventListener('click', async () => {
+    b.textContent = '⏳ bezig…';
+    try {
+      const { resultaten } = await api('/api/youtube/sync', { method: 'POST' });
+      alert(resultaten.map(r => `${r.kanaal}: ${r.videos} video's bijgewerkt${r.fouten.length ? `\n  fouten: ${r.fouten.join('; ')}` : ''}`).join('\n'));
+      VIEWS.kanalen();
+    } catch (e) { alert(e.message); VIEWS.kanalen(); }
+  }));
 }
 
 function kanaalForm(c) {
@@ -419,14 +571,55 @@ function bindKanaalForms() {
 
 // ---------- helpers: pipeline ----------
 function videoKaart(v, isManager) {
+  const uploadActief = v.stappen.find(s => s.key === 'upload' && s.status !== 'wachtend');
+  const s = v.stats;
   return `
     <div class="card" data-video="${v.id}">
       <h3 style="margin-top:0">🎬 ${esc(v.werktitel)} <span class="muted" style="font-weight:400">— ${esc(kanaalNaam(v.channelId))}</span></h3>
       ${v.idee ? `<p class="muted">${esc(v.idee)}</p>` : ''}
+      <p class="muted" style="font-size:.85rem">
+        ${v.geplandePublicatie ? `📅 publicatie: <b>${esc(v.geplandePublicatie)}</b>` : '📅 nog geen publicatiedatum'}
+        ${v.youtubeVideoId ? ` · ▶️ <a href="https://youtu.be/${esc(v.youtubeVideoId)}" target="_blank">${esc(v.youtubeVideoId)}</a>` : ''}
+        ${s ? ` · 👁 ${s.views ?? '?'} views${s.ctrPct != null ? ` · CTR ${s.ctrPct}%` : ''}${s.avdMinuten != null ? ` · AVD ${s.avdMinuten} min` : ''}` : ''}
+        ${isManager ? ` · <a href="#" data-videoedit="${v.id}">bewerken</a>` : ''}
+      </p>
       <div class="stappen">
-        ${v.stappen.map(s => stapBlok(v, s, isManager)).join('')}
+        ${v.stappen.map(st => stapBlok(v, st, isManager)).join('')}
       </div>
+      ${v.qc?.length ? `
+      <details ${uploadActief ? 'open' : ''} style="margin-top:.5rem">
+        <summary class="muted" style="cursor:pointer">✅ QC-checklist vóór upload (${v.qc.filter(q => q.done).length}/${v.qc.length})</summary>
+        <div class="qc-lijst">
+          ${v.qc.map((q, i) => `
+            <label class="qc-item ${q.done ? 'done' : ''}">
+              <input type="checkbox" ${q.done ? 'checked' : ''} data-qc="${v.id}:${i}"> ${esc(q.label)}
+            </label>`).join('')}
+        </div>
+      </details>` : ''}
     </div>`;
+}
+
+function bindVideoExtras() {
+  document.querySelectorAll('[data-qc]').forEach(cb => cb.addEventListener('change', async () => {
+    const [videoId, index] = cb.dataset.qc.split(':');
+    await api(`/api/videos/${videoId}/qc/${index}/toggle`, { method: 'POST' });
+    VIEWS.pipeline();
+  }));
+  document.querySelectorAll('[data-videoedit]').forEach(a => a.addEventListener('click', async e => {
+    e.preventDefault();
+    const vid = a.dataset.videoedit;
+    const datum = prompt('Geplande publicatiedatum (JJJJ-MM-DD, leeg = geen):');
+    if (datum === null) return;
+    const ytId = prompt('YouTube video-id na upload (bijv. dQw4w9WgXcQ, leeg = geen):');
+    if (ytId === null) return;
+    await api(`/api/videos/${vid}`, { method: 'PUT', body: { geplandePublicatie: datum || null, youtubeVideoId: ytId || '' } });
+    const stats = prompt('Handmatige KPI-invoer views,CTR%,AVDmin (bijv. 15000,6.2,4.5 — leeg = overslaan):');
+    if (stats) {
+      const [views, ctrPct, avdMinuten] = stats.split(',').map(x => x.trim());
+      await api(`/api/videos/${vid}/stats`, { method: 'POST', body: { views, ctrPct, avdMinuten } });
+    }
+    VIEWS.pipeline();
+  }));
 }
 
 function stapBlok(v, s, isManager) {

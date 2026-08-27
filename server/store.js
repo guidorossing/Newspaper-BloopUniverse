@@ -17,9 +17,26 @@ const EMPTY = {
   videos: [],
   todos: [],
   vault: [],
+  templates: [],
+  koppelcodes: [],
   settings: {
     discordWebhookUrl: '',
-    discordEnabled: false
+    discordEnabled: false,
+    // Bot-toegang tot de CMS-API met een vast token (zie discord-bot/).
+    botToken: '',
+    // QC-checklist die elke video moet doorlopen vóór de upload-stap
+    // ingeleverd mag worden. Aanpasbaar via Instellingen.
+    qcItems: [
+      'Eindscherm + infokaarten toegevoegd',
+      'Beschrijving met keywords en tijdstempels',
+      'Tags ingevuld',
+      'Pinned comment klaargezet',
+      'Video in de juiste afspeellijst',
+      'Thumbnail geüpload en gecontroleerd op telefoonformaat',
+      'Publicatietijd volgens uploadschema'
+    ],
+    // YouTube Data/Analytics API (zie docs/youtube-api.md)
+    youtube: { clientId: '', clientSecret: '' }
   },
   activity: []
 };
@@ -34,7 +51,11 @@ export function load() {
   if (db) return db;
   fs.mkdirSync(DATA_DIR, { recursive: true });
   if (fs.existsSync(DB_FILE)) {
-    db = { ...structuredClone(EMPTY), ...JSON.parse(fs.readFileSync(DB_FILE, 'utf8')) };
+    const opSchijf = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    db = { ...structuredClone(EMPTY), ...opSchijf };
+    // Nieuwe settings-velden aanvullen zonder bestaande waarden te overschrijven.
+    db.settings = { ...structuredClone(EMPTY.settings), ...(opSchijf.settings || {}) };
+    db.settings.youtube = { ...structuredClone(EMPTY.settings.youtube), ...(opSchijf.settings?.youtube || {}) };
   } else {
     db = structuredClone(EMPTY);
     save();
