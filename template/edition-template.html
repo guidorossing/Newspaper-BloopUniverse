@@ -3,29 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- WEEKLY CHECKLIST:
-  1. Copy this file to editions/YYYY-MM-DD/index.html (date of publication)
-  2. Replace every [PLACEHOLDER] below
-  3. Update Vol./No. in the topbar and footer
-  4. Add the new edition link to index.html ("Latest edition" in the footer)
--->
+<!-- ===========================================================
+     WEEKLY CHECKLIST
+     1. Copy this file to editions/YYYY-MM-DD/index.html
+     2. Replace every [PLACEHOLDER] below
+     3. Bump Vol./No. in the topbar and the footer
+     4. Add a block for this edition at the top of archive.html
+     5. Add the edition's URL to sitemap.xml
+     6. Commit and push — Cloudflare publishes it within a minute
+     7. Send the same content to premium readers from beehiiv
+     =========================================================== -->
 <title>The Bloop Times — Vol. [VOL], No. [NO] — [FULL DATE]</title>
 <meta name="description" content="[ONE-SENTENCE SUMMARY OF THIS EDITION]">
+<link rel="canonical" href="https://bloopuniverse.com/editions/[YYYY-MM-DD]/">
+<link rel="icon" type="image/svg+xml" href="../../assets/img/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Bloop Times — Edition No. [NO]">
+<meta property="og:description" content="[ONE-SENTENCE TEASER]">
+<meta property="og:image" content="[LEAD STORY IMAGE URL]">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lora:ital,wght@0,400;0,600;1,400&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../assets/style.css">
 </head>
 <body>
+
+<nav class="nav">
+  <div class="container">
+    <a class="brand" href="../../index.html">
+      <img src="../../assets/img/logo.svg" alt="BloopUniverse logo">
+      <span><span class="brand-name">The Bloop Times</span><span class="brand-sub">by BloopUniverse</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../../archive.html">Archive</a></li>
+      <li><a href="../../index.html#premium">Premium</a></li>
+      <li><a href="https://www.youtube.com/@BloopUniverse" target="_blank" rel="noopener">YouTube</a></li>
+      <li><a class="btn btn-red btn-sm" href="https://news.bloopuniverse.com/subscribe">Try it free</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="edition-wrap">
 <div class="paper">
 
   <div class="topbar">
     <span>Vol. [VOL] · No. [NO]</span>
     <span>The Official BloopUniverse Weekly</span>
-    <span>Price: one chuckle</span>
+    <span>Premium edition</span>
   </div>
 
   <header class="masthead">
+    <img class="masthead-logo" src="../../assets/img/logo.svg" alt="">
     <h1>The Bloop Times</h1>
     <p class="tagline">Hollywood's mistakes · delivered weekly · nobody was supposed to see this</p>
   </header>
@@ -33,13 +61,13 @@
   <div class="dateline">
     <span>[WEEKDAY], [FULL DATE]</span>
     <span>[EDITION TAGLINE, e.g. "The Reshoot Edition"]</span>
-    <span><a href="../../index.html" style="color:inherit">Subscribe: €9.99/mo</a></span>
+    <span><a href="https://news.bloopuniverse.com/upgrade">€9.99/mo →</a></span>
   </div>
 
-  <!-- Lead story: this week's biggest video or story -->
+  <!-- ============ LEAD STORY ============ -->
   <section class="grid grid-lead">
     <article>
-      <p class="kicker">Front Page · [TOPIC]</p>
+      <span class="kicker">Front Page · [TOPIC]</span>
       <h2 class="headline">[BIG PUNNY HEADLINE]</h2>
       <p class="standfirst">[ONE-SENTENCE TEASER IN ITALICS]</p>
       <p class="byline">By The Bloop Times Editorial Desk</p>
@@ -47,18 +75,24 @@
         <img src="[VIDEO THUMBNAIL URL]" alt="[DESCRIPTION]">
         <figcaption>[WITTY CAPTION]</figcaption>
       </figure>
-      <div class="columned" style="margin-top:16px">
+      <div class="columned" style="margin-top:18px">
         <p class="dropcap">[PARAGRAPH 1 — open with the hook]</p>
-        <p>[PARAGRAPH 2 — what's in the video / the story]</p>
+        <p>[PARAGRAPH 2 — what's in the video]</p>
+        <p class="pullquote">"[SHORT QUOTABLE LINE]"</p>
+        <p>[PARAGRAPH 3 — why it matters / the payoff]</p>
         <p><strong>▶ Watch now:</strong> <a href="[VIDEO URL]">"[VIDEO TITLE]"</a></p>
       </div>
     </article>
 
     <aside class="sidebar">
-      <p class="kicker">By the numbers</p>
+      <span class="kicker">By the numbers</span>
       <div class="box accent" style="margin-bottom:18px">
-        <div class="stat">[BIG NUMBER]</div>
+        <div class="stat-num">[BIG NUMBER]</div>
         <div class="stat-label">[WHAT THE NUMBER MEANS]</div>
+      </div>
+      <div class="box" style="margin-bottom:18px">
+        <div class="stat-num ink">[SECOND NUMBER]</div>
+        <div class="stat-label">[WHAT IT MEANS]</div>
       </div>
       <p style="font-style:italic; color:var(--ink-soft)">[RUNNING GAG / FAKE CORRECTION NOTICE]</p>
     </aside>
@@ -66,28 +100,61 @@
 
   <hr class="thick">
 
-  <!-- Two secondary stories -->
+  <!-- ============ SECOND STORIES ============ -->
   <section class="grid grid-2">
     <article>
-      <p class="kicker">[SECTION NAME]</p>
+      <span class="kicker">[SECTION NAME]</span>
       <h3 class="subhead">[SECOND STORY HEADLINE]</h3>
-      <p>[STORY TEXT]</p>
+      <figure>
+        <img src="[THUMBNAIL URL]" alt="[DESCRIPTION]">
+        <figcaption>[WITTY CAPTION]</figcaption>
+      </figure>
+      <p style="margin-top:14px">[STORY TEXT]</p>
       <p><strong>▶</strong> <a href="[VIDEO URL]">"[VIDEO TITLE]"</a></p>
     </article>
 
     <article>
-      <p class="kicker">Behind the Bloop · The story behind the laughter</p>
-      <h3 class="subhead">[FEATURE: the true story behind one famous blooper]</h3>
-      <p>[FEATURE TEXT — 2 to 3 paragraphs]</p>
+      <span class="kicker">Behind the Bloop · The story behind the laughter</span>
+      <h3 class="subhead">[THE TRUE STORY BEHIND ONE FAMOUS BLOOPER]</h3>
+      <p>[PARAGRAPH 1 — set the scene]</p>
+      <p>[PARAGRAPH 2 — what actually happened, verifiable facts only]</p>
+      <p>[PARAGRAPH 3 — the takeaway]</p>
+      <p style="font-style:italic; color:var(--ink-soft)">[LINK TO A RELATED VIDEO]</p>
     </article>
   </section>
 
   <hr class="thick">
 
-  <!-- This week's uploads -->
+  <!-- ============ WEEK IN NUMBERS ============ -->
+  <section>
+    <span class="kicker">The week in numbers</span>
+    <div class="numbers-strip">
+      <div><span class="n">[N]</span><span class="l">[WHAT IT COUNTS]</span></div>
+      <div><span class="n">[N]</span><span class="l">[WHAT IT COUNTS]</span></div>
+      <div><span class="n">[N]</span><span class="l">[WHAT IT COUNTS]</span></div>
+      <div><span class="n">0</span><span class="l">regrets</span></div>
+    </div>
+  </section>
+
+  <hr class="thick">
+
+  <!-- ============ PHOTO STRIP ============ -->
+  <section>
+    <span class="kicker">The week in pictures</span>
+    <h3 class="subhead" style="margin-bottom:16px">[HEADLINE FOR THE PHOTO SPREAD]</h3>
+    <div class="photo-strip">
+      <figure><img src="[THUMB 1]" alt="[ALT]" loading="lazy"><figcaption>[CAPTION 1]</figcaption></figure>
+      <figure><img src="[THUMB 2]" alt="[ALT]" loading="lazy"><figcaption>[CAPTION 2]</figcaption></figure>
+      <figure><img src="[THUMB 3]" alt="[ALT]" loading="lazy"><figcaption>[CAPTION 3]</figcaption></figure>
+    </div>
+  </section>
+
+  <hr class="thick">
+
+  <!-- ============ FRESH OFF THE PRESS ============ -->
   <section class="grid grid-lead">
     <div>
-      <p class="kicker">Fresh Off The Press</p>
+      <span class="kicker">Fresh Off The Press</span>
       <h3 class="subhead">This Week on BloopUniverse</h3>
       <ul class="plain">
         <li><a href="[URL]">[VIDEO TITLE]</a> <span class="views">New this week</span></li>
@@ -96,7 +163,8 @@
       </ul>
     </div>
     <aside class="sidebar">
-      <p class="kicker">Hall of Fame</p>
+      <span class="kicker">Hall of Fame</span>
+      <p style="margin-bottom:12px">The all-time most-watched entries in the BloopUniverse archive:</p>
       <ul class="plain">
         <li>[TOP VIDEO 1] <span class="views">[VIEWS]</span></li>
         <li>[TOP VIDEO 2] <span class="views">[VIEWS]</span></li>
@@ -107,10 +175,10 @@
 
   <hr class="thick">
 
-  <!-- Quiz + fan corner -->
+  <!-- ============ QUIZ + FAN CORNER ============ -->
   <section class="grid grid-2">
     <article>
-      <p class="kicker">The Bloop Quiz</p>
+      <span class="kicker">The Bloop Quiz</span>
       <h3 class="subhead">Five Questions. No Retakes.</h3>
       <ol class="quiz">
         <li>[QUESTION 1]</li>
@@ -123,7 +191,7 @@
     </article>
 
     <article>
-      <p class="kicker">Fan Corner</p>
+      <span class="kicker">Fan Corner</span>
       <h3 class="subhead">Letters To The Editor</h3>
       <div class="box" style="margin-top:14px">
         <p style="font-style:italic">"[BEST FAN COMMENT OF THE WEEK]" — [USERNAME], under [VIDEO]</p>
@@ -135,12 +203,14 @@
 
   <hr class="thick">
 
-  <section class="price-card">
-    <p class="kicker" style="color:var(--gold)">Enjoyed this edition?</p>
-    <h3 class="subhead" style="font-size:clamp(24px,3.5vw,34px)">Get The Bloop Times Every Week</h3>
-    <p>New editions, full archive access and early teasers — for €9.99 a month. Cancel anytime.</p>
-    <br>
-    <a class="btn primary" href="../../index.html#subscribe">Subscribe Now</a>
+  <!-- ============ CTA ============ -->
+  <section class="edition-cta">
+    <span class="kicker light">Enjoyed this edition?</span>
+    <h2 class="h2">Get The Bloop Times every Friday.</h2>
+    <p>A new edition lands every Friday for premium readers — €9.99 a month, cancel any time.</p>
+    <a class="btn btn-red btn-lg" href="https://news.bloopuniverse.com/upgrade">Become a premium reader →</a>
+    &nbsp;
+    <a class="btn btn-ghost-light btn-lg" href="https://news.bloopuniverse.com/subscribe">Email me a free edition</a>
   </section>
 
   <footer class="colophon">
@@ -149,5 +219,7 @@
   </footer>
 
 </div>
+</div>
+
 </body>
 </html>
