@@ -475,3 +475,83 @@ footer.colophon a { color: inherit; }
   .hero-actions .btn { width: 100%; }
   .brand-name { font-size: 17px; }
 }
+
+/* ==========================================================================
+   RECURRING SECTIONS (the 15-section edition format)
+   ========================================================================== */
+
+/* A label with a rule running off to the right — the spine of every section */
+.section-rule { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; }
+.section-rule .kicker { margin: 0; white-space: nowrap; }
+.section-rule::after { content: ""; flex: 1; border-top: 1px solid var(--ink); opacity: .35; }
+
+/* The Wire — three short movie/actor updates */
+.briefs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+.brief { border-top: 3px solid var(--ink); padding-top: 12px; }
+.brief .tag-line { font-family: var(--sans); font-weight: 700; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--red); margin-bottom: 7px; }
+.brief h4 { font-family: var(--serif); font-weight: 700; font-size: 19px; line-height: 1.2; margin-bottom: 8px; }
+.brief p { font-size: 15px; }
+.brief .source { display: block; margin-top: 10px; font-family: var(--sans); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+
+/* Blooper of the Week — the fact sheet */
+.blooper-facts { list-style: none; margin-top: 4px; }
+.blooper-facts li { display: grid; grid-template-columns: 158px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px dotted rgba(20,20,24,.35); }
+.blooper-facts li:last-child { border-bottom: 0; }
+.blooper-facts .k { font-family: var(--sans); font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--red); padding-top: 4px; }
+.blooper-facts .v { font-family: var(--body-serif); font-size: 16px; }
+
+/* Improvised or Scripted? — the verdict stamp */
+.verdict { text-align: center; margin: 18px 0; }
+.verdict-stamp {
+  display: inline-block; transform: rotate(-4deg);
+  border: 3px solid var(--red); color: var(--red); border-radius: 5px;
+  font-family: var(--sans); font-weight: 800; font-size: 15px; letter-spacing: .2em; text-transform: uppercase;
+  padding: 10px 20px;
+}
+
+/* Did You Know? — big red numerals */
+.facts { counter-reset: fact; list-style: none; display: grid; gap: 18px; }
+.facts li { position: relative; padding-left: 54px; font-size: 16px; }
+.facts li::before {
+  counter-increment: fact; content: counter(fact);
+  position: absolute; left: 0; top: -6px;
+  font-family: var(--serif); font-weight: 900; font-size: 38px; line-height: 1; color: var(--red);
+}
+
+/* Upcoming releases */
+.release-wrap { overflow-x: auto; }
+.releases { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 14.5px; min-width: 460px; }
+.releases th { text-align: left; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); border-bottom: 2px solid var(--ink); padding: 0 14px 8px 0; }
+.releases td { padding: 12px 14px 12px 0; border-bottom: 1px dotted rgba(20,20,24,.35); vertical-align: top; }
+.releases tr:last-child td { border-bottom: 0; }
+.releases .date { white-space: nowrap; font-weight: 700; color: var(--red); }
+.releases .title { font-family: var(--body-serif); font-size: 16px; font-weight: 600; }
+.releases .where { color: var(--ink-soft); white-space: nowrap; }
+
+/* Reader poll */
+.poll-options { list-style: none; display: grid; gap: 10px; margin-top: 14px; }
+.poll-options a {
+  display: block; border: 2px solid var(--ink); border-radius: 4px; padding: 13px 16px;
+  text-decoration: none; color: var(--ink); font-family: var(--sans); font-weight: 600; font-size: 15px;
+  transition: background .15s ease, color .15s ease;
+}
+.poll-options a:hover { background: var(--ink); color: var(--paper); }
+.poll-result { margin-top: 8px; }
+.poll-result .row { font-family: var(--sans); font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; margin-bottom: 5px; }
+.poll-result .bar { height: 9px; border-radius: 999px; background: rgba(20,20,24,.12); overflow: hidden; margin-bottom: 14px; }
+.poll-result .bar span { display: block; height: 100%; background: var(--red); }
+
+/* Subscriber-only story */
+.locked { border: 2px solid var(--red); border-radius: 6px; padding: 24px 26px; background: rgba(255,45,45,.045); }
+.locked .lock-label { font-family: var(--sans); font-weight: 800; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--red); margin-bottom: 10px; display: block; }
+
+/* Look ahead to next Friday */
+.lookahead { border: 2px dashed var(--ink); border-radius: 6px; padding: 22px 24px; background: rgba(255,255,255,.4); }
+.lookahead ul { list-style: none; margin-top: 12px; }
+.lookahead li { padding: 8px 0 8px 22px; position: relative; }
+.lookahead li::before { content: "▸"; position: absolute; left: 0; color: var(--red); font-weight: 700; }
+
+@media (max-width: 900px) {
+  .briefs { grid-template-columns: 1fr; }
+  .blooper-facts li { grid-template-columns: 1fr; gap: 4px; }
+}

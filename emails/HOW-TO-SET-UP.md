@@ -107,3 +107,7 @@ The chain runs by itself: video → site → sign-up → free edition → upgrad
 Next: edition No. 2 on Friday. Use `emails/weekly-template.html` for the email
 and `template/edition-template.html` for the web version, and set the post to
 **Premium only** in beehiiv so it goes to Insiders.
+
+What goes in each section — and which sources are good enough — is written up
+in [CONTENT-PLAYBOOK.md](../CONTENT-PLAYBOOK.md). Read it once before you write
+edition No. 2.
