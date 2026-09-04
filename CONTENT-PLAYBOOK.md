@@ -231,6 +231,35 @@ No. 7". Keep it under 45 characters so phones don't cut it.
 
 ---
 
+## The welcome email is a different animal
+
+`emails/welcome-free-edition.html` is not a Friday edition. It is sent
+automatically the moment somebody signs up, which means it might be read the
+day it was written or eleven months later.
+
+**So it carries no news.** No front page, no Wire, no Coming Soon, no view
+counts, no "this week". Only the evergreen sections: Behind the Scenes,
+Blooper of the Week, Improvised or Scripted?, Did You Know?, one rotating
+slot, Guess the Movie, and three archive videos.
+
+The clever part is that the email *says so*, in a section near the end called
+"You may have noticed there's no news in it". The three sections it's missing
+are exactly the three you get on Friday. The limitation is the pitch.
+
+Two rules when you refresh it:
+
+- **Nothing dated.** No release dates, no subscriber counts, no view counts,
+  no "last week". If it would age, it doesn't go in.
+- **Every story sourced in the text.** The italic source line under each story
+  is doing real work: it's the reason a stranger believes the next one, and
+  belief is what they're being asked to pay for.
+
+Refresh it maybe twice a year, or whenever a story in it stops being your
+best. Anyone who signed up before the change keeps the old one — that's fine,
+they already got a complete paper.
+
+---
+
 ## Tone
 
 It's a newspaper about people getting things wrong, written by someone who

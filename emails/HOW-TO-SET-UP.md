@@ -25,7 +25,7 @@ you reached it through the Send email block, it belongs to the automation.
 Click where it says **New post** and replace it with:
 
 ```
-Your free edition of The Bloop Times
+Your free edition — the kid who wrote Marvel's best joke
 ```
 
 Leave the subtitle empty.
@@ -55,11 +55,15 @@ Look for **Email settings**, the **Email** tab, or a gear icon.
 
 | Field | Value |
 |---|---|
-| Subject | `Your free edition of The Bloop Times` |
-| Preview text | `Marvel takes so bad they had to reshoot the whole scene.` |
+| Subject | `Your free edition — the kid who wrote Marvel's best joke` |
+| Preview text | `A Make-A-Wish kid wrote one of Marvel's best jokes. Inside: that story, and four more nobody told you.` |
 
 Preview text is the grey line next to the subject in an inbox. Left empty,
 mail clients grab the first words of the email, which looks sloppy.
+
+The subject names the strangest specific thing in the email rather than the
+product. "Your free edition of The Bloop Times" tells someone what arrived;
+this tells them why to open it.
 
 ---
 
@@ -70,10 +74,14 @@ your own address and check on your phone:
 
 - Red BU logo top left, on black
 - "The Bloop Times" large, with double rules underneath
-- Section labels (Front Page, Behind the Bloop) in red capitals
-- Quiz in a bordered box, answers in grey underneath
-- Black panel at the bottom with a red **Get Inside Access — $9.99/month** button
-- The button opens `news.bloopuniverse.com/upgrade`
+- Section labels (Behind the Scenes, Blooper of the Week) in red capitals
+- The blooper fact sheet in a bordered white box, four labelled rows
+- The **IMPROVISED** verdict stamp, red outline, centred
+- Three big red numerals in Did You Know?
+- A thin black bar halfway down: *become an Insider →*
+- The pink-bordered **Insiders Only** box near the bottom
+- Black panel at the end with a red **Get Inside Access — $9.99/month** button
+- Both upgrade links open `news.bloopuniverse.com/upgrade`
 
 ---
 
@@ -94,6 +102,9 @@ Skipping this step is the usual mistake. A draft automation sends nothing.
 2. Click **Get your free edition**
 3. Sign up with a private address you don't already use for beehiiv
 4. The edition should land within a few minutes
+
+Read it the whole way through on a phone, as a stranger would. It has one
+job: make someone who has never heard of you want the Friday edition.
 
 Nothing arrives? Check, in this order: is the automation **Live**; does
 Audience → Subscribers list the address you just used; is it sitting in spam.
