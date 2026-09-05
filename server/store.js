@@ -15,6 +15,7 @@ const EMPTY = {
   users: [],
   channels: [],
   videos: [],
+  ideeen: [],
   todos: [],
   vault: [],
   templates: [],

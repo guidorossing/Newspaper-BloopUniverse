@@ -10,6 +10,7 @@ import * as auth from './auth.js';
 import * as vault from './vault.js';
 import * as pipeline from './pipeline.js';
 import * as kalender from './kalender.js';
+import * as ideeen from './ideeen.js';
 import * as youtube from './youtube.js';
 import { notify } from './discord.js';
 
@@ -182,6 +183,9 @@ async function api(req, res, url) {
       openCheckpoints: auth.magMinstens(user, 'manager') ? openCheckpoints : [],
       deadlines: pipeline.deadlineOverzicht(),
       openTodos: db.todos.filter(t => !t.klaar).length,
+      ideeenOpVoorraad: db.ideeen.filter(i => i.status === 'nieuw' || i.status === 'goedgekeurd').length,
+      // Kanalen met minder dan 2 weken ideeënvoorraad: hier droogt de pipeline op.
+      ideeenAlarm: ideeen.voorraad().filter(v => v.status === 'kritiek'),
       activity: auth.magMinstens(user, 'manager') ? db.activity.slice(0, 20) : []
     });
   }
@@ -308,6 +312,76 @@ async function api(req, res, url) {
     };
     save();
     return send(res, 200, { stats: video.stats });
+  }
+
+  // -- ideeënbank --
+  if (route === 'GET /api/ideeen') {
+    return send(res, 200, {
+      ideeen: ideeen.gesorteerd(url.searchParams.get('status')),
+      voorraad: ideeen.voorraad(),
+      wegingen: ideeen.WEGINGEN
+    });
+  }
+  if (route === 'POST /api/ideeen') {
+    // Iedereen mag pitchen — ook freelancers en de Discord-bot.
+    const body = await readBody(req);
+    if (!body.titel) return send(res, 400, { error: 'Titel is verplicht' });
+    const idee = ideeen.nieuwIdee({ ...body, aangedragenDoor: user.naam });
+    logActivity(user.naam, `pitchte idee "${idee.titel}"`);
+    await ideeen.meldNieuwIdee(idee);
+    return send(res, 200, { idee });
+  }
+  if (req.method === 'POST' && /^\/api\/ideeen\/[^/]+\/score$/.test(url.pathname)) {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager mag scoren' });
+    try {
+      return send(res, 200, { idee: ideeen.scoorIdee(url.pathname.split('/')[3], await readBody(req), user) });
+    } catch (e) {
+      return send(res, 400, { error: e.message });
+    }
+  }
+  if (req.method === 'POST' && /^\/api\/ideeen\/[^/]+\/status$/.test(url.pathname)) {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    try {
+      const { status } = await readBody(req);
+      return send(res, 200, { idee: ideeen.zetStatus(url.pathname.split('/')[3], status, user) });
+    } catch (e) {
+      return send(res, 400, { error: e.message });
+    }
+  }
+  // Promoveren: idee wordt een video in de pipeline en verdwijnt uit de backlog.
+  if (req.method === 'POST' && /^\/api\/ideeen\/[^/]+\/promoveer$/.test(url.pathname)) {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    const idee = db.ideeen.find(i => i.id === url.pathname.split('/')[3]);
+    if (!idee) return send(res, 404, { error: 'Idee niet gevonden' });
+    if (idee.status === 'gepromoveerd') return send(res, 400, { error: 'Dit idee staat al in de pipeline' });
+    const body = await readBody(req);
+    const channelId = body.channelId || idee.channelId;
+    if (!channelId || !db.channels.find(c => c.id === channelId)) {
+      return send(res, 400, { error: 'Kies een geldig kanaal voor dit idee' });
+    }
+    const video = pipeline.nieuweVideo({
+      channelId,
+      werktitel: idee.titel,
+      idee: [idee.omschrijving, idee.bron ? `Bron: ${idee.bron}` : ''].filter(Boolean).join('\n'),
+      geplandePublicatie: body.geplandePublicatie || null
+    });
+    idee.status = 'gepromoveerd';
+    idee.videoId = video.id;
+    save();
+    logActivity(user.naam, `promoveerde idee "${idee.titel}" naar de pipeline`);
+    await notify('info', `🎬 Idee gepromoveerd naar productie: ${video.werktitel}`,
+      [`**Kanaal:** ${db.channels.find(c => c.id === channelId)?.naam}`,
+       idee.score != null ? `**Ideescore:** ${idee.score}/5` : ''].filter(Boolean));
+    return send(res, 200, { idee, video });
+  }
+  if (req.method === 'DELETE' && /^\/api\/ideeen\/[^/]+$/.test(url.pathname)) {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    const idx = db.ideeen.findIndex(i => i.id === url.pathname.split('/')[3]);
+    if (idx === -1) return send(res, 404, { error: 'Niet gevonden' });
+    logActivity(user.naam, `verwijderde idee "${db.ideeen[idx].titel}"`);
+    db.ideeen.splice(idx, 1);
+    save();
+    return send(res, 200, { ok: true });
   }
 
   // -- publicatiekalender --

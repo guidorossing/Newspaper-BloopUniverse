@@ -118,6 +118,27 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; }
 .instructie-body ul, .instructie-body ol { margin: .5rem 0 .8rem 1.4rem; }
 .instructie-body h4 { margin: 1rem 0 .4rem; color: var(--accent); }
 
+/* Ideeënbank */
+.idee-kaart { display: flex; gap: 1rem; align-items: flex-start; }
+.idee-score {
+  flex-shrink: 0; width: 62px; height: 62px; border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--panel-2); border: 2px solid var(--border); font-weight: 700; font-size: 1.35rem;
+}
+.idee-score.hoog { border-color: var(--green); color: var(--green); }
+.idee-score.midden { border-color: var(--yellow); color: var(--yellow); }
+.idee-score.laag { border-color: var(--red); color: var(--red); }
+.idee-score small { font-size: .6rem; font-weight: 400; color: var(--muted); }
+.idee-body { flex: 1; min-width: 0; }
+.score-assen { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .5rem; margin-top: .6rem; }
+.score-as label { margin: 0 0 .2rem; }
+.badge.nieuw { border-color: var(--accent); color: var(--accent); }
+.badge.gepromoveerd { border-color: var(--green); color: var(--green); }
+.badge.afgewezen { border-color: var(--red); color: var(--red); }
+.badge.ruim { border-color: var(--green); color: var(--green); }
+.badge.krap { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
+.badge.kritiek { background: var(--red); border-color: var(--red); color: #fff; }
+
 /* Kalender */
 .kalender-week { margin-bottom: 1rem; }
 .kalender-rij { display: flex; align-items: center; gap: .7rem; padding: .45rem 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }

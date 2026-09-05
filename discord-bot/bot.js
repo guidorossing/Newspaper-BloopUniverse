@@ -72,6 +72,11 @@ const commands = [
     .addStringOption(o => o.setName('code').setDescription('Koppelcode van de admin').setRequired(true)),
   new SlashCommandBuilder().setName('mijntaken').setDescription('Jouw open taken, deadlines en feedback'),
   new SlashCommandBuilder().setName('inleveren').setDescription('Lever werk in voor een van je taken'),
+  new SlashCommandBuilder().setName('idee').setDescription('Pitch een idee voor de ideeënbank')
+    .addStringOption(o => o.setName('titel').setDescription('Werktitel van het idee').setRequired(true))
+    .addStringOption(o => o.setName('waarom').setDescription('Waarom is dit een goed idee?').setRequired(false))
+    .addStringOption(o => o.setName('bron').setDescription('Link naar de outlier/concurrent die dit inspireerde').setRequired(false)),
+  new SlashCommandBuilder().setName('ideeen').setDescription('De best scorende ideeën op de plank'),
   new SlashCommandBuilder().setName('status').setDescription('Pipeline-overzicht van alle video\'s in productie'),
   new SlashCommandBuilder().setName('checkpoints').setDescription('Alles wat op goedkeuring wacht, met knoppen'),
   new SlashCommandBuilder().setName('deadlines').setDescription('Deadlines die (bijna) verlopen zijn')
@@ -157,6 +162,32 @@ client.on('interactionCreate', async interaction => {
           components: [new ActionRowBuilder().addComponents(menu)],
           flags: MessageFlags.Ephemeral
         });
+      }
+
+      if (cmd === 'idee') {
+        const titel = interaction.options.getString('titel');
+        await cms('/api/ideeen', {
+          method: 'POST',
+          body: {
+            titel,
+            omschrijving: interaction.options.getString('waarom') || '',
+            bron: interaction.options.getString('bron') || ''
+          }
+        }, interaction.user.id);
+        return interaction.reply(`💡 **${interaction.member?.displayName || interaction.user.username}** pitchte een idee: **${titel}**`);
+      }
+
+      if (cmd === 'ideeen') {
+        const { ideeen, voorraad } = await cms('/api/ideeen?status=');
+        const open = ideeen.filter(i => i.status === 'nieuw' || i.status === 'goedgekeurd').slice(0, 10);
+        const regels = open.length
+          ? open.map(i => `${i.score != null ? `**${i.score}/5**` : '– '} · ${i.titel}${i.status === 'goedgekeurd' ? ' ✅' : ''}`)
+          : ['Nog geen ideeën op de plank. Pitch er een met `/idee`!'];
+        const alarm = voorraad.filter(v => v.status === 'kritiek');
+        if (alarm.length) {
+          regels.push('', '⚠️ **Voorraad kritiek:** ' + alarm.map(v => `${v.kanaal} (${v.wekenVoorraad} wk)`).join(', '));
+        }
+        return interaction.reply({ embeds: [new EmbedBuilder().setTitle('💡 Ideeënbank').setDescription(regels.join('\n')).setColor(0x7c5cff)] });
       }
 
       if (cmd === 'status') {

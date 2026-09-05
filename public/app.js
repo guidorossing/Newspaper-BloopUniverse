@@ -79,8 +79,19 @@ const VIEWS = {
         <div class="card stat"><div class="big">${d.kanalen}</div><div class="muted">Kanalen</div></div>
         <div class="card stat"><div class="big">${d.videosInProductie}</div><div class="muted">Video's in productie</div></div>
         <div class="card stat"><div class="big">${d.videosAfgerond}</div><div class="muted">Video's afgerond</div></div>
+        <div class="card stat"><div class="big">${d.ideeenOpVoorraad ?? 0}</div><div class="muted">Ideeën op voorraad</div></div>
         <div class="card stat"><div class="big">${d.openTodos}</div><div class="muted">Open to-do's</div></div>
       </div>
+      ${d.ideeenAlarm?.length ? `
+        <div class="card" style="border-color:var(--red)">
+          <b>💡 Ideeënvoorraad kritiek — de pipeline dreigt op te drogen:</b>
+          ${d.ideeenAlarm.map(v => `
+            <div class="todo-rij">
+              <span class="badge kritiek">${v.wekenVoorraad ?? 0} wk</span>
+              <span><b>${esc(v.kanaal)}</b> — ${v.beschikbaar} ideeën, ${v.perWeek}×/week nodig</span>
+              <span style="margin-left:auto"><button class="btn small" onclick="openTab('ideeen')">Naar ideeënbank →</button></span>
+            </div>`).join('')}
+        </div>` : ''}
       ${d.openCheckpoints.length ? `
         <h3>⏸️ Wacht op jouw goedkeuring</h3>
         <div class="card">${d.openCheckpoints.map(c => `
@@ -183,6 +194,65 @@ const VIEWS = {
     });
     document.querySelectorAll('[data-toggle]').forEach(cb =>
       cb.addEventListener('change', async () => { await api(`/api/todos/${cb.dataset.toggle}/toggle`, { method: 'POST' }); VIEWS.todos(); }));
+  },
+
+  ideeen: async () => {
+    const [{ ideeen, voorraad }, { channels }] = await Promise.all([api('/api/ideeen'), api('/api/channels')]);
+    CACHE.channels = channels;
+    const isManager = magMinstens('manager');
+    const asLabels = {
+      outlierPotentie: 'Outlier-potentie',
+      zoekvolume: 'Zoekvolume',
+      productiegemak: 'Productiegemak',
+      kanaalfit: 'Kanaalfit'
+    };
+    const open = ideeen.filter(i => i.status === 'nieuw' || i.status === 'goedgekeurd');
+    const rest = ideeen.filter(i => i.status === 'afgewezen' || i.status === 'gepromoveerd');
+    $('#content').innerHTML = `
+      <h2>💡 Ideeënbank</h2>
+      <p class="muted">De voorraad vóór de pipeline. Iedereen mag pitchen; jij scoort op vier assen en promoveert de beste ideeën naar productie. Zo staat de pipeline nooit droog en houd je de uploadfrequentie overeind.</p>
+
+      <div class="card">
+        <h3 style="margin-top:0">📦 Voorraad per kanaal</h3>
+        ${voorraad.map(v => `
+          <div class="kalender-rij">
+            <span class="badge ${v.status}">${v.wekenVoorraad ?? '?'} wk</span>
+            <b>${esc(v.kanaal)}</b>
+            <span class="muted">${v.beschikbaar} ideeën op de plank · ${v.perWeek}×/week nodig${v.status === 'kritiek' ? ' — <b>tijd om te brainstormen!</b>' : ''}</span>
+          </div>`).join('') || '<p class="muted">Nog geen kanalen.</p>'}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">➕ Idee pitchen</h3>
+        <div class="form-row">
+          <div><label>Titel / werktitel</label><input id="i-titel" placeholder="bijv. De 5 vreemdste signalen uit de ruimte"></div>
+          <div><label>Kanaal</label><select id="i-kanaal"><option value="">— nog niet bepaald —</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
+        </div>
+        <label>Waarom is dit een goed idee?</label><textarea id="i-omschrijving" placeholder="Wat is de hook? Voor wie is dit? Wat maakt het anders dan wat er al is?"></textarea>
+        <label>Bron / inspiratie (link naar de outlier of concurrent)</label><input id="i-bron" placeholder="https://youtube.com/watch?v=...">
+        <div style="margin-top:.7rem"><button class="btn primary" id="i-add">Idee toevoegen</button> <span class="error" id="i-error"></span></div>
+      </div>
+
+      <h3>Op de plank (${open.length})</h3>
+      ${open.map(i => ideeKaart(i, isManager, asLabels)).join('') || '<p class="muted">Nog geen ideeën. Pitch er hierboven een!</p>'}
+
+      ${rest.length ? `<h3>Archief (${rest.length})</h3>${rest.map(i => `
+        <div class="card">
+          <b>${esc(i.titel)}</b> <span class="badge ${i.status}">${i.status}</span>
+          ${i.score != null ? `<span class="muted"> · score ${i.score}/5</span>` : ''}
+          <span class="muted"> · ${esc(kanaalNaam(i.channelId))}</span>
+        </div>`).join('')}` : ''}`;
+
+    $('#i-add').addEventListener('click', async () => {
+      if (!$('#i-titel').value.trim()) { $('#i-error').textContent = 'Titel is verplicht'; return; }
+      try {
+        await api('/api/ideeen', { method: 'POST', body: {
+          titel: $('#i-titel').value, channelId: $('#i-kanaal').value || null,
+          omschrijving: $('#i-omschrijving').value, bron: $('#i-bron').value } });
+        VIEWS.ideeen();
+      } catch (e) { $('#i-error').textContent = e.message; }
+    });
+    bindIdeeActies();
   },
 
   kalender: async () => {
@@ -567,6 +637,87 @@ function bindKanaalForms() {
       } catch (e) { form.querySelector('.f-error').textContent = e.message; }
     });
   });
+}
+
+// ---------- helpers: ideeënbank ----------
+function ideeKaart(i, isManager, asLabels) {
+  const klasse = i.score == null ? '' : i.score >= 4 ? 'hoog' : i.score >= 3 ? 'midden' : 'laag';
+  return `
+    <div class="card">
+      <div class="idee-kaart">
+        <div class="idee-score ${klasse}">${i.score ?? '–'}<small>van 5</small></div>
+        <div class="idee-body">
+          <b>${esc(i.titel)}</b>
+          <span class="badge ${i.status}">${esc(i.status)}</span>
+          <span class="badge">${esc(kanaalNaam(i.channelId))}</span>
+          ${i.omschrijving ? `<p class="muted" style="margin-top:.35rem;white-space:pre-wrap">${esc(i.omschrijving)}</p>` : ''}
+          <p class="muted" style="font-size:.8rem">
+            💬 ${esc(i.aangedragenDoor)}
+            ${i.bron ? ` · 🔗 <a href="${esc(i.bron)}" target="_blank">bron</a>` : ''}
+            ${i.notitie ? ` · 📝 ${esc(i.notitie)}` : ''}
+          </p>
+          ${isManager ? `
+            <details>
+              <summary class="muted" style="cursor:pointer">⭐ Scoren (1 = slecht, 5 = uitstekend)</summary>
+              <div class="score-assen" data-scoreform="${i.id}">
+                ${Object.entries(asLabels).map(([as, label]) => `
+                  <div class="score-as">
+                    <label>${label}</label>
+                    <select class="s-${as}">
+                      <option value="">—</option>
+                      ${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${i.scores?.[as] === n ? 'selected' : ''}>${n}</option>`).join('')}
+                    </select>
+                  </div>`).join('')}
+              </div>
+              <label>Notitie</label><input class="s-notitie" value="${esc(i.notitie || '')}" data-notitie="${i.id}" placeholder="bijv. concurrent haalde hier 400k views mee">
+              <div style="margin-top:.6rem"><button class="btn small primary" data-scoreopslaan="${i.id}">Score opslaan</button></div>
+            </details>
+            <div class="acties" style="margin-top:.6rem">
+              <button class="btn small green" data-promoveer="${i.id}">🎬 Naar pipeline</button>
+              <button class="btn small" data-status="${i.id}:goedgekeurd">👍 Goedkeuren</button>
+              <button class="btn small red" data-status="${i.id}:afgewezen">👎 Afwijzen</button>
+              <button class="btn small red" data-delidee="${i.id}">🗑️</button>
+            </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindIdeeActies() {
+  document.querySelectorAll('[data-scoreopslaan]').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.scoreopslaan;
+    const form = document.querySelector(`[data-scoreform="${id}"]`);
+    const body = { notitie: document.querySelector(`[data-notitie="${id}"]`).value };
+    for (const as of ['outlierPotentie', 'zoekvolume', 'productiegemak', 'kanaalfit']) {
+      body[as] = form.querySelector(`.s-${as}`).value;
+    }
+    try { await api(`/api/ideeen/${id}/score`, { method: 'POST', body }); VIEWS.ideeen(); }
+    catch (e) { alert(e.message); }
+  }));
+  document.querySelectorAll('[data-status]').forEach(b => b.addEventListener('click', async () => {
+    const [id, status] = b.dataset.status.split(':');
+    try { await api(`/api/ideeen/${id}/status`, { method: 'POST', body: { status } }); VIEWS.ideeen(); }
+    catch (e) { alert(e.message); }
+  }));
+  document.querySelectorAll('[data-promoveer]').forEach(b => b.addEventListener('click', async () => {
+    const opties = CACHE.channels.map((c, n) => `${n + 1}. ${c.naam}`).join('\n');
+    const keuze = prompt(`Voor welk kanaal?\n${opties}\n\nNummer:`);
+    if (keuze === null) return;
+    const kanaal = CACHE.channels[Number(keuze) - 1];
+    if (!kanaal) { alert('Geen geldig kanaal gekozen'); return; }
+    const datum = prompt('Geplande publicatiedatum (JJJJ-MM-DD, leeg = later bepalen):') || null;
+    try {
+      await api(`/api/ideeen/${b.dataset.promoveer}/promoveer`, { method: 'POST', body: { channelId: kanaal.id, geplandePublicatie: datum } });
+      alert('🎬 Idee staat nu in de pipeline!');
+      VIEWS.ideeen();
+    } catch (e) { alert(e.message); }
+  }));
+  document.querySelectorAll('[data-delidee]').forEach(b => b.addEventListener('click', async () => {
+    if (confirm('Idee definitief verwijderen?')) {
+      await api(`/api/ideeen/${b.dataset.delidee}`, { method: 'DELETE' });
+      VIEWS.ideeen();
+    }
+  }));
 }
 
 // ---------- helpers: pipeline ----------
