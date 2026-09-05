@@ -84,6 +84,10 @@ def schedule(args, token: str, publication: str) -> None:
 
     payload = {
         "title": args.title,
+        # beehiiv keeps these apart: `title` heads the web version,
+        # `subject_line` is what lands in the inbox. Setting only the first
+        # ships an edition with a blank subject.
+        "subject_line": args.subject_line or args.title,
         "body_content": html,
         "status": args.status,
         "audience": args.audience,
@@ -92,6 +96,10 @@ def schedule(args, token: str, publication: str) -> None:
         payload["scheduled_at"] = args.scheduled_at
     if args.preview_text:
         payload["preview_text"] = args.preview_text
+    if args.targets:
+        reach = [{"action": "include", "receiver_type": "Publication", "tier": args.targets}]
+        payload["send_targets"] = reach
+        payload["web_targets"] = reach
     if args.extra:
         payload.update(json.loads(args.extra))
 
@@ -122,10 +130,13 @@ def main() -> int:
 
     s = sub.add_parser("schedule", help="create a scheduled post")
     s.add_argument("--html", required=True, help="path to the edition's email HTML")
-    s.add_argument("--title", required=True, help="post title / subject line")
+    s.add_argument("--title", required=True, help="headline on the web version")
+    s.add_argument("--subject-line", default="", help="inbox subject; defaults to --title")
     s.add_argument("--preview-text", default="", help="inbox preview line")
     s.add_argument("--scheduled-at", default="", help="RFC3339, e.g. 2026-09-11T13:00:00Z")
     s.add_argument("--audience", default="premium", help="premium | free | both")
+    s.add_argument("--targets", default="", help="tier name for send_targets/web_targets, "
+                                                 "when audience alone isn't enough")
     s.add_argument("--status", default="confirmed", help="confirmed (will send) | draft")
     s.add_argument("--extra", default="", help="extra JSON merged into the payload")
     s.add_argument("--dry-run", action="store_true")

@@ -21,7 +21,10 @@ on:
         description: "Draft folder, e.g. 2026-09-11"
         type: string
       title:
-        description: "Subject line"
+        description: "Headline on the web version"
+        type: string
+      subject_line:
+        description: "Inbox subject line (blank = same as the headline)"
         type: string
       preview_text:
         description: "Inbox preview line"
@@ -34,6 +37,9 @@ on:
         type: choice
         options: [premium, free, both]
         default: premium
+      targets:
+        description: "Tier name for send_targets/web_targets, if audience alone isn't enough"
+        type: string
       status:
         description: "confirmed = it will send · draft = park it in beehiiv"
         type: choice
@@ -83,9 +89,11 @@ jobs:
           python3 .github/scripts/beehiiv.py schedule \
             --html "drafts/${{ inputs.draft }}/email.html" \
             --title "${{ inputs.title }}" \
+            --subject-line "${{ inputs.subject_line }}" \
             --preview-text "${{ inputs.preview_text }}" \
             --scheduled-at "${{ inputs.scheduled_at }}" \
             --audience "${{ inputs.audience }}" \
+            --targets "${{ inputs.targets }}" \
             --status "${{ inputs.status }}" \
             ${{ inputs.extra && format('--extra ''{0}''', inputs.extra) || '' }} \
             ${{ inputs.dry_run && '--dry-run' || '' }}
