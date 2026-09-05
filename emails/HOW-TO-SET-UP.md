@@ -111,6 +111,54 @@ Audience → Subscribers list the address you just used; is it sitting in spam.
 
 ---
 
+## 8. The follow-up sequence
+
+Most people don't subscribe off the first email. They read it, think *that was
+good*, and then get on with their day. Three more letters over two weeks is
+where the paid conversions actually come from.
+
+Back in **Audience → Automations → your automation**, add these after the
+welcome email:
+
+| Step | Wait | Email | Subject |
+|---|---|---|---|
+| 2 | 3 days | `followup-1-day3.html` | Indiana Jones didn't win that fight |
+| 3 | 4 days | `followup-2-day7.html` | What's actually in the Friday edition |
+| 4 | 7 days | `followup-3-day14.html` | The cast knew. Sort of. |
+
+The waits are cumulative, so those land on day 3, day 7 and day 14.
+
+Each one goes in the same way as the welcome email: **Add step → Wait**, set the
+delay, then **Add step → Send email → + Create email → Blank draft**, `/`,
+**Custom HTML**, paste the file. Subject and preview text are written in a
+comment at the top of each file.
+
+### Stop them once someone pays
+
+This matters more than the emails themselves. Nothing sours a new subscriber
+faster than being pitched a subscription they already bought.
+
+Look for a **condition**, **filter** or **exit** step in the automation builder
+and set it so anyone on the paid tier leaves the sequence. If beehiiv only
+offers it per-step, put the check before each of the three sends.
+
+If you genuinely can't find that option, tell me before switching the sequence
+on — an unfiltered pitch to paying Insiders is worse than no sequence at all.
+
+### The rest
+
+- **Publish the automation again** after editing. Same trap as the first time:
+  edits sit as a draft until you do.
+- Send yourself a test of each one, and read them in order. They're written as a
+  sequence — day 14 refers back to the free edition.
+- The last one says it's the last one. That's deliberate; a stated end reduces
+  unsubscribes, so don't quietly add a fourth.
+- People already partway through the automation may not pick up the new steps.
+  Beehiiv's behaviour there varies, so treat the sequence as applying to new
+  sign-ups and don't chase the handful who came before.
+
+---
+
 ## Then you're done
 
 The chain runs by itself: video → site → sign-up → free edition → upgrade button.

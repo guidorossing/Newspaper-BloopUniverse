@@ -281,6 +281,48 @@ No. 7". Keep it under 45 characters so phones don't cut it.
 
 ---
 
+## The automated emails are a different animal
+
+`emails/welcome-free-edition.html` and the three follow-ups are not Friday
+editions. They fire on a timer after somebody signs up, which means they might
+be read the day they were written or eleven months later.
+
+**So they carry no news.** No front page, no Wire, no Coming Soon, no view
+counts, no "this week". Only material that doesn't age.
+
+| File | Sent | What it is |
+|---|---|---|
+| `welcome-free-edition.html` | immediately | the full free edition, five sourced stories |
+| `followup-1-day3.html` | day 3 | one story: the Raiders sword fight |
+| `followup-2-day7.html` | day 7 | the shape of a real Friday edition, section by section |
+| `followup-3-day14.html` | day 14 | the Alien myth, corrected — then the Insiders pitch |
+
+The welcome edition's clever part is that it *says* it has no news, in a section
+near the end. The three sections it's missing are exactly the three you get on
+Friday. The limitation is the pitch.
+
+Day 14 deliberately corrects a famous myth rather than repeating it. That is the
+clearest demonstration available of what the sourcing rule actually buys a
+reader, which is why it closes the sequence.
+
+Two rules when you refresh any of them:
+
+- **Nothing dated.** No release dates, no subscriber counts, no view counts, no
+  "last week". If it would age, it doesn't go in.
+- **Every story sourced in the text.** The italic line under each story is doing
+  real work: it's the reason a stranger believes the next one, and belief is
+  what they're being asked to pay for.
+
+Refresh them maybe twice a year, or whenever a story in one stops being your
+best. Anyone who signed up before the change keeps the old version — that's
+fine, they already got a complete paper.
+
+The sequence must stop for anyone who has already upgraded. Pitching a
+subscription to someone who just bought it is worse than sending nothing at all;
+see `emails/HOW-TO-SET-UP.md`.
+
+---
+
 ## Tone
 
 It's a newspaper about people getting things wrong, written by someone who
