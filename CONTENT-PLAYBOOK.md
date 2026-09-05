@@ -208,55 +208,62 @@ Spreading it across the week beats one panicked Thursday night.
 
 ## Publishing an edition
 
-**Web**
+### Where an edition actually lives
 
-1. `cp -r template/ editions/YYYY-MM-DD/` and rename to `index.html`
-2. Fill every `[PLACEHOLDER]`
-3. Add the edition to the top of `archive.html`
-4. Add the URL to `sitemap.xml`
-5. Commit and push — Cloudflare publishes within a minute
+**beehiiv holds the paper. The website is the shop window.**
 
-**Email**
+This matters more than it sounds. bloopuniverse.com is a static site — it
+serves the same files to everybody and cannot check who is reading. Publish a
+paid edition there and it is readable by anyone with the URL, and indexed by
+Google within days. beehiiv gates posts by tier properly, so that is where the
+editions go.
 
-1. Open `emails/weekly-template.html`, fill every `[PLACEHOLDER]`
-2. beehiiv → new post → Blank draft → `/` → Custom HTML → paste
-3. Set the audience to **Premium only** so it goes to Insiders
-4. Subject and preview text (see below), send yourself a test, publish
+| | Where | Who can read it |
+|---|---|---|
+| Edition No. 1 | website, `editions/2026-08-26/` | everyone, permanently — it's the sales page |
+| Every Friday edition | beehiiv, **Premium only** | Insiders |
+| The archive index | website, `archive.html` | everyone sees the covers and teasers; the links open beehiiv |
+
+So `archive.html` lists each edition with its cover, headline and a two-sentence
+teaser, linking to the beehiiv post. Non-Insiders hit beehiiv's paywall there,
+which is exactly where you want them: one click from the upgrade button, having
+just read what they're missing.
+
+`template/edition-template.html` is therefore only needed for an edition you
+deliberately publish free and public. The weekly job is the email.
+
+### Thursday: the draft is already waiting
+
+A GitHub Action (`.github/workflows/thursday-edition-draft.yml`) runs every
+Thursday at 06:00 UTC and opens a draft pull request containing
+`drafts/YYYY-MM-DD/email.html` — the weekly template with the date, volume and
+edition number already filled in — plus the checklist above as the PR body.
+
+You write into that file, tick the boxes, and merge. Nothing is sent by
+merging; the PR is a workbench, not a publisher.
+
+Run it early with **Actions → Thursday edition draft → Run workflow** if you
+want to start on a Tuesday. It won't create a second draft for a Friday that
+already has one.
+
+Drafts stay in the repo after publishing. They're the written record, and the
+edition numbering counts them.
+
+### Friday: check it, then send
+
+1. Fact-check pass (below), then merge the pull request
+2. beehiiv → new post → **Blank draft** → `/` → **Custom HTML** → paste `email.html`
+3. Audience: **Premium only**
+4. Subject and preview text, send yourself a test, read it on a phone
+5. **Schedule** for Friday morning rather than sending by hand — a scheduled
+   post can still be edited or cancelled up to the moment it goes
+6. Copy the post URL, add the edition to the top of `archive.html`, push
 
 **Subject lines that work:** the specific, strange detail, not the section
 name. "The Thor line that came from a nine-year-old" beats "The Bloop Times
 No. 7". Keep it under 45 characters so phones don't cut it.
 
 **Preview text:** never repeat the subject. Use it to add the second hook.
-
----
-
-## The welcome email is a different animal
-
-`emails/welcome-free-edition.html` is not a Friday edition. It is sent
-automatically the moment somebody signs up, which means it might be read the
-day it was written or eleven months later.
-
-**So it carries no news.** No front page, no Wire, no Coming Soon, no view
-counts, no "this week". Only the evergreen sections: Behind the Scenes,
-Blooper of the Week, Improvised or Scripted?, Did You Know?, one rotating
-slot, Guess the Movie, and three archive videos.
-
-The clever part is that the email *says so*, in a section near the end called
-"You may have noticed there's no news in it". The three sections it's missing
-are exactly the three you get on Friday. The limitation is the pitch.
-
-Two rules when you refresh it:
-
-- **Nothing dated.** No release dates, no subscriber counts, no view counts,
-  no "last week". If it would age, it doesn't go in.
-- **Every story sourced in the text.** The italic source line under each story
-  is doing real work: it's the reason a stranger believes the next one, and
-  belief is what they're being asked to pay for.
-
-Refresh it maybe twice a year, or whenever a story in it stops being your
-best. Anyone who signed up before the change keeps the old one — that's fine,
-they already got a complete paper.
 
 ---
 
