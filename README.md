@@ -73,3 +73,10 @@ configs staan in `deploy/`.
   (gitignored — bevat kanaalinfo en versleutelde geheimen).
 - Vanilla-JS frontend (`public/`), geen build-stap.
 - Discord-bot als los pakket (`discord-bot/`, enige dependency: discord.js).
+
+## Opstartgids
+
+`docs/opstartgids.html` is de afvinkbare installatiegids: zeven fases van
+lege VPS tot draaiende pipeline, met screenshots per stap. Open het bestand
+lokaal in je browser, of gebruik de gepubliceerde versie waarin je
+voortgang bewaard blijft.

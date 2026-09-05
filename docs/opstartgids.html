@@ -1,0 +1,800 @@
+<title>Bloop Universe Opstartgids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+:root {
+  --paper:      #f5f4fa;
+  --card:       #ffffff;
+  --sunk:       #eeecf6;
+  --ink:        #17162a;
+  --muted:      #5c5977;
+  --line:       #ddd9ec;
+  --accent:     #5b3df5;
+  --accent-soft:#ece7ff;
+  --warn:       #9a5600;
+  --warn-soft:  #fdf0dd;
+  --ok:         #0c6f4d;
+  --ok-soft:    #ddf3ea;
+  --shadow:     0 1px 2px rgba(23,22,42,.06), 0 8px 24px -16px rgba(23,22,42,.3);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:      #121120;
+    --card:       #1b1a2b;
+    --sunk:       #232236;
+    --ink:        #eae8f7;
+    --muted:      #a09dbd;
+    --line:       #322f4a;
+    --accent:     #9c86ff;
+    --accent-soft:#282343;
+    --warn:       #f0b45f;
+    --warn-soft:  #33270f;
+    --ok:         #6ddcae;
+    --ok-soft:    #102f24;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"] {
+  --paper:      #121120;
+  --card:       #1b1a2b;
+  --sunk:       #232236;
+  --ink:        #eae8f7;
+  --muted:      #a09dbd;
+  --line:       #322f4a;
+  --accent:     #9c86ff;
+  --accent-soft:#282343;
+  --warn:       #f0b45f;
+  --warn-soft:  #33270f;
+  --ok:         #6ddcae;
+  --ok-soft:    #102f24;
+  --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 940px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2.5rem) 6rem; }
+
+/* ---------- kop ---------- */
+header { padding: clamp(2.5rem, 6vw, 4.5rem) 0 1.5rem; }
+.kicker {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 .9rem;
+}
+h1 {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  font-weight: 800; font-size: clamp(2.2rem, 6.5vw, 3.6rem);
+  line-height: 1.02; letter-spacing: -.025em; margin: 0 0 1rem;
+  text-wrap: balance;
+}
+.lead { font-size: 1.12rem; color: var(--muted); max-width: 62ch; margin: 0; }
+
+/* ---------- voortgang ---------- */
+.voortgang {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--paper); border-bottom: 1px solid var(--line);
+  padding: .7rem 0; margin-bottom: 2.5rem;
+}
+.voortgang-in {
+  max-width: 940px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2.5rem);
+  display: flex; align-items: center; gap: .9rem;
+}
+.balk { flex: 1; height: 7px; background: var(--sunk); border-radius: 99px; overflow: hidden; }
+.balk i { display: block; height: 100%; width: 0%; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
+.voortgang-tekst {
+  font-family: "JetBrains Mono", monospace; font-size: .74rem;
+  color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.bewaard { font-family:"JetBrains Mono",monospace; font-size:.68rem; color: var(--ok); opacity: 0; transition: opacity .3s; }
+.bewaard.zichtbaar { opacity: 1; }
+
+/* ---------- fase ---------- */
+.fase { margin: 0 0 3.5rem; }
+.fase-kop { display: flex; align-items: baseline; gap: .8rem; margin-bottom: .4rem; }
+.fase-nr {
+  font-family: "JetBrains Mono", monospace; font-size: .8rem; font-weight: 600;
+  color: var(--accent); background: var(--accent-soft);
+  padding: .2rem .5rem; border-radius: 5px; flex-shrink: 0;
+}
+.fase h2 {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  font-weight: 700; font-size: clamp(1.4rem, 3.4vw, 1.85rem);
+  letter-spacing: -.02em; margin: 0; text-wrap: balance;
+}
+.fase-uitleg { color: var(--muted); margin: 0 0 1.6rem; max-width: 64ch; }
+.duur {
+  font-family: "JetBrains Mono", monospace; font-size: .7rem;
+  color: var(--muted); border: 1px solid var(--line);
+  padding: .15rem .45rem; border-radius: 4px; white-space: nowrap;
+}
+
+/* ---------- stap ---------- */
+.stap {
+  display: grid; grid-template-columns: 30px 1fr; gap: 0 .9rem;
+  padding: 1.1rem 0; border-top: 1px solid var(--line);
+}
+.stap:last-of-type { border-bottom: 1px solid var(--line); }
+.vink {
+  appearance: none; -webkit-appearance: none;
+  width: 22px; height: 22px; margin: .18rem 0 0; flex-shrink: 0;
+  border: 2px solid var(--line); border-radius: 6px;
+  background: var(--card); cursor: pointer; position: relative;
+  transition: background .15s, border-color .15s;
+}
+.vink:hover { border-color: var(--accent); }
+.vink:checked { background: var(--ok); border-color: var(--ok); }
+.vink:checked::after {
+  content: ""; position: absolute; left: 6px; top: 2px;
+  width: 5px; height: 10px; border: solid var(--card);
+  border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+}
+.vink:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.stap-body { min-width: 0; }
+.stap h3 {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  font-weight: 600; font-size: 1.06rem; letter-spacing: -.01em;
+  margin: 0 0 .3rem; line-height: 1.35;
+}
+.stap.af h3 { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.stap p { margin: 0 0 .6rem; max-width: 64ch; }
+.stap p:last-child { margin-bottom: 0; }
+.stap ul, .stap ol { margin: .1rem 0 .7rem; padding-left: 1.2rem; max-width: 64ch; }
+.stap li { margin-bottom: .28rem; }
+a { color: var(--accent); text-underline-offset: 2px; }
+
+/* ---------- code ---------- */
+pre {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  background: var(--sunk); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: .8rem 1rem; overflow-x: auto;
+  font-size: .78rem; line-height: 1.6; margin: .5rem 0 .8rem;
+}
+pre .c { color: var(--muted); }
+code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: .82em; background: var(--sunk);
+  padding: .1rem .32rem; border-radius: 4px;
+}
+
+/* ---------- notities ---------- */
+.let-op, .tip {
+  border-left: 3px solid var(--warn); background: var(--warn-soft);
+  padding: .75rem 1rem; border-radius: 0 7px 7px 0; margin: .6rem 0 .8rem;
+  font-size: .93rem; max-width: 64ch;
+}
+.tip { border-left-color: var(--ok); background: var(--ok-soft); }
+.let-op b, .tip b {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  display: block; margin-bottom: .12rem; font-size: .82rem;
+  letter-spacing: .02em; text-transform: uppercase;
+}
+.let-op b { color: var(--warn); }
+.tip b { color: var(--ok); }
+
+/* ---------- beeld ---------- */
+figure { margin: 1rem 0 1.2rem; }
+figure img {
+  width: 100%; height: auto; display: block;
+  border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+}
+figcaption {
+  font-size: .82rem; color: var(--muted); margin-top: .5rem;
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+}
+
+/* ---------- tabel ---------- */
+.tabel-wrap { overflow-x: auto; margin: .6rem 0 1rem; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 460px; }
+th, td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+}
+td:first-child { font-weight: 600; white-space: nowrap; }
+
+/* ---------- slot ---------- */
+.ritme {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 1.5rem clamp(1.1rem, 3vw, 2rem); margin-top: 1rem;
+  box-shadow: var(--shadow);
+}
+.ritme h3 {
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  margin: 0 0 .2rem; font-size: 1.02rem; font-weight: 700;
+}
+.ritme + .ritme { margin-top: .9rem; }
+.ritme p { margin: 0; color: var(--muted); font-size: .95rem; }
+.ritme ul { margin: .5rem 0 0; padding-left: 1.15rem; font-size: .95rem; }
+
+footer {
+  margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
+  color: var(--muted); font-size: .88rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .stap { grid-template-columns: 26px 1fr; gap: 0 .7rem; }
+}
+</style>
+
+<div class="voortgang">
+  <div class="voortgang-in">
+    <div class="balk"><i id="balk"></i></div>
+    <span class="voortgang-tekst" id="teller">0 van 0 stappen</span>
+    <span class="bewaard" id="bewaard">bewaard</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<header>
+  <p class="kicker">Bloop Universe CMS · installatiegids</p>
+  <h1>Van lege server naar draaiende videofabriek</h1>
+  <p class="lead">Werk de fases van boven naar beneden af en vink af wat klaar is — je voortgang blijft bewaard, ook als je het tabblad sluit. Reken op ongeveer twee uur voor alles, verspreid over zoveel sessies als je wilt.</p>
+</header>
+
+<!-- ============ FASE 0 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 0</span>
+    <h2>Leg klaar wat je nodig hebt</h2>
+    <span class="duur">10 min</span>
+  </div>
+  <p class="fase-uitleg">Vier dingen die je zelf moet regelen. Zonder deze vier loop je halverwege vast, dus verzamel ze eerst.</p>
+
+  <div class="stap" data-stap="v0-domein">
+    <input type="checkbox" class="vink" id="c-v0-domein">
+    <div class="stap-body">
+      <h3>Kies een domeinnaam</h3>
+      <p>Bijvoorbeeld <code>cms.bloopuniverse.com</code>. Je hebt hem op twee plekken nodig: in de webserverconfiguratie en straks in de YouTube-koppeling. Kies hem nu, dan hoef je later niets te wijzigen.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v0-vps">
+    <input type="checkbox" class="vink" id="c-v0-vps">
+    <div class="stap-body">
+      <h3>Neem een VPS</h3>
+      <p>Hetzner CX22 of DigitalOcean Basic, ongeveer €5 per maand. Kies <b>Ubuntu 24.04</b> als besturingssysteem. Je krijgt een IP-adres en een root-wachtwoord — die heb je zo nodig.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v0-google">
+    <input type="checkbox" class="vink" id="c-v0-google">
+    <div class="stap-body">
+      <h3>Zorg dat je bij de Google-accounts van je kanalen kunt</h3>
+      <p>Voor de automatische cijfers moet je per kanaal één keer inloggen met het Google-account dat eigenaar is van dat YouTube-kanaal. Weet je zeker dat je die wachtwoorden en 2FA-codes hebt?</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v0-discord">
+    <input type="checkbox" class="vink" id="c-v0-discord">
+    <div class="stap-body">
+      <h3>Zorg dat je serverbeheerder bent in Discord</h3>
+      <p>Je moet webhooks kunnen aanmaken en een bot kunnen uitnodigen. Als de server van iemand anders is, vraag dan beheerdersrechten of laat diegene deze stappen doen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASE 1 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 1</span>
+    <h2>Server, domein en eerste login</h2>
+    <span class="duur">30 min</span>
+  </div>
+  <p class="fase-uitleg">Alles in dit blok gebeurt in de terminal van je VPS. Verbind met <code>ssh root@JOUW-IP</code> en plak de blokken één voor één.</p>
+
+  <div class="stap" data-stap="v1-dns">
+    <input type="checkbox" class="vink" id="c-v1-dns">
+    <div class="stap-body">
+      <h3>Zet het DNS-record klaar</h3>
+      <p>Maak bij je domeinbeheerder een <b>A-record</b> aan dat je gekozen (sub)domein naar het IP-adres van de VPS wijst. Doe dit als eerste — DNS kan tot een uur duren om door te komen, en die tijd loopt dan alvast.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v1-install">
+    <input type="checkbox" class="vink" id="c-v1-install">
+    <div class="stap-body">
+      <h3>Installeer de software en haal de code op</h3>
+<pre>adduser --disabled-password --gecos "" bloop
+apt update &amp;&amp; apt install -y nodejs npm git caddy
+node --version   <span class="c"># moet v18 of hoger tonen</span>
+
+git clone https://github.com/guidorossing/Newspaper-BloopUniverse.git /opt/bloop-universe
+chown -R bloop:bloop /opt/bloop-universe</pre>
+      <div class="let-op"><b>Let op</b>Toont <code>node --version</code> iets lager dan v18? Installeer dan eerst een nieuwere Node via <code>curl -fsSL https://deb.nodesource.com/setup_22.x | bash - &amp;&amp; apt install -y nodejs</code>.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v1-caddy">
+    <input type="checkbox" class="vink" id="c-v1-caddy">
+    <div class="stap-body">
+      <h3>Zet HTTPS aan met Caddy</h3>
+      <p>Caddy regelt het beveiligingscertificaat automatisch. Kopieer de meegeleverde configuratie en vervang het voorbeelddomein door dat van jou:</p>
+<pre>cp /opt/bloop-universe/deploy/Caddyfile /etc/caddy/Caddyfile
+nano /etc/caddy/Caddyfile   <span class="c"># vervang cms.bloopuniverse.com</span>
+systemctl reload caddy</pre>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v1-service">
+    <input type="checkbox" class="vink" id="c-v1-service">
+    <div class="stap-body">
+      <h3>Start het CMS als achtergronddienst</h3>
+      <p>Zo start het systeem vanzelf opnieuw op na een herstart van de server:</p>
+<pre>cp /opt/bloop-universe/deploy/bloop-cms.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now bloop-cms
+journalctl -u bloop-cms -n 20</pre>
+      <div class="tip"><b>Belangrijk</b>Die laatste regel toont je <b>tijdelijke admin-wachtwoord</b>. Het verschijnt maar één keer. Kopieer het nu.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v1-login">
+    <input type="checkbox" class="vink" id="c-v1-login">
+    <div class="stap-body">
+      <h3>Log in en wijzig direct je wachtwoord</h3>
+      <p>Open je domein in de browser. Log in met <code>admin@bloopuniverse.local</code> en het tijdelijke wachtwoord. Het systeem vraagt meteen om een nieuw wachtwoord — kies iets sterks en zet het in je wachtwoordmanager.</p>
+      <figure>
+        <img src="{{IMG_LOGIN}}" alt="Het inlogscherm van het Bloop Universe CMS met velden voor e-mailadres en wachtwoord">
+        <figcaption>Dit inlogscherm zie je als alles goed staat. Krijg je een foutmelding over het certificaat, wacht dan nog even — DNS is dan nog niet doorgekomen.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASE 2 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 2</span>
+    <h2>Je eerste kanaal inrichten</h2>
+    <span class="duur">15 min</span>
+  </div>
+  <p class="fase-uitleg">De kanaalinstellingen zijn het fundament: scriptwriters, editors en thumbnail-artiesten werken er allemaal uit. Vul ze serieus in, dan hoef je later veel minder bij te sturen.</p>
+
+  <div class="stap" data-stap="v2-kanaal">
+    <input type="checkbox" class="vink" id="c-v2-kanaal">
+    <div class="stap-body">
+      <h3>Maak het kanaal aan onder Kanalen</h3>
+      <p>Onderaan het tabblad staat het formulier. Deze velden doen het echte werk:</p>
+      <div class="tabel-wrap">
+        <table>
+          <tr><th>Veld</th><th>Waarom het telt</th></tr>
+          <tr><td>Uploadfrequentie</td><td>Verplicht. De kalender en de ideeënvoorraad rekenen hier allebei mee — zonder dit getal kan het systeem niet waarschuwen.</td></tr>
+          <tr><td>Titelformat</td><td>De formule waar elke titel aan moet voldoen, bijvoorbeeld <i>[Getal] + onderwerp + curiosity gap, max 55 tekens</i>.</td></tr>
+          <tr><td>Thumbnailformat</td><td>De vaste opbouw, zodat je thumbnails als familie herkenbaar blijven.</td></tr>
+          <tr><td>Concurrenten</td><td>De lijst waar je thumbnail-artiest tegen aan ontwerpt en waar je ideeën vandaan haalt.</td></tr>
+          <tr><td>Doelen AVD en CTR</td><td>Hier vergelijkt het systeem straks de echte cijfers mee, met stoplichtkleuren.</td></tr>
+        </table>
+      </div>
+      <figure>
+        <img src="{{IMG_KANALEN}}" alt="Het Kanalen-tabblad met een kanaalkaart die uploadfrequentie, doelen voor AVD en CTR, titelformat en concurrenten toont">
+        <figcaption>Een ingevuld kanaal. De YouTube-koppeling onderaan zetten we in fase 4 aan.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v2-qc">
+    <input type="checkbox" class="vink" id="c-v2-qc">
+    <div class="stap-body">
+      <h3>Loop de QC-checklist na onder Instellingen</h3>
+      <p>Er staat een standaardlijst klaar (eindscherm, tags, pinned comment, en zo verder). Pas hem aan naar jouw manier van werken. Deze lijst is een harde grendel: de upload-stap kan niet ingeleverd worden zolang er iets openstaat.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASE 3 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 3</span>
+    <h2>Discord koppelen</h2>
+    <span class="duur">25 min</span>
+  </div>
+  <p class="fase-uitleg">Twee koppelingen die elkaar aanvullen: een webhook die meldingen stuurt, en een bot waarmee freelancers hun hele werkdag kunnen doen zonder de webapp te openen.</p>
+
+  <div class="stap" data-stap="v3-kanalen">
+    <input type="checkbox" class="vink" id="c-v3-kanalen">
+    <div class="stap-body">
+      <h3>Richt je Discord-server in</h3>
+      <p>Maak deze kanalen aan (of hernoem wat je al hebt):</p>
+      <ul>
+        <li><code>#productie-updates</code> — hier komen alle automatische meldingen binnen</li>
+        <li><code>#goedkeuringen</code> — alleen jij en je managers; hier staan de knoppen</li>
+        <li><code>#ideeen</code> — iedereen mag hier pitchen</li>
+        <li>Eén kanaal per stap: <code>#scripts</code>, <code>#voice-avatar</code>, <code>#video-edit</code>, <code>#thumbnails</code>, <code>#upload</code></li>
+      </ul>
+      <p>Maak ook een rol <b>CMS Admin</b> aan en geef die aan jezelf. Alleen die rol mag straks goed- en afkeuren.</p>
+      <div class="tip"><b>Waarom per stap een kanaal</b>Zet de rechten zo dat een freelancer alleen zijn eigen stap-kanaal ziet. Dan lekt er nooit informatie over omzet of andermans tarieven.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v3-webhook">
+    <input type="checkbox" class="vink" id="c-v3-webhook">
+    <div class="stap-body">
+      <h3>Maak de webhook aan en plak hem in het CMS</h3>
+      <p>In Discord: <b>Serverinstellingen → Integraties → Webhooks → Nieuwe webhook</b>. Kies <code>#productie-updates</code> en kopieer de URL. Plak hem in het CMS onder <b>Instellingen → Discord-koppeling</b>, zet het vinkje aan, klik <b>Alle instellingen opslaan</b> en daarna <b>Test versturen</b>.</p>
+      <div class="let-op"><b>Controleer</b>Zie je het testbericht in Discord verschijnen? Zo niet, dan is de URL niet goed geplakt of staat het vinkje uit.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v3-bot">
+    <input type="checkbox" class="vink" id="c-v3-bot">
+    <div class="stap-body">
+      <h3>Maak de bot aan in de Developer Portal</h3>
+      <ol>
+        <li>Ga naar <a href="https://discord.com/developers/applications" target="_blank" rel="noopener">discord.com/developers/applications</a> → <b>New Application</b>.</li>
+        <li>Tabblad <b>Bot</b> → <b>Reset Token</b> → kopieer het token en bewaar het veilig. Het is maar één keer zichtbaar.</li>
+        <li>Tabblad <b>OAuth2</b> → selecteer de scopes <code>bot</code> en <code>applications.commands</code>, en de permissies <b>Send Messages</b> en <b>Embed Links</b>.</li>
+        <li>Open de gegenereerde URL en nodig de bot uit in je server.</li>
+      </ol>
+      <p>Noteer ook je <b>Application ID</b> (tabblad General Information) en je <b>Server-ID</b> (rechtsklik op je server in Discord → ID kopiëren; zet daarvoor de ontwikkelaarsmodus aan onder Instellingen → Geavanceerd).</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v3-token">
+    <input type="checkbox" class="vink" id="c-v3-token">
+    <div class="stap-body">
+      <h3>Genereer het bot-token in het CMS</h3>
+      <p>Ga naar <b>Instellingen → Discord-bot</b> en klik op <b>Genereer bot-token</b>. Dit is een ander token dan dat van Discord: hiermee mag de bot bij jouw CMS. Kopieer het.</p>
+      <figure>
+        <img src="{{IMG_INSTELLINGEN}}" alt="Het Instellingen-tabblad met blokken voor de Discord-koppeling, het bot-token, de YouTube API en de QC-checklist">
+        <figcaption>Alle koppelingen zitten op één scherm: webhook, bot-token, YouTube en de QC-checklist.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v3-start">
+    <input type="checkbox" class="vink" id="c-v3-start">
+    <div class="stap-body">
+      <h3>Start de bot op je server</h3>
+<pre>cd /opt/bloop-universe/discord-bot
+sudo -u bloop npm install
+sudo -u bloop cp .env.example .env
+sudo -u bloop nano .env   <span class="c"># vul de vijf waarden in</span>
+
+cp /opt/bloop-universe/deploy/bloop-discord-bot.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now bloop-discord-bot
+journalctl -u bloop-discord-bot -n 20   <span class="c"># "Discord-bot online als ..."</span></pre>
+      <p>In <code>.env</code> vul je in: het Discord-token, de Application ID, de Server-ID, <code>CMS_URL=http://localhost:3000</code> en het CMS-bot-token.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v3-test">
+    <input type="checkbox" class="vink" id="c-v3-test">
+    <div class="stap-body">
+      <h3>Test de bot met een commando</h3>
+      <p>Typ <code>/status</code> in Discord. Krijg je een pipeline-overzicht terug, dan praten de bot en het CMS met elkaar. Probeer daarna <code>/idee</code> — dat is het commando dat je team het vaakst gaat gebruiken.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASE 4 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 4</span>
+    <h2>YouTube-cijfers automatisch binnenhalen</h2>
+    <span class="duur">20 min</span>
+  </div>
+  <p class="fase-uitleg">Eenmalig instellen, daarna komen views, kijktijd, abonnees en omzet elke ochtend vanzelf binnen. De volledige uitleg staat ook in <code>docs/youtube-api.md</code> in de repo.</p>
+
+  <div class="stap" data-stap="v4-project">
+    <input type="checkbox" class="vink" id="c-v4-project">
+    <div class="stap-body">
+      <h3>Maak een Google Cloud-project</h3>
+      <ol>
+        <li>Ga naar <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> en maak een nieuw project, bijvoorbeeld "Bloop Universe CMS".</li>
+        <li><b>APIs &amp; Services → Library</b>: schakel <b>YouTube Data API v3</b> én <b>YouTube Analytics API</b> in.</li>
+        <li><b>OAuth consent screen</b>: type <i>External</i>, vul naam en e-mail in. Voeg bij <b>Test users</b> elk Google-account toe waarmee je een kanaal gaat koppelen.</li>
+      </ol>
+      <div class="let-op"><b>Vergeet dit niet</b>Staat een account niet bij Test users, dan krijg je bij het koppelen een "access_denied"-melding. Dit is de fout die de meeste mensen maakt struikelen.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v4-client">
+    <input type="checkbox" class="vink" id="c-v4-client">
+    <div class="stap-body">
+      <h3>Maak de OAuth-client en vul hem in het CMS in</h3>
+      <p>Onder <b>Credentials → Create credentials → OAuth client ID</b>, type <i>Web application</i>. Vul bij <b>Authorized redirect URIs</b> exact dit in, met jouw domein:</p>
+<pre>https://cms.bloopuniverse.com/api/youtube/callback</pre>
+      <p>Kopieer de client-id en het client-secret naar <b>Instellingen → YouTube API</b> in het CMS en sla op.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v4-koppel">
+    <input type="checkbox" class="vink" id="c-v4-koppel">
+    <div class="stap-body">
+      <h3>Koppel elk kanaal en haal de eerste cijfers op</h3>
+      <p>Ga naar <b>Kanalen</b> en klik bij je kanaal op <b>Koppel YouTube</b>. Log in met het Google-account dat eigenaar is van dat kanaal en geef toestemming. Kom terug en klik op <b>Sync cijfers</b>.</p>
+      <div class="tip"><b>Goed om te weten</b>Thumbnail-CTR geeft YouTube niet vrij via de API. Dat ene getal vul je handmatig in bij een video (Pipeline → bewerken); het telt daarna gewoon mee in de vergelijking met je doel.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASE 5 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 5</span>
+    <h2>Je team toevoegen</h2>
+    <span class="duur">15 min</span>
+  </div>
+  <p class="fase-uitleg">Iedereen krijgt een eigen account. Nooit accounts delen — anders is het activiteitenlog niets meer waard en weet je niet wie wat deed.</p>
+
+  <div class="stap" data-stap="v5-accounts">
+    <input type="checkbox" class="vink" id="c-v5-accounts">
+    <div class="stap-body">
+      <h3>Maak per teamlid een account aan</h3>
+      <p>Onder <b>Team</b>. Kies de juiste rol en functie:</p>
+      <div class="tabel-wrap">
+        <table>
+          <tr><th>Rol</th><th>Mag</th></tr>
+          <tr><td>admin</td><td>Alles, inclusief wachtwoorden onthullen en gebruikers beheren. Alleen jij.</td></tr>
+          <tr><td>manager</td><td>Goed- en afkeuren, kanalen en ideeën beheren. Geen wachtwoorden, geen gebruikersbeheer.</td></tr>
+          <tr><td>freelancer</td><td>Eigen taken, ideeën pitchen, instructies lezen. Ziet geen omzet en geen wachtwoorden.</td></tr>
+        </table>
+      </div>
+      <figure>
+        <img src="{{IMG_TEAM}}" alt="Het Team-tabblad met een tabel van gebruikers, hun rol en functie, en knoppen voor Discord-koppelcodes">
+        <figcaption>Per teamlid genereer je hier een koppelcode voor Discord.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v5-koppelcodes">
+    <input type="checkbox" class="vink" id="c-v5-koppelcodes">
+    <div class="stap-body">
+      <h3>Deel de Discord-koppelcodes uit</h3>
+      <p>Klik bij elk teamlid op <b>Koppelcode</b> en stuur de code naar diegene. Zij typen in Discord <code>/koppel code:xxxx</code>. Vanaf dat moment werken <code>/mijntaken</code> en <code>/inleveren</code> voor hen, en krijgen ze een persoonlijke ping als een taak op hen wacht.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v5-youtube-rechten">
+    <input type="checkbox" class="vink" id="c-v5-youtube-rechten">
+    <div class="stap-body">
+      <h3>Geef YouTube-toegang via machtigingen, niet via wachtwoorden</h3>
+      <p>Moet iemand kunnen uploaden? Nodig diegene dan uit via <b>YouTube Studio → Instellingen → Machtigingen</b> met de rol <b>Editor (beperkt)</b>. Die kan uploaden en metadata bewerken, maar ziet geen omzet. Vertrekt iemand, dan trek je de machtiging met één klik in — zonder wachtwoorden te hoeven wijzigen.</p>
+      <div class="let-op"><b>Wachtwoordbeleid</b>Zet in de Channel Admin alleen wachtwoorden die je écht niet via machtigingen kunt regelen. Elke keer dat je er een onthult, wordt dat gelogd — dat is met opzet.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v5-instructies">
+    <input type="checkbox" class="vink" id="c-v5-instructies">
+    <div class="stap-body">
+      <h3>Stuur iedereen naar het instructiecentrum</h3>
+      <p>Er staan uitgeschreven instructies klaar voor scriptwriter, video-editor en thumbnail-artiest, plus de algemene teamafspraken. Laat nieuwe mensen die eerst lezen. Ze staan ook als losse bestanden in <code>docs/instructiecentrum/</code>, handig om mee te sturen bij een offerte of opdracht.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASE 6 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 6</span>
+    <h2>Vullen en de eerste video draaien</h2>
+    <span class="duur">30 min</span>
+  </div>
+  <p class="fase-uitleg">Nu gaat het systeem echt werken. Begin bij de ideeënbank: die voedt alles wat erna komt.</p>
+
+  <div class="stap" data-stap="v6-ideeen">
+    <input type="checkbox" class="vink" id="c-v6-ideeen">
+    <div class="stap-body">
+      <h3>Vul de ideeënbank met minstens acht ideeën</h3>
+      <p>Bij twee uploads per week is acht ideeën vier weken voorraad — genoeg om rustig te werken. Kijk naar de outliers van je concurrenten en plak de link erbij als bron.</p>
+      <p>Scoor daarna elk idee op vier assen van 1 tot 5. Het systeem rekent er één prioriteitsscore van, waarbij bewezen vraag het zwaarst weegt:</p>
+      <div class="tabel-wrap">
+        <table>
+          <tr><th>As</th><th>Weging</th><th>Vraag die je jezelf stelt</th></tr>
+          <tr><td>Outlier-potentie</td><td>35%</td><td>Doet dit concept het aantoonbaar goed bij concurrenten?</td></tr>
+          <tr><td>Zoekvolume</td><td>25%</td><td>Zoeken mensen hier actief naar?</td></tr>
+          <tr><td>Productiegemak</td><td>20%</td><td>Is dit snel en goedkoop te maken? (5 = heel makkelijk)</td></tr>
+          <tr><td>Kanaalfit</td><td>20%</td><td>Past het bij de niche en de toon van dit kanaal?</td></tr>
+        </table>
+      </div>
+      <figure>
+        <img src="{{IMG_IDEEEN}}" alt="De ideeënbank met voorraad per kanaal in weken, een pitchformulier en ideeën gesorteerd op score met een open scorepaneel">
+        <figcaption>Bovenaan zie je hoeveel weken voorraad je hebt. Zakt dat onder twee weken, dan krijg je een waarschuwing op het dashboard.</figcaption>
+      </figure>
+      <div class="tip"><b>Laat je team meedoen</b>Freelancers mogen ook pitchen — in de webapp of met <code>/idee</code> in Discord. Zij zien vaak dingen die jij mist.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v6-templates">
+    <input type="checkbox" class="vink" id="c-v6-templates">
+    <div class="stap-body">
+      <h3>Zet je eerste templates klaar</h3>
+      <p>Onder <b>Templates</b>: je bewezen titelformules, thumbnailconcepten en hooks. Werkt iets goed, zet het er dan meteen bij met een notitie erover ("8,1% CTR op video X"). Zo wordt het systeem elke maand slimmer.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v6-video">
+    <input type="checkbox" class="vink" id="c-v6-video">
+    <div class="stap-body">
+      <h3>Promoveer je beste idee naar de pipeline</h3>
+      <p>Klik bij het hoogst scorende idee op <b>Naar pipeline</b>, kies het kanaal en geef een publicatiedatum. Het idee wordt een video met alle zes stappen klaar, en verdwijnt uit de voorraad.</p>
+      <figure>
+        <img src="{{IMG_PIPELINE}}" alt="De pipeline met een video en zes stappen van Idee tot Upload, met statussen en de QC-checklist eronder">
+        <figcaption>Elke stap is een checkpoint. Pas na jouw goedkeuring wordt de volgende freelancer geactiveerd.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v6-toewijzen">
+    <input type="checkbox" class="vink" id="c-v6-toewijzen">
+    <div class="stap-body">
+      <h3>Wijs de stappen toe met deadlines</h3>
+      <p>Klik op het poppetje bij elke stap, kies de freelancer en geef een deadline. Die persoon krijgt automatisch bericht zodra de vorige stap is goedgekeurd — niet eerder, zodat niemand op halve informatie begint.</p>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v6-kalender">
+    <input type="checkbox" class="vink" id="c-v6-kalender">
+    <div class="stap-body">
+      <h3>Controleer de kalender</h3>
+      <p>Plan genoeg video's in om je uploadfrequentie te halen. Staat er een week rood of geel, dan haal je het schema niet — dan is het tijd om een idee te promoveren.</p>
+      <figure>
+        <img src="{{IMG_KALENDER}}" alt="De publicatiekalender met per week per kanaal het aantal ingeplande video's tegenover het benodigde aantal">
+        <figcaption>Groen is op schema, geel is onderbezet, rood is een lege week. Elke ochtend om 08:00 gaat er automatisch een alarm naar Discord bij gevaar.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASE 7 ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Fase 7</span>
+    <h2>Beveiligen en back-uppen</h2>
+    <span class="duur">10 min</span>
+  </div>
+  <p class="fase-uitleg">Sla deze fase niet over. Zonder back-up van de sleutel zijn je opgeslagen wachtwoorden onherstelbaar kwijt als de server crasht.</p>
+
+  <div class="stap" data-stap="v7-backup">
+    <input type="checkbox" class="vink" id="c-v7-backup">
+    <div class="stap-body">
+      <h3>Zet de dagelijkse back-up aan</h3>
+      <p>Draai <code>crontab -e</code> als root en voeg deze regel toe:</p>
+<pre>0 3 * * * tar czf /root/backup-bloop-$(date +\%u).tar.gz -C /opt/bloop-universe data</pre>
+      <p>Dit bewaart zeven roterende dagelijkse back-ups van je database én je versleutelingssleutel.</p>
+      <div class="let-op"><b>Cruciaal</b>De map <code>data/</code> bevat <code>vault.key</code>. Zonder dat bestand zijn de wachtwoorden in de Channel Admin niet meer te ontsleutelen — ook niet door mij. Kopieer de back-ups regelmatig naar je eigen computer of een cloudopslag.</div>
+    </div>
+  </div>
+
+  <div class="stap" data-stap="v7-check">
+    <input type="checkbox" class="vink" id="c-v7-check">
+    <div class="stap-body">
+      <h3>Controleer of alles draait</h3>
+<pre>systemctl status bloop-cms bloop-discord-bot --no-pager</pre>
+      <p>Beide moeten <b>active (running)</b> tonen. Het dashboard geeft je vanaf nu het volledige overzicht: openstaande goedkeuringen, deadlines die verlopen, ideeënvoorraad en wie wat deed.</p>
+      <figure>
+        <img src="{{IMG_DASHBOARD}}" alt="Het dashboard met tellers voor kanalen, video's in productie, ideeën op voorraad en open to-do's, plus het activiteitenlog">
+        <figcaption>Je startscherm elke ochtend.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RITME ============ -->
+<section class="fase">
+  <div class="fase-kop">
+    <span class="fase-nr">Daarna</span>
+    <h2>Het ritme dat het systeem verwacht</h2>
+  </div>
+  <p class="fase-uitleg">De techniek staat nu. Dit is de gewoonte die er een fabriek van maakt.</p>
+
+  <div class="ritme">
+    <h3>Elke dag — 5 minuten</h3>
+    <p>Open het dashboard of typ <code>/checkpoints</code> in Discord. Keur goed of geef feedback. Elke dag dat een checkpoint blijft liggen, ligt je hele pipeline een dag stil.</p>
+  </div>
+
+  <div class="ritme">
+    <h3>Elke week — 30 minuten</h3>
+    <ul>
+      <li>Kalender bekijken: haal je de uploadfrequentie de komende twee weken?</li>
+      <li>Ideeënvoorraad aanvullen als die onder de vier weken zakt.</li>
+      <li>Nieuwe ideeën scoren en de beste promoveren.</li>
+    </ul>
+  </div>
+
+  <div class="ritme">
+    <h3>Elke maand — 1 uur</h3>
+    <ul>
+      <li>Sync de YouTube-cijfers en vergelijk doel met realisatie per kanaal.</li>
+      <li>Wat goed presteerde: leg het vast als template.</li>
+      <li>Kijk welke freelancer op welke stap de beste cijfers haalt en verdeel het werk daarop.</li>
+      <li>Controleer of je back-ups er echt zijn.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <p>Alle technische details staan in de repo: <code>docs/deploy-vps.md</code> voor de server, <code>docs/youtube-api.md</code> voor de cijfers, <code>docs/discord-integratie.md</code> voor de bot en <code>docs/beveiliging-toegangsbeheer.md</code> voor het rollen- en wachtwoordbeleid.</p>
+  <p>Loop je vast bij een stap? Noem het stapnummer, dan pak ik het op.</p>
+</footer>
+
+</div>
+
+<script id="state" type="application/json">{}</script>
+
+<script>
+(function () {
+  // De pagina bewaart je afvinkvoortgang door zichzelf opnieuw te publiceren.
+  // We leggen het onaangeroerde document vast vóór we iets aanvinken, zodat
+  // we bij elke publicatie alleen het state-blok vervangen en nooit de
+  // gemuteerde DOM terugschrijven.
+  var PRISTINE = "<!doctype html>\n" + document.documentElement.outerHTML;
+
+  var vinkjes = Array.prototype.slice.call(document.querySelectorAll(".vink"));
+  var balk = document.getElementById("balk");
+  var teller = document.getElementById("teller");
+  var bewaardLabel = document.getElementById("bewaard");
+  var artifact = null;
+  var publishTimer = null;
+
+  var STATE = {};
+  try { STATE = JSON.parse(document.getElementById("state").textContent) || {}; }
+  catch (e) { STATE = {}; }
+
+  function sleutel(vink) { return vink.closest(".stap").dataset.stap; }
+
+  function teken() {
+    var af = 0;
+    vinkjes.forEach(function (v) {
+      var aan = STATE[sleutel(v)] === true;
+      v.checked = aan;
+      v.closest(".stap").classList.toggle("af", aan);
+      if (aan) af++;
+    });
+    var pct = vinkjes.length ? Math.round((af / vinkjes.length) * 100) : 0;
+    balk.style.width = pct + "%";
+    teller.textContent = af + " van " + vinkjes.length + " stappen" + (af ? "  ·  " + pct + "%" : "");
+  }
+
+  function meldBewaard() {
+    bewaardLabel.classList.add("zichtbaar");
+    setTimeout(function () { bewaardLabel.classList.remove("zichtbaar"); }, 1800);
+  }
+
+  // Snelle klikken bundelen tot één publicatie.
+  function bewaar() {
+    if (!artifact) return;
+    clearTimeout(publishTimer);
+    publishTimer = setTimeout(function () {
+      var html = PRISTINE.replace(
+        /<script id="state" type="application\/json">[\s\S]*?<\/script>/,
+        '<script id="state" type="application/json">' + JSON.stringify(STATE) + '<\/script>'
+      );
+      artifact.publish(html).then(meldBewaard).catch(function () {
+        // Botsing of alleen-lezen: de andere versie wint, hier valt niets te herstellen.
+      });
+    }, 700);
+  }
+
+  vinkjes.forEach(function (v) {
+    v.addEventListener("change", function () {
+      STATE[sleutel(v)] = v.checked;
+      teken();
+      bewaar();
+    });
+  });
+
+  teken();
+
+  if (window.claude && window.claude.use) {
+    window.claude.use("artifact").then(function (ns) { artifact = ns; }).catch(function () {});
+  }
+})();
+</script>
