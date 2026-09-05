@@ -555,3 +555,7 @@ footer.colophon a { color: inherit; }
   .briefs { grid-template-columns: 1fr; }
   .blooper-facts li { grid-template-columns: 1fr; gap: 4px; }
 }
+
+/* Archive: an edition that lives behind beehiiv's paywall */
+.tag-locked { display: inline-block; margin-left: 10px; padding: 3px 9px; border-radius: 999px; background: rgba(20,20,24,.08); color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; vertical-align: middle; }
+.archive-note { max-width: 720px; margin: 0 auto 34px; text-align: center; color: var(--ink-soft); font-size: 15.5px; }
