@@ -197,7 +197,7 @@ Hollywood spends millions making movies look perfect. We print the rest.*
 
 [Watch on YouTube: https://www.youtube.com/@BloopUniverse] · [Read the archive: https://bloopuniverse.com/archive.html]
 
-*Spotted a mistake? Reply to this email — corrections get printed, and credited.*
+*Spotted a mistake? Reply, or write to editor@bloopuniverse.com — corrections get printed, and credited.*
 
 ---
 
