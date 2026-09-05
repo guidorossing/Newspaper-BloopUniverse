@@ -1,0 +1,63 @@
+name: Open edition pull request
+
+# The Thursday session writes the edition and pushes a branch. It may not
+# have GitHub tooling of its own, so opening the pull request happens here:
+# push an edition/* branch and a draft PR appears, with the session's own
+# source list as the body.
+on:
+  push:
+    branches:
+      - "edition/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open a draft pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
+            echo "A pull request already exists for $BRANCH."
+            exit 0
+          fi
+
+          slug="${BRANCH#edition/}"
+          sources="drafts/${slug}/SOURCES.md"
+
+          {
+            echo "Written by the Thursday session. Nothing has been sent."
+            echo
+            if [ -f "$sources" ]; then
+              cat "$sources"
+            else
+              echo "> **No \`$sources\` in this branch.** The session was asked to list"
+              echo "> its sources per section. Without that list, fact-check every"
+              echo "> claim by hand before approving."
+            fi
+            echo
+            echo "### Before you approve"
+            echo
+            echo "- [ ] Every name, year and release date correct"
+            echo "- [ ] Every claim in the news sections traceable to its source"
+            echo "- [ ] Nothing asserted that the sources above don't actually support"
+            echo "- [ ] Every link opens, and goes where the text says"
+            echo "- [ ] Vol./No. right in the top bar *and* the footer"
+            echo "- [ ] Insiders Only section couldn't be got from the channel or Google"
+            echo
+            echo "Then merge, and tell Claude the subject line and send time."
+          } > /tmp/pr-body.md
+
+          gh pr create --draft \
+            --base main --head "$BRANCH" \
+            --title "Edition — ${slug}" \
+            --body-file /tmp/pr-body.md

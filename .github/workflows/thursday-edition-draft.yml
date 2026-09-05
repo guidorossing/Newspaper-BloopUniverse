@@ -1,12 +1,15 @@
 name: Thursday edition draft
 
-# Every Thursday morning a scaffolded edition is waiting in a draft PR, so
-# Friday is a review-and-send job rather than a write-from-nothing job.
+# Manual fallback. Normally a scheduled Claude session writes Thursday's
+# edition — researched, filled in, and opened as a draft PR. This workflow
+# produces the same folder with only the dates and numbering filled in, for
+# when that session fails or you'd rather write it yourself.
 #
-# 06:00 UTC — 08:00 in Amsterdam in summer, 07:00 in winter.
+# Actions -> Thursday edition draft -> Run workflow.
+#
+# Deliberately not on a schedule: two things racing to scaffold the same
+# Friday would collide.
 on:
-  schedule:
-    - cron: "0 6 * * 4"
   workflow_dispatch:
 
 permissions:

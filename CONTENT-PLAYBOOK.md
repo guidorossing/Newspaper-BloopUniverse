@@ -232,32 +232,46 @@ just read what they're missing.
 `template/edition-template.html` is therefore only needed for an edition you
 deliberately publish free and public. The weekly job is the email.
 
-### Thursday: the draft is already waiting
+### Thursday: the edition arrives written
 
-A GitHub Action (`.github/workflows/thursday-edition-draft.yml`) runs every
-Thursday at 06:00 UTC and opens a draft pull request containing
-`drafts/YYYY-MM-DD/email.html` — the weekly template with the date, volume and
-edition number already filled in — plus the checklist above as the PR body.
+A scheduled Claude session runs every Thursday at 06:00 UTC. It researches the
+week's real movie and actor news, writes the full edition into
+`drafts/YYYY-MM-DD/email.html` — dated for that Friday — and opens a draft pull
+request with its sources listed.
 
-You write into that file, tick the boxes, and merge. Nothing is sent by
-merging; the PR is a workbench, not a publisher.
+**What it must never do:** invent a casting, a release date, or a quote. Every
+claim in the news sections carries its outlet and date; every behind-the-scenes
+story names who said it and where. If the session can't source something, it
+says so in the PR rather than filling the gap. A section left honestly thin
+beats a section quietly fabricated.
 
-Run it early with **Actions → Thursday edition draft → Run workflow** if you
-want to start on a Tuesday. It won't create a second draft for a Friday that
-already has one.
+You read it, fix what needs fixing, and merge.
+
+If that session ever fails, `.github/workflows/thursday-edition-draft.yml` is
+the fallback: **Actions → Thursday edition draft → Run workflow** gives you the
+same folder with the dates and numbering filled in and the writing left to you.
 
 Drafts stay in the repo after publishing. They're the written record, and the
 edition numbering counts them.
 
-### Friday: check it, then send
+### Friday: approve, and it schedules itself
 
 1. Fact-check pass (below), then merge the pull request
-2. beehiiv → new post → **Blank draft** → `/` → **Custom HTML** → paste `email.html`
-3. Audience: **Premium only**
-4. Subject and preview text, send yourself a test, read it on a phone
-5. **Schedule** for Friday morning rather than sending by hand — a scheduled
-   post can still be edited or cancelled up to the moment it goes
-6. Copy the post URL, add the edition to the top of `archive.html`, push
+2. Tell Claude it's approved, with the subject line and send time
+3. Claude triggers **Schedule edition to beehiiv**, which creates the post set
+   to **Premium only** and to send at the time you gave
+4. Open it in beehiiv and read it once. A scheduled post can be edited or
+   cancelled right up to the moment it goes
+5. After it sends, add the edition to the top of `archive.html` with its
+   beehiiv URL
+
+Doing it by hand instead: beehiiv → new post → **Blank draft** → `/` →
+**Custom HTML** → paste `email.html` → audience **Premium only** → schedule.
+
+The workflow needs two repository secrets, set once:
+`BEEHIIV_API_KEY` and `BEEHIIV_PUBLICATION_ID`. Run it in **probe** mode first
+— it prints the fields beehiiv actually uses, so the first real send isn't a
+guess.
 
 **Subject lines that work:** the specific, strange detail, not the section
 name. "The Thor line that came from a nine-year-old" beats "The Bloop Times

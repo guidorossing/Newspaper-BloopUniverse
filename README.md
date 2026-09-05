@@ -91,34 +91,52 @@ bewust gratis en openbaar zet. Het wekelijkse werk is de e-mail.
 
 ---
 
-## Donderdag staat de opzet al klaar
+## Donderdag: de editie komt geschreven binnen
 
-De GitHub Action `.github/workflows/thursday-edition-draft.yml` draait elke
-donderdag om 06:00 UTC en opent een draft pull request met
-`drafts/JJJJ-MM-DD/email.html` — het weektemplate met datum, jaargang en
-editienummer al ingevuld — plus de volledige checklist in de PR-omschrijving.
+Elke donderdag om 06:00 UTC (08:00 bij jou in de zomer) draait een ingeplande
+Claude-sessie. Die zoekt het échte, actuele film- en acteursnieuws van die week
+op, schrijft de volledige editie in `drafts/JJJJ-MM-DD/email.html` — gedateerd
+op die vrijdag — en opent een draft pull request met de bronnen erbij.
 
-Jij vult hem, vinkt af, en merget. Mergen verstuurt niets: de PR is een
-werkbank, geen drukpers.
+Wat die sessie nooit doet: een casting, releasedatum of quote verzinnen. Elk
+nieuwsbericht draagt zijn bron en datum. Lukt het niet iets te onderbouwen, dan
+staat dat in de PR in plaats van dat het gat wordt opgevuld.
 
-Eerder beginnen? **Actions → Thursday edition draft → Run workflow.** Hij maakt
-geen tweede opzet voor een vrijdag die er al een heeft.
+Jij leest, corrigeert wat er moet, en merget.
 
-**Eenmalig aanzetten:** Settings → Actions → General → *Workflow permissions* →
-zet **Allow GitHub Actions to create and approve pull requests** aan. Zonder dat
-vinkje maakt de action de bestanden wel, maar de PR niet.
+**Valt die sessie uit?** `.github/workflows/thursday-edition-draft.yml` is de
+terugvaloptie: **Actions → Thursday edition draft → Run workflow** geeft je
+dezelfde map met datum en nummering ingevuld, schrijven doe je dan zelf.
+
+Concepten blijven in de repo staan na publicatie. Dat is het geschreven
+archief, en de nummering telt ze mee.
 
 ---
 
-## Vrijdag: nakijken en versturen
+## Vrijdag: akkoord geven, dan plant hij zichzelf in
 
 1. Factcheck-ronde, dan de pull request mergen
-2. beehiiv → nieuwe post → **Blank draft** → `/` → **Custom HTML** → `email.html` plakken
-3. Doelgroep op **Premium only**
-4. Onderwerpregel + previewtekst, testmail naar jezelf, lezen op je telefoon
-5. **Inplannen** voor vrijdagochtend in plaats van handmatig versturen — een
-   ingeplande post kun je tot het laatste moment nog aanpassen of annuleren
-6. Post-URL kopiëren, editie bovenaan in `archive.html` zetten, pushen
+2. Zeg tegen Claude dat je akkoord bent, met de onderwerpregel en het verzendmoment
+3. Claude triggert **Schedule edition to beehiiv**; die maakt de post aan op
+   **Premium only** en ingepland op het opgegeven tijdstip
+4. Open hem in beehiiv en lees hem één keer. Een ingeplande post kun je tot het
+   laatste moment nog aanpassen of annuleren
+5. Na verzending de editie bovenaan in `archive.html` zetten met de beehiiv-URL
+
+Met de hand kan ook: beehiiv → nieuwe post → **Blank draft** → `/` →
+**Custom HTML** → `email.html` plakken → doelgroep **Premium only** → inplannen.
+
+**Eenmalig instellen.** Twee repository secrets onder Settings → Secrets and
+variables → Actions:
+
+| Secret | Waar vandaan |
+|---|---|
+| `BEEHIIV_API_KEY` | beehiiv → Settings → API |
+| `BEEHIIV_PUBLICATION_ID` | begint met `pub_`, staat bij dezelfde API-instellingen |
+
+Draai de workflow daarna één keer in **probe**-modus. Die leest een bestaande
+post uit en print welke veldnamen beehiiv echt gebruikt, zodat de eerste echte
+verzending geen gok is.
 
 ---
 
