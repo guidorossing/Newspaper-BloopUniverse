@@ -71,22 +71,54 @@ en de geloofwaardigheid is weg.
 
 ---
 
-## Nieuwe editie maken — checklist
+## Waar een editie leeft
 
-**Web**
+**beehiiv houdt de krant. De website is de etalage.**
 
-1. `cp template/edition-template.html editions/JJJJ-MM-DD/index.html`
-2. Alle `[PLACEHOLDERS]` invullen, Vol./No. ophogen (topbar *én* footer)
-3. Factcheck-ronde (zie playbook): namen, jaartallen, releasedata, links
-4. Nieuw blok bovenaan in `archive.html` + regel in `sitemap.xml`
-5. Committen en pushen → Cloudflare zet 'm live
+bloopuniverse.com is een statische site: die serveert iedereen hetzelfde en kan
+niet controleren wie er leest. Publiceer je een betaalde editie daar, dan is hij
+leesbaar voor iedereen met de URL en staat hij binnen een paar dagen in Google.
+beehiiv zet de betaalmuur wél goed neer. Dus daar gaan de edities heen.
 
-**E-mail**
+| | Waar | Wie leest het |
+|---|---|---|
+| Editie nr. 1 | website, `editions/2026-08-26/` | iedereen, permanent — dat is de verkooppagina |
+| Elke vrijdageditie | beehiiv, **Premium only** | Insiders |
+| Archiefindex | website, `archive.html` | iedereen ziet covers en teasers; de link opent beehiiv |
 
-1. `emails/weekly-template.html` invullen met dezelfde inhoud
-2. beehiiv → nieuwe post → **Blank draft** → `/` → **Custom HTML** → plakken
-3. Doelgroep op **Premium only** zetten (dat is de Insider-editie)
-4. Onderwerpregel + previewtekst, testmail naar jezelf, dan publiceren
+`template/edition-template.html` heb je dus alleen nodig voor een editie die je
+bewust gratis en openbaar zet. Het wekelijkse werk is de e-mail.
+
+---
+
+## Donderdag staat de opzet al klaar
+
+De GitHub Action `.github/workflows/thursday-edition-draft.yml` draait elke
+donderdag om 06:00 UTC en opent een draft pull request met
+`drafts/JJJJ-MM-DD/email.html` — het weektemplate met datum, jaargang en
+editienummer al ingevuld — plus de volledige checklist in de PR-omschrijving.
+
+Jij vult hem, vinkt af, en merget. Mergen verstuurt niets: de PR is een
+werkbank, geen drukpers.
+
+Eerder beginnen? **Actions → Thursday edition draft → Run workflow.** Hij maakt
+geen tweede opzet voor een vrijdag die er al een heeft.
+
+**Eenmalig aanzetten:** Settings → Actions → General → *Workflow permissions* →
+zet **Allow GitHub Actions to create and approve pull requests** aan. Zonder dat
+vinkje maakt de action de bestanden wel, maar de PR niet.
+
+---
+
+## Vrijdag: nakijken en versturen
+
+1. Factcheck-ronde, dan de pull request mergen
+2. beehiiv → nieuwe post → **Blank draft** → `/` → **Custom HTML** → `email.html` plakken
+3. Doelgroep op **Premium only**
+4. Onderwerpregel + previewtekst, testmail naar jezelf, lezen op je telefoon
+5. **Inplannen** voor vrijdagochtend in plaats van handmatig versturen — een
+   ingeplande post kun je tot het laatste moment nog aanpassen of annuleren
+6. Post-URL kopiëren, editie bovenaan in `archive.html` zetten, pushen
 
 ---
 

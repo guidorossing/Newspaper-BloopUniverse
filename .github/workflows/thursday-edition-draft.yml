@@ -1,0 +1,86 @@
+name: Thursday edition draft
+
+# Every Thursday morning a scaffolded edition is waiting in a draft PR, so
+# Friday is a review-and-send job rather than a write-from-nothing job.
+#
+# 06:00 UTC — 08:00 in Amsterdam in summer, 07:00 in winter.
+on:
+  schedule:
+    - cron: "0 6 * * 4"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scaffold next Friday's edition
+        id: draft
+        run: python3 .github/scripts/make_draft.py >> "$GITHUB_OUTPUT"
+
+      - name: Open the draft pull request
+        if: steps.draft.outputs.slug != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          slug="${{ steps.draft.outputs.slug }}"
+          branch="edition/${slug}"
+
+          if [ -z "$(git status --porcelain drafts/)" ]; then
+            echo "Nothing new to commit — draft already exists."
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add drafts/
+          git commit -m "Scaffold edition No. ${{ steps.draft.outputs.number }} for ${{ steps.draft.outputs.friday }}"
+          git push -u origin "$branch"
+
+          gh pr create --draft \
+            --base main --head "$branch" \
+            --title "Edition No. ${{ steps.draft.outputs.number }} — ${{ steps.draft.outputs.friday }}" \
+            --body "$(cat <<'BODY'
+          Scaffolded automatically. The dates and numbering are filled in; the
+          journalism is not.
+
+          **Where to write:** `drafts/${{ steps.draft.outputs.slug }}/email.html`
+          — ${{ steps.draft.outputs.placeholders }} placeholders left.
+
+          ### Thursday — write it
+
+          - [ ] **Front Page** — the week's biggest movie news, two sources
+          - [ ] **The Wire** — two industry items + Actor of the Week
+          - [ ] **Behind the Scenes** — the long story, named source
+          - [ ] **Blooper of the Week** — all four rows, including *did it stay in?*
+          - [ ] **Improvised or Scripted?** — verdict plus who confirmed it
+          - [ ] **Did You Know?** — three facts
+          - [ ] **Rotating slot** — deleted scene / near-miss casting / where are they now
+          - [ ] **Coming Soon** — five releases, dates re-checked today
+          - [ ] **Poll + Guess the Movie** — plus last week's results
+          - [ ] **Video of the Week** + Fan Corner
+          - [ ] **Insiders Only** — the story that never becomes a video
+          - [ ] **Next Friday** — three lines
+
+          ### Friday — check it, then send
+
+          - [ ] Every name, year and release date correct
+          - [ ] Every claim in the news sections traceable to its source
+          - [ ] Every link opens, and goes where the text says
+          - [ ] Vol./No. right in the top bar *and* the footer
+          - [ ] Pasted into beehiiv as **Custom HTML**
+          - [ ] Audience set to **Premium only**
+          - [ ] Test email read on a phone
+          - [ ] Scheduled for Friday morning
+          - [ ] Added to `archive.html` with the beehiiv post URL
+
+          Section briefs and sourcing rules: [CONTENT-PLAYBOOK.md](../blob/main/CONTENT-PLAYBOOK.md)
+          BODY
+          )"
