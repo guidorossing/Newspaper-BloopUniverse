@@ -1,0 +1,99 @@
+name: Schedule edition to beehiiv
+
+# Run this once you've read the edition and it's good to go. It creates the
+# post in beehiiv, set to send at the time you give it.
+#
+# Claude can trigger this workflow but cannot reach beehiiv directly — the
+# API key lives here as a repository secret and never leaves the runner.
+#
+# Required secrets (Settings -> Secrets and variables -> Actions):
+#   BEEHIIV_API_KEY          Settings -> API in beehiiv
+#   BEEHIIV_PUBLICATION_ID   starts with pub_
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe = inspect existing posts · schedule = create the post"
+        type: choice
+        options: [probe, schedule]
+        default: schedule
+      draft:
+        description: "Draft folder, e.g. 2026-09-11"
+        type: string
+      title:
+        description: "Headline on the web version"
+        type: string
+      subject_line:
+        description: "Inbox subject line (blank = same as the headline)"
+        type: string
+      preview_text:
+        description: "Inbox preview line"
+        type: string
+      scheduled_at:
+        description: "When to send, UTC RFC3339 — e.g. 2026-09-11T11:00:00Z (13:00 Amsterdam)"
+        type: string
+      audience:
+        description: "Who receives it"
+        type: choice
+        options: [premium, free, both]
+        default: premium
+      targets:
+        description: "Tier name for send_targets/web_targets, if audience alone isn't enough"
+        type: string
+      status:
+        description: "confirmed = it will send · draft = park it in beehiiv"
+        type: choice
+        options: [confirmed, draft]
+        default: confirmed
+      dry_run:
+        description: "Print the request without sending it"
+        type: boolean
+        default: false
+      extra:
+        description: 'Extra JSON merged into the payload, e.g. {"content_tags":["edition"]}'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe beehiiv
+        if: inputs.mode == 'probe'
+        env:
+          BEEHIIV_API_KEY: ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}
+        run: python3 .github/scripts/beehiiv.py probe
+
+      - name: Check the draft exists
+        if: inputs.mode == 'schedule'
+        run: |
+          set -euo pipefail
+          file="drafts/${{ inputs.draft }}/email.html"
+          if [ ! -f "$file" ]; then
+            echo "::error::$file does not exist. Merge the edition PR first."
+            exit 1
+          fi
+          echo "Scheduling $file ($(wc -c < "$file") bytes)"
+
+      - name: Schedule the edition
+        if: inputs.mode == 'schedule'
+        env:
+          BEEHIIV_API_KEY: ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}
+        run: |
+          python3 .github/scripts/beehiiv.py schedule \
+            --html "drafts/${{ inputs.draft }}/email.html" \
+            --title "${{ inputs.title }}" \
+            --subject-line "${{ inputs.subject_line }}" \
+            --preview-text "${{ inputs.preview_text }}" \
+            --scheduled-at "${{ inputs.scheduled_at }}" \
+            --audience "${{ inputs.audience }}" \
+            --targets "${{ inputs.targets }}" \
+            --status "${{ inputs.status }}" \
+            ${{ inputs.extra && format('--extra ''{0}''', inputs.extra) || '' }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
