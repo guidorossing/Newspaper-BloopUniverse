@@ -1,11 +1,11 @@
-// Channel Admin vault: kanaalinformatie + inloggegevens, versleuteld op
-// schijf met AES-256-GCM. De sleutel staat in data/vault.key (gitignored)
-// of in de env-variabele CMS_VAULT_KEY (hex, 64 tekens).
+// Channel Admin vault: channel information and credentials, encrypted on
+// disk with AES-256-GCM. The key lives in data/vault.key (gitignored) or in
+// the CMS_VAULT_KEY environment variable (hex, 64 characters).
 //
-// Belangrijk: dit is een pragmatische kluis voor een klein team. Voor
-// YouTube zelf geldt: deel bij voorkeur GEEN wachtwoorden, maar nodig
-// freelancers uit via YouTube Studio-kanaalmachtigingen (rol "Editor" of
-// "Editor (beperkt)"). Zie docs/beveiliging-toegangsbeheer.md.
+// Important: this is a pragmatic vault for a small team. For YouTube itself
+// the rule is: preferably share NO passwords, but invite freelancers through
+// YouTube Studio channel permissions (role "Editor" or "Editor (limited)").
+// See docs/security-access-control.md.
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -27,7 +27,7 @@ export function initVaultKey() {
       fs.writeFileSync(keyFile, KEY.toString('hex'), { mode: 0o600 });
     }
   }
-  if (KEY.length !== 32) throw new Error('Vault-sleutel moet 32 bytes (64 hex-tekens) zijn');
+  if (KEY.length !== 32) throw new Error('Vault key must be 32 bytes (64 hex characters)');
 }
 
 export function encryptSecret(plaintext) {

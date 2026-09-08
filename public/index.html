@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +10,11 @@
   <div id="login-view" class="hidden">
     <div class="login-card">
       <h1>🎬 Rossing T&amp;M CMS</h1>
-      <p class="muted">Productie- en kanaalbeheer voor faceless YouTube-kanalen</p>
+      <p class="muted">Production and channel management for faceless YouTube channels</p>
       <form id="login-form">
-        <input type="email" id="login-email" placeholder="E-mailadres" required>
-        <input type="password" id="login-password" placeholder="Wachtwoord" required>
-        <button type="submit" class="btn primary">Inloggen</button>
+        <input type="email" id="login-email" placeholder="Email address" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button type="submit" class="btn primary">Sign in</button>
         <p id="login-error" class="error"></p>
       </form>
     </div>
@@ -24,19 +24,19 @@
     <nav id="sidebar">
       <div class="brand">🎬 Rossing T&amp;M</div>
       <button class="nav-btn" data-tab="dashboard">📊 Dashboard</button>
-      <button class="nav-btn" data-tab="kanalen">📺 Kanalen</button>
-      <button class="nav-btn" data-tab="ideeen">💡 Ideeënbank</button>
+      <button class="nav-btn" data-tab="kanalen">📺 Channels</button>
+      <button class="nav-btn" data-tab="ideeen">💡 Idea bank</button>
       <button class="nav-btn" data-tab="pipeline">🎬 Pipeline</button>
-      <button class="nav-btn" data-tab="kalender">📅 Kalender</button>
+      <button class="nav-btn" data-tab="kalender">📅 Calendar</button>
       <button class="nav-btn" data-tab="templates">🧩 Templates</button>
-      <button class="nav-btn" data-tab="todos">✅ To-do's</button>
-      <button class="nav-btn" data-tab="instructies">📚 Instructiecentrum</button>
+      <button class="nav-btn" data-tab="todos">✅ To-dos</button>
+      <button class="nav-btn" data-tab="instructies">📚 Instructions</button>
       <button class="nav-btn manager-only" data-tab="vault">🔐 Channel Admin</button>
       <button class="nav-btn manager-only" data-tab="team">👥 Team</button>
-      <button class="nav-btn admin-only" data-tab="instellingen">⚙️ Instellingen</button>
+      <button class="nav-btn admin-only" data-tab="instellingen">⚙️ Settings</button>
       <div class="sidebar-footer">
         <span id="user-badge"></span>
-        <button id="logout-btn" class="btn small">Uitloggen</button>
+        <button id="logout-btn" class="btn small">Sign out</button>
       </div>
     </nav>
     <main id="content"></main>

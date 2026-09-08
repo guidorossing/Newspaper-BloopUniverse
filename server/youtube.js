@@ -1,16 +1,16 @@
-// YouTube-koppeling: haalt per gekoppeld kanaal en per video de échte
-// cijfers op via de YouTube Data API v3 + YouTube Analytics API v2.
+// YouTube integration: pulls the real numbers per linked channel and per
+// video through the YouTube Data API v3 and YouTube Analytics API v2.
 //
-// Werking (zie docs/youtube-api.md voor de volledige setup):
-//   1. Admin vult Google OAuth client-id/secret in bij Instellingen.
-//   2. Per kanaal: "Koppel YouTube" -> Google-loginscherm -> refresh-token
-//      wordt AES-versleuteld opgeslagen bij het kanaal.
-//   3. "Sync" (of de dagelijkse auto-sync) haalt views, kijktijd (AVD) en
-//      omzet op voor kanaal en video's met een ingevuld youtubeVideoId.
+// How it works (see docs/youtube-api.md for the full setup):
+//   1. The admin enters the Google OAuth client id and secret under Settings.
+//   2. Per channel: "Link YouTube" -> Google login screen -> the refresh
+//      token is stored AES-encrypted with the channel.
+//   3. "Sync" (or the daily auto-sync) pulls views, watch time (AVD) and
+//      revenue for the channel and for videos that have a youtubeVideoId.
 //
-// Let op: thumbnail-CTR (impressies) stelt YouTube niet open via de
-// publieke Analytics API — dat veld blijft handmatig in te vullen vanuit
-// YouTube Studio. Alle andere KPI's gaan automatisch.
+// Note: thumbnail CTR (impressions) is not exposed through the public
+// Analytics API — that field stays a manual entry from YouTube Studio.
+// Every other KPI comes in automatically.
 import { load, save, logActivity } from './store.js';
 import { encryptSecret, decryptSecret } from './vault.js';
 
@@ -20,12 +20,12 @@ const SCOPES = [
   'https://www.googleapis.com/auth/yt-analytics-monetary.readonly'
 ].join(' ');
 
-// access-tokens per kanaal in geheugen; refresh-token staat versleuteld in de db.
+// Access tokens per channel live in memory; the refresh token is stored encrypted in the db.
 const accessTokens = new Map(); // channelId -> { token, verlooptOm }
 
 export function authUrl(channelId, redirectUri) {
   const { settings } = load();
-  if (!settings.youtube.clientId) throw new Error('Vul eerst de Google client-id in bij Instellingen');
+  if (!settings.youtube.clientId) throw new Error('Enter the Google client id under Settings first');
   const p = new URLSearchParams({
     client_id: settings.youtube.clientId,
     redirect_uri: redirectUri,
@@ -49,11 +49,11 @@ async function tokenRequest(body) {
   return data;
 }
 
-// Stap 2 van OAuth: code inwisselen en refresh-token opslaan bij het kanaal.
+// OAuth step 2: exchange the code and store the refresh token with the channel.
 export async function verwerkCallback(code, channelId, redirectUri) {
   const db = load();
   const channel = db.channels.find(c => c.id === channelId);
-  if (!channel) throw new Error('Kanaal niet gevonden');
+  if (!channel) throw new Error('Channel not found');
   const { settings } = db;
   const tokens = await tokenRequest({
     code,
@@ -62,9 +62,9 @@ export async function verwerkCallback(code, channelId, redirectUri) {
     redirect_uri: redirectUri,
     grant_type: 'authorization_code'
   });
-  if (!tokens.refresh_token) throw new Error('Geen refresh-token ontvangen — trek de app-toegang in via myaccount.google.com/permissions en koppel opnieuw');
+  if (!tokens.refresh_token) throw new Error('No refresh token received — revoke the app access at myaccount.google.com/permissions and link again');
 
-  // Welk YouTube-kanaal hoort bij dit Google-account?
+  // Which YouTube channel belongs to this Google account?
   const kanaalRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=id,snippet,statistics&mine=true', {
     headers: { Authorization: `Bearer ${tokens.access_token}` }
   });
@@ -79,7 +79,7 @@ export async function verwerkCallback(code, channelId, redirectUri) {
   };
   accessTokens.set(channelId, { token: tokens.access_token, verlooptOm: Date.now() + (tokens.expires_in - 60) * 1000 });
   save();
-  logActivity('Systeem', `YouTube-kanaal "${channel.youtube.youtubeNaam}" gekoppeld aan "${channel.naam}"`);
+  logActivity('System', `linked YouTube channel "${channel.youtube.youtubeNaam}" to "${channel.naam}"`);
   return channel.youtube.youtubeNaam;
 }
 
@@ -103,21 +103,21 @@ async function analyticsQuery(token, youtubeChannelId, params) {
     headers: { Authorization: `Bearer ${token}` }
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(`Analytics-fout: ${data.error?.message || res.status}`);
+  if (!res.ok) throw new Error(`Analytics error: ${data.error?.message || res.status}`);
   return data;
 }
 
-// Haal cijfers op voor één kanaal + alle video's met een youtubeVideoId.
+// Pull the numbers for one channel plus every video that has a youtubeVideoId.
 export async function syncKanaal(channelId) {
   const db = load();
   const channel = db.channels.find(c => c.id === channelId);
-  if (!channel?.youtube?.refreshTokenEncrypted) throw new Error('Dit kanaal is niet aan YouTube gekoppeld');
+  if (!channel?.youtube?.refreshTokenEncrypted) throw new Error('This channel is not linked to YouTube');
   const token = await accessTokenVoor(channel);
   const ytId = channel.youtube.youtubeChannelId;
   const vandaag = new Date().toISOString().slice(0, 10);
   const resultaat = { kanaal: channel.naam, videos: 0, fouten: [] };
 
-  // Kanaaltotalen over de laatste 28 dagen (incl. omzet als dat mag).
+  // Channel totals over the last 28 days (including revenue where allowed).
   const start28 = new Date(Date.now() - 28 * 24 * 3600 * 1000).toISOString().slice(0, 10);
   try {
     const rap = await analyticsQuery(token, ytId, {
@@ -126,7 +126,7 @@ export async function syncKanaal(channelId) {
     });
     const rij = rap.rows?.[0] || [];
     channel.youtubeStats = {
-      periode: 'laatste 28 dagen',
+      periode: 'last 28 days',
       views: rij[0] ?? 0,
       kijkMinuten: rij[1] ?? 0,
       avdSeconden: rij[2] ?? 0,
@@ -135,7 +135,7 @@ export async function syncKanaal(channelId) {
       laatstOpgehaald: new Date().toISOString()
     };
   } catch (e) {
-    // Zonder monetair recht faalt estimatedRevenue; probeer zonder omzet.
+    // Without the monetary scope estimatedRevenue fails; retry without revenue.
     try {
       const rap = await analyticsQuery(token, ytId, {
         startDate: start28, endDate: vandaag,
@@ -143,17 +143,17 @@ export async function syncKanaal(channelId) {
       });
       const rij = rap.rows?.[0] || [];
       channel.youtubeStats = {
-        periode: 'laatste 28 dagen',
+        periode: 'last 28 days',
         views: rij[0] ?? 0, kijkMinuten: rij[1] ?? 0, avdSeconden: rij[2] ?? 0,
         abonneesErbij: rij[3] ?? 0, omzetUsd: null,
         laatstOpgehaald: new Date().toISOString()
       };
     } catch (e2) {
-      resultaat.fouten.push(`kanaalcijfers: ${e2.message}`);
+      resultaat.fouten.push(`channel figures: ${e2.message}`);
     }
   }
 
-  // Per video (levensduur-totalen).
+  // Per video (lifetime totals).
   for (const video of db.videos.filter(v => v.channelId === channelId && v.youtubeVideoId)) {
     try {
       const rap = await analyticsQuery(token, ytId, {
@@ -188,14 +188,14 @@ export async function syncAlles() {
   return resultaten;
 }
 
-// Dagelijkse auto-sync om 07:30 servertijd (vóór het kalender-alarm van 08:00).
+// Daily auto-sync at 07:30 server time (before the 08:00 calendar alert).
 export function planAutoSync() {
   const nu = new Date();
   const volgende = new Date(nu);
   volgende.setHours(7, 30, 0, 0);
   if (volgende <= nu) volgende.setDate(volgende.getDate() + 1);
   setTimeout(async () => {
-    try { await syncAlles(); } catch { /* sync mag nooit de server breken */ }
+    try { await syncAlles(); } catch { /* a sync must never break the server */ }
     planAutoSync();
   }, volgende - nu);
 }

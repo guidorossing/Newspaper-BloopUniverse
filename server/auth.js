@@ -1,21 +1,21 @@
-// Gebruikers, sessies en toegangsbeheer.
+// Users, sessions and access control.
 //
-// Rollen (van hoog naar laag):
-//   admin      — jij. Alles, inclusief vault-geheimen en gebruikersbeheer.
-//   manager    — kanaalmanager. Alles behalve geheimen onthullen en
-//                gebruikers/instellingen beheren.
-//   freelancer — ziet alleen de pipeline, eigen taken, to-do's en het
-//                instructiecentrum. Geen vault, geen KPI-financiën.
+// Roles (from most to least privileged):
+//   admin      — you. Everything, including vault secrets and user management.
+//   manager    — channel manager. Everything except revealing secrets and
+//                managing users and settings.
+//   freelancer — sees only the pipeline, their own tasks, the to-do list and
+//                the instruction centre. No vault, no financial KPIs.
 //
-// Wachtwoorden worden met scrypt gehasht (Node-native, geen dependencies).
+// Passwords are hashed with scrypt (built into Node, no dependencies).
 import crypto from 'node:crypto';
 import { load, save, id } from './store.js';
 
 const SESSIONS = new Map(); // sid -> { userId, created }
-const SESSION_TTL_MS = 1000 * 60 * 60 * 12; // 12 uur
+const SESSION_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
 
 export const ROLLEN = ['admin', 'manager', 'freelancer'];
-export const FUNCTIES = ['scriptwriter', 'voice-artiest', 'video-editor', 'thumbnail-artiest', 'uploader', 'overig'];
+export const FUNCTIES = ['scriptwriter', 'voice-artist', 'video-editor', 'thumbnail-artist', 'uploader', 'other'];
 
 export function hashPassword(pw) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -31,8 +31,8 @@ export function verifyPassword(pw, stored) {
   return check.length === expect.length && crypto.timingSafeEqual(check, expect);
 }
 
-// Eerste start: maak een admin-account aan met een tijdelijk wachtwoord
-// dat in de console wordt getoond. Direct wijzigen na eerste login.
+// First boot: create an admin account with a temporary password that is
+// printed to the console. Change it immediately after the first login.
 export function seedAdmin() {
   const db = load();
   if (db.users.length > 0) return null;
@@ -42,7 +42,7 @@ export function seedAdmin() {
     naam: 'Admin',
     email: 'info@rossingtm.com',
     rol: 'admin',
-    functie: 'overig',
+    functie: 'other',
     passwordHash: hashPassword(tijdelijk),
     moetWachtwoordWijzigen: true
   });
@@ -79,7 +79,7 @@ export function publicUser(u) {
   return rest;
 }
 
-// rolNiveau: hoe lager het getal, hoe meer rechten.
+// rolNiveau: the lower the number, the more rights.
 export function rolNiveau(rol) {
   return ROLLEN.indexOf(rol);
 }

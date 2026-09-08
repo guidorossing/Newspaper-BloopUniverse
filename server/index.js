@@ -1,5 +1,5 @@
-// Rossing T&M CMS — hoofdserver.
-// Zero-dependency: draait op kale Node.js (>= 18). Start met `npm start`.
+// Rossing T&M CMS — main server.
+// Zero-dependency: runs on plain Node.js (>= 18). Start it with `npm start`.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -39,11 +39,11 @@ function readBody(req) {
     let raw = '';
     req.on('data', c => {
       raw += c;
-      if (raw.length > 1e6) { reject(new Error('Body te groot')); req.destroy(); }
+      if (raw.length > 1e6) { reject(new Error('Request body too large')); req.destroy(); }
     });
     req.on('end', () => {
       try { resolve(raw ? JSON.parse(raw) : {}); }
-      catch { reject(new Error('Ongeldige JSON')); }
+      catch { reject(new Error('Invalid JSON')); }
     });
     req.on('error', reject);
   });
@@ -55,11 +55,11 @@ function getSid(req) {
   return m ? m[1] : null;
 }
 
-// --- KPI-verplichting: uploadfrequentie mag NOOIT ontbreken -----------------
+// --- KPI rule: the upload frequency may NEVER be missing --------------------
 function valideerKanaal(body) {
   const k = body.kpis || {};
   if (!k.uploadFrequentiePerWeek || Number(k.uploadFrequentiePerWeek) <= 0) {
-    throw new Error('Uploadfrequentie is verplicht: vul in hoeveel video\'s per week dit kanaal uploadt.');
+    throw new Error('Upload frequency is required: enter how many videos per week this channel publishes.');
   }
   return {
     naam: String(body.naam || '').trim(),
@@ -80,13 +80,13 @@ function valideerKanaal(body) {
   };
 }
 
-// Tarieven, uren en aannames waarmee het kanaal wordt doorgerekend. Alles
-// optioneel: ontbreekt een waarde, dan valt calc.js terug op de standaard.
+// Rates, hours and assumptions the channel is calculated with. All optional:
+// where a value is missing, calc.js falls back to its default.
 function valideerProductie(p = {}) {
   const nietNegatief = (v, standaard) => {
-    // Ontbreekt de waarde, dan geldt de standaard; onzin of een negatief
-    // bedrag ook. Zo kan een half ingevuld formulier de berekening nooit
-    // laten ontsporen.
+    // A missing value falls back to the default, and so does nonsense or a
+    // negative amount. That way a half-filled form can never derail the
+    // calculation.
     if (v == null || v === '') return standaard;
     const n = Number(v);
     return Number.isFinite(n) && n >= 0 ? n : standaard;
@@ -103,18 +103,18 @@ function valideerProductie(p = {}) {
     vasteKostenPerMaand: nietNegatief(p.vasteKostenPerMaand, S.vasteKostenPerMaand),
     rpm: nietNegatief(p.rpm, S.rpm),
     verwachteViewsPerVideo: nietNegatief(p.verwachteViewsPerVideo, S.verwachteViewsPerVideo),
-    // Een goedkeuringspercentage van 0 zou een deling door nul geven bij het
-    // berekenen van de benodigde ideeenvoorraad; 1% is het praktische minimum.
+    // An approval rate of 0 would divide by zero when working out the idea
+    // stock needed; 1% is the practical minimum.
     ideeGoedkeuringsPct: Math.min(100, Math.max(1, nietNegatief(p.ideeGoedkeuringsPct, S.ideeGoedkeuringsPct))),
     urenPerFreelancerPerWeek: nietNegatief(p.urenPerFreelancerPerWeek, S.urenPerFreelancerPerWeek)
   };
 }
 
-// --- API-router --------------------------------------------------------------
-// De Discord-bot authenticeert met een vast token (Instellingen -> bot-token).
-// Met een X-Discord-User header handelt de API namens de gekoppelde CMS-
-// gebruiker; zonder die header werkt de bot als "manager" (voor overzichten
-// en de goedkeuringsknoppen, die de bot zelf al beperkt tot CMS Admins).
+// --- API router --------------------------------------------------------------
+// The Discord bot authenticates with a fixed token (Settings -> bot token).
+// With an X-Discord-User header the API acts on behalf of the linked CMS user;
+// without that header the bot acts as a "manager" (for overviews and the
+// approval buttons, which the bot itself already limits to CMS Admins).
 function botUser(req, db) {
   const token = req.headers['x-bot-token'];
   if (!token || !db.settings.botToken) return null;
@@ -126,7 +126,7 @@ function botUser(req, db) {
     const gekoppeld = db.users.find(u => u.discordUserId === discordId);
     if (gekoppeld) return gekoppeld;
   }
-  return { id: 'discord-bot', naam: 'Discord-bot', rol: 'manager', functie: 'overig' };
+  return { id: 'discord-bot', naam: 'Discord bot', rol: 'manager', functie: 'other' };
 }
 
 async function api(req, res, url) {
@@ -135,46 +135,46 @@ async function api(req, res, url) {
   const user = auth.userForSession(sid) || botUser(req, db);
   const route = `${req.method} ${url.pathname}`;
 
-  // -- publiek --
+  // -- public --
   if (route === 'POST /api/login') {
     const { email, password } = await readBody(req);
     const result = auth.login(email, password);
-    if (!result) return send(res, 401, { error: 'Onjuiste inloggegevens' });
-    logActivity(result.user.naam, 'logde in');
+    if (!result) return send(res, 401, { error: 'Incorrect email or password' });
+    logActivity(result.user.naam, 'signed in');
     return send(res, 200, { user: auth.publicUser(result.user) }, {
       'Set-Cookie': `sid=${result.sid}; HttpOnly; Path=/; SameSite=Strict`
     });
   }
 
-  // YouTube OAuth-callback: Google stuurt de browser hierheen; de
-  // SameSite=Strict sessiecookie reist niet mee met die redirect, dus deze
-  // route is bewust publiek. De code is alleen bruikbaar met ons client-secret.
+  // YouTube OAuth callback: Google sends the browser here. The SameSite=Strict
+  // session cookie does not survive that redirect, so this route is public by
+  // design. The code is only usable together with our client secret.
   if (route === 'GET /api/youtube/callback') {
     const redirectUri = `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}/api/youtube/callback`;
     try {
       const naam = await youtube.verwerkCallback(url.searchParams.get('code'), url.searchParams.get('state'), redirectUri);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(`<h2>✅ YouTube-kanaal "${naam}" gekoppeld</h2><p>Je kunt dit tabblad sluiten en teruggaan naar het CMS.</p>`);
+      return res.end(`<h2>✅ YouTube channel "${naam}" linked</h2><p>You can close this tab and go back to the CMS.</p>`);
     } catch (e) {
       res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-      return res.end(`<h2>❌ Koppelen mislukt</h2><p>${e.message}</p>`);
+      return res.end(`<h2>❌ Linking failed</h2><p>${e.message}</p>`);
     }
   }
 
-  if (!user) return send(res, 401, { error: 'Niet ingelogd' });
+  if (!user) return send(res, 401, { error: 'Not signed in' });
 
-  // -- Discord-accountkoppeling (bot wisselt koppelcode in) --
+  // -- Discord account linking (the bot redeems a link code) --
   if (route === 'POST /api/discord/koppel') {
-    if (user.id !== 'discord-bot' && !auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen de bot of een manager' });
+    if (user.id !== 'discord-bot' && !auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Only the bot or a manager' });
     const { code, discordUserId, discordNaam } = await readBody(req);
     const kc = db.koppelcodes.find(k => k.code === code);
-    if (!kc) return send(res, 404, { error: 'Onbekende of al gebruikte koppelcode' });
+    if (!kc) return send(res, 404, { error: 'Unknown or already used link code' });
     const doel = db.users.find(u => u.id === kc.userId);
-    if (!doel) return send(res, 404, { error: 'Gebruiker bestaat niet meer' });
+    if (!doel) return send(res, 404, { error: 'That user no longer exists' });
     doel.discordUserId = String(discordUserId);
     db.koppelcodes = db.koppelcodes.filter(k => k.code !== code);
     save();
-    logActivity('Discord-bot', `koppelde Discord-account ${discordNaam || discordUserId} aan ${doel.naam}`);
+    logActivity('Discord bot', `linked Discord account ${discordNaam || discordUserId} to ${doel.naam}`);
     return send(res, 200, { naam: doel.naam, functie: doel.functie });
   }
 
@@ -187,7 +187,7 @@ async function api(req, res, url) {
 
   if (route === 'POST /api/me/password') {
     const { nieuw } = await readBody(req);
-    if (!nieuw || String(nieuw).length < 8) return send(res, 400, { error: 'Minimaal 8 tekens' });
+    if (!nieuw || String(nieuw).length < 8) return send(res, 400, { error: 'At least 8 characters' });
     user.passwordHash = auth.hashPassword(nieuw);
     user.moetWachtwoordWijzigen = false;
     save();
@@ -199,7 +199,7 @@ async function api(req, res, url) {
     const openCheckpoints = [];
     for (const v of db.videos) {
       for (const s of v.stappen) {
-        if (s.status === 'ter_goedkeuring') {
+        if (s.status === 'awaiting_approval') {
           openCheckpoints.push({
             videoId: v.id, werktitel: v.werktitel, stap: s.naam, stapKey: s.key,
             kanaal: db.channels.find(c => c.id === v.channelId)?.naam || '?',
@@ -215,25 +215,25 @@ async function api(req, res, url) {
       openCheckpoints: auth.magMinstens(user, 'manager') ? openCheckpoints : [],
       deadlines: pipeline.deadlineOverzicht(),
       openTodos: db.todos.filter(t => !t.klaar).length,
-      ideeenOpVoorraad: db.ideeen.filter(i => i.status === 'nieuw' || i.status === 'goedgekeurd').length,
-      // Kanalen met minder dan 2 weken ideeënvoorraad: hier droogt de pipeline op.
-      ideeenAlarm: ideeen.voorraad().filter(v => v.status === 'kritiek'),
-      // Capaciteit en kosten over alle kanalen samen. Bevat tarieven, dus
-      // alleen voor admin en manager.
+      ideeenOpVoorraad: db.ideeen.filter(i => i.status === 'new' || i.status === 'approved').length,
+      // Channels with less than two weeks of idea stock: the pipeline is drying up.
+      ideeenAlarm: ideeen.voorraad().filter(v => v.status === 'critical'),
+      // Capacity and cost across all channels. Contains rates, so admins and
+      // managers only.
       totalen: auth.magMinstens(user, 'manager') ? calc.bedrijfsTotalen(db.channels) : null,
       activity: auth.magMinstens(user, 'manager') ? db.activity.slice(0, 20) : []
     });
   }
 
-  // -- kanalen --
+  // -- channels --
   if (route === 'GET /api/channels') {
     const kanalen = db.channels.map(c => {
-      // Refresh-token (versleuteld of niet) verlaat de server nooit.
+      // The refresh token (encrypted or not) never leaves the server.
       const { youtube: yt, ...zonderYt } = c;
       const veiligYt = yt ? { youtubeChannelId: yt.youtubeChannelId, youtubeNaam: yt.youtubeNaam, gekoppeldOp: yt.gekoppeldOp } : undefined;
       const basis = { ...zonderYt, ...(veiligYt ? { youtube: veiligYt } : {}) };
       if (auth.magMinstens(user, 'manager')) return basis;
-      // Freelancers zien geen omzet-KPI's, geen kanaalomzet en geen tarieven.
+      // Freelancers see no revenue KPIs, no channel revenue and no rates.
       const { kpis, youtubeStats, productie, ...rest } = basis;
       const { omzetgroeiPctPerMaand, ...kpiRest } = kpis || {};
       const veiligeStats = youtubeStats ? { ...youtubeStats, omzetUsd: undefined } : undefined;
@@ -242,23 +242,23 @@ async function api(req, res, url) {
     return send(res, 200, { channels: kanalen });
   }
   if (route === 'POST /api/channels') {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const data = valideerKanaal(await readBody(req));
-    if (!data.naam) return send(res, 400, { error: 'Kanaalnaam is verplicht' });
+    if (!data.naam) return send(res, 400, { error: 'Channel name is required' });
     const channel = { id: id(), ...data };
     db.channels.push(channel);
     save();
-    logActivity(user.naam, `maakte kanaal "${channel.naam}" aan`);
+    logActivity(user.naam, `created channel "${channel.naam}"`);
     return send(res, 200, { channel });
   }
   if (req.method === 'PUT' && url.pathname.startsWith('/api/channels/')) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const cid = url.pathname.split('/')[3];
     const channel = db.channels.find(c => c.id === cid);
-    if (!channel) return send(res, 404, { error: 'Kanaal niet gevonden' });
+    if (!channel) return send(res, 404, { error: 'Channel not found' });
     Object.assign(channel, valideerKanaal(await readBody(req)), { id: channel.id });
     save();
-    logActivity(user.naam, `wijzigde kanaal "${channel.naam}"`);
+    logActivity(user.naam, `edited channel "${channel.naam}"`);
     return send(res, 200, { channel });
   }
 
@@ -267,16 +267,16 @@ async function api(req, res, url) {
     return send(res, 200, { videos: db.videos, stappen: pipeline.STAPPEN });
   }
   if (route === 'POST /api/videos') {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const body = await readBody(req);
     if (!body.channelId || !db.channels.find(c => c.id === body.channelId)) {
-      return send(res, 400, { error: 'Kies een geldig kanaal' });
+      return send(res, 400, { error: 'Pick a valid channel' });
     }
-    if (!body.werktitel) return send(res, 400, { error: 'Werktitel is verplicht' });
+    if (!body.werktitel) return send(res, 400, { error: 'Working title is required' });
     const video = pipeline.nieuweVideo({ ...body, geplandePublicatie: body.geplandePublicatie || null });
-    logActivity(user.naam, `startte video "${video.werktitel}" in de pipeline`);
-    await notify('info', `🎬 Nieuwe video in de pipeline: ${video.werktitel}`,
-      [`**Kanaal:** ${db.channels.find(c => c.id === video.channelId)?.naam}`]);
+    logActivity(user.naam, `started video "${video.werktitel}" in the pipeline`);
+    await notify('info', `🎬 New video in the pipeline: ${video.werktitel}`,
+      [`**Channel:** ${db.channels.find(c => c.id === video.channelId)?.naam}`]);
     return send(res, 200, { video });
   }
   if (req.method === 'POST' && /^\/api\/videos\/[^/]+\/stappen\/[^/]+\/(inleveren|goedkeuren|afkeuren|toewijzen)$/.test(url.pathname)) {
@@ -287,14 +287,14 @@ async function api(req, res, url) {
       if (actie === 'inleveren') {
         video = await pipeline.leverIn(videoId, stapKey, user, body.opleverLink);
       } else if (actie === 'goedkeuren' || actie === 'afkeuren') {
-        if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager mag keuren' });
+        if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Only an admin or manager can approve' });
         video = actie === 'goedkeuren'
           ? await pipeline.keurGoed(videoId, stapKey, user)
           : await pipeline.keurAf(videoId, stapKey, user, body.feedback);
       } else if (actie === 'toewijzen') {
-        if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+        if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
         video = db.videos.find(v => v.id === videoId);
-        if (!video) return send(res, 404, { error: 'Video niet gevonden' });
+        if (!video) return send(res, 404, { error: 'Video not found' });
         const stap = video.stappen.find(s => s.key === stapKey);
         stap.assigneeId = body.assigneeId || null;
         stap.deadline = body.deadline || stap.deadline;
@@ -306,11 +306,11 @@ async function api(req, res, url) {
     }
   }
 
-  // -- video bewerken (planning, YouTube-id) --
+  // -- edit a video (scheduling, YouTube id) --
   if (req.method === 'PUT' && /^\/api\/videos\/[^/]+$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const video = db.videos.find(v => v.id === url.pathname.split('/')[3]);
-    if (!video) return send(res, 404, { error: 'Video niet gevonden' });
+    if (!video) return send(res, 404, { error: 'Video not found' });
     const body = await readBody(req);
     if (body.werktitel !== undefined) video.werktitel = String(body.werktitel);
     if (body.idee !== undefined) video.idee = String(body.idee);
@@ -320,23 +320,23 @@ async function api(req, res, url) {
     return send(res, 200, { video });
   }
 
-  // -- QC-checklist afvinken --
+  // -- tick off the QC checklist --
   if (req.method === 'POST' && /^\/api\/videos\/[^/]+\/qc\/\d+\/toggle$/.test(url.pathname)) {
     const [, , , videoId, , index] = url.pathname.split('/');
     const video = db.videos.find(v => v.id === videoId);
-    if (!video) return send(res, 404, { error: 'Video niet gevonden' });
+    if (!video) return send(res, 404, { error: 'Video not found' });
     const item = (video.qc || [])[Number(index)];
-    if (!item) return send(res, 404, { error: 'QC-item niet gevonden' });
+    if (!item) return send(res, 404, { error: 'QC item not found' });
     item.done = !item.done;
     save();
     return send(res, 200, { qc: video.qc });
   }
 
-  // -- handmatige KPI-invoer (fallback / CTR die de API niet geeft) --
+  // -- manual KPI entry (fallback, and the CTR the API does not expose) --
   if (req.method === 'POST' && /^\/api\/videos\/[^/]+\/stats$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const video = db.videos.find(v => v.id === url.pathname.split('/')[3]);
-    if (!video) return send(res, 404, { error: 'Video niet gevonden' });
+    if (!video) return send(res, 404, { error: 'Video not found' });
     const body = await readBody(req);
     video.stats = {
       ...(video.stats || {}),
@@ -349,7 +349,7 @@ async function api(req, res, url) {
     return send(res, 200, { stats: video.stats });
   }
 
-  // -- ideeënbank --
+  // -- idea bank --
   if (route === 'GET /api/ideeen') {
     return send(res, 200, {
       ideeen: ideeen.gesorteerd(url.searchParams.get('status')),
@@ -358,16 +358,16 @@ async function api(req, res, url) {
     });
   }
   if (route === 'POST /api/ideeen') {
-    // Iedereen mag pitchen — ook freelancers en de Discord-bot.
+    // Anyone can pitch — freelancers and the Discord bot included.
     const body = await readBody(req);
-    if (!body.titel) return send(res, 400, { error: 'Titel is verplicht' });
+    if (!body.titel) return send(res, 400, { error: 'Title is required' });
     const idee = ideeen.nieuwIdee({ ...body, aangedragenDoor: user.naam });
-    logActivity(user.naam, `pitchte idee "${idee.titel}"`);
+    logActivity(user.naam, `pitched idea "${idee.titel}"`);
     await ideeen.meldNieuwIdee(idee);
     return send(res, 200, { idee });
   }
   if (req.method === 'POST' && /^\/api\/ideeen\/[^/]+\/score$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager mag scoren' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Only an admin or manager can score' });
     try {
       return send(res, 200, { idee: ideeen.scoorIdee(url.pathname.split('/')[3], await readBody(req), user) });
     } catch (e) {
@@ -375,7 +375,7 @@ async function api(req, res, url) {
     }
   }
   if (req.method === 'POST' && /^\/api\/ideeen\/[^/]+\/status$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     try {
       const { status } = await readBody(req);
       return send(res, 200, { idee: ideeen.zetStatus(url.pathname.split('/')[3], status, user) });
@@ -383,43 +383,43 @@ async function api(req, res, url) {
       return send(res, 400, { error: e.message });
     }
   }
-  // Promoveren: idee wordt een video in de pipeline en verdwijnt uit de backlog.
+  // Promote: the idea becomes a video in the pipeline and leaves the backlog.
   if (req.method === 'POST' && /^\/api\/ideeen\/[^/]+\/promoveer$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const idee = db.ideeen.find(i => i.id === url.pathname.split('/')[3]);
-    if (!idee) return send(res, 404, { error: 'Idee niet gevonden' });
-    if (idee.status === 'gepromoveerd') return send(res, 400, { error: 'Dit idee staat al in de pipeline' });
+    if (!idee) return send(res, 404, { error: 'Idea not found' });
+    if (idee.status === 'promoted') return send(res, 400, { error: 'This idea is already in the pipeline' });
     const body = await readBody(req);
     const channelId = body.channelId || idee.channelId;
     if (!channelId || !db.channels.find(c => c.id === channelId)) {
-      return send(res, 400, { error: 'Kies een geldig kanaal voor dit idee' });
+      return send(res, 400, { error: 'Pick a valid channel for this idea' });
     }
     const video = pipeline.nieuweVideo({
       channelId,
       werktitel: idee.titel,
-      idee: [idee.omschrijving, idee.bron ? `Bron: ${idee.bron}` : ''].filter(Boolean).join('\n'),
+      idee: [idee.omschrijving, idee.bron ? `Source: ${idee.bron}` : ''].filter(Boolean).join('\n'),
       geplandePublicatie: body.geplandePublicatie || null
     });
-    idee.status = 'gepromoveerd';
+    idee.status = 'promoted';
     idee.videoId = video.id;
     save();
-    logActivity(user.naam, `promoveerde idee "${idee.titel}" naar de pipeline`);
-    await notify('info', `🎬 Idee gepromoveerd naar productie: ${video.werktitel}`,
-      [`**Kanaal:** ${db.channels.find(c => c.id === channelId)?.naam}`,
-       idee.score != null ? `**Ideescore:** ${idee.score}/5` : ''].filter(Boolean));
+    logActivity(user.naam, `promoted idea "${idee.titel}" to the pipeline`);
+    await notify('info', `🎬 Idea promoted to production: ${video.werktitel}`,
+      [`**Channel:** ${db.channels.find(c => c.id === channelId)?.naam}`,
+       idee.score != null ? `**Idea score:** ${idee.score}/5` : ''].filter(Boolean));
     return send(res, 200, { idee, video });
   }
   if (req.method === 'DELETE' && /^\/api\/ideeen\/[^/]+$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const idx = db.ideeen.findIndex(i => i.id === url.pathname.split('/')[3]);
-    if (idx === -1) return send(res, 404, { error: 'Niet gevonden' });
-    logActivity(user.naam, `verwijderde idee "${db.ideeen[idx].titel}"`);
+    if (idx === -1) return send(res, 404, { error: 'Not found' });
+    logActivity(user.naam, `deleted idea "${db.ideeen[idx].titel}"`);
     db.ideeen.splice(idx, 1);
     save();
     return send(res, 200, { ok: true });
   }
 
-  // -- publicatiekalender --
+  // -- publishing calendar --
   if (route === 'GET /api/kalender') {
     return send(res, 200, {
       weken: kalender.weekOverzicht(Number(url.searchParams.get('weken')) || 6),
@@ -427,14 +427,14 @@ async function api(req, res, url) {
     });
   }
 
-  // -- templatebibliotheek --
+  // -- template library --
   if (route === 'GET /api/templates') {
     return send(res, 200, { templates: db.templates });
   }
   if (route === 'POST /api/templates') {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const body = await readBody(req);
-    if (!body.naam || !body.inhoud) return send(res, 400, { error: 'Naam en inhoud zijn verplicht' });
+    if (!body.naam || !body.inhoud) return send(res, 400, { error: 'Name and content are required' });
     const template = {
       id: id(), channelId: body.channelId || null,
       type: ['titel', 'thumbnail', 'hook', 'beschrijving', 'script'].includes(body.type) ? body.type : 'titel',
@@ -443,21 +443,21 @@ async function api(req, res, url) {
     };
     db.templates.push(template);
     save();
-    logActivity(user.naam, `voegde template "${template.naam}" toe (${template.type})`);
+    logActivity(user.naam, `added template "${template.naam}" (${template.type})`);
     return send(res, 200, { template });
   }
   if (req.method === 'DELETE' && url.pathname.startsWith('/api/templates/')) {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     const idx = db.templates.findIndex(t => t.id === url.pathname.split('/')[3]);
-    if (idx === -1) return send(res, 404, { error: 'Niet gevonden' });
+    if (idx === -1) return send(res, 404, { error: 'Not found' });
     db.templates.splice(idx, 1);
     save();
     return send(res, 200, { ok: true });
   }
 
-  // -- YouTube-koppeling --
+  // -- YouTube integration --
   if (route === 'GET /api/youtube/koppel') {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const redirectUri = `${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}/api/youtube/callback`;
     try {
       return send(res, 200, { url: youtube.authUrl(url.searchParams.get('channelId'), redirectUri) });
@@ -466,33 +466,33 @@ async function api(req, res, url) {
     }
   }
   if (route === 'POST /api/youtube/sync') {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     try {
       const resultaten = await youtube.syncAlles();
-      logActivity(user.naam, 'draaide een YouTube-sync');
+      logActivity(user.naam, 'ran a YouTube sync');
       return send(res, 200, { resultaten });
     } catch (e) {
       return send(res, 400, { error: e.message });
     }
   }
 
-  // -- koppelcode voor Discord-account --
+  // -- link code for a Discord account --
   if (req.method === 'POST' && /^\/api\/users\/[^/]+\/koppelcode$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const doel = db.users.find(u => u.id === url.pathname.split('/')[3]);
-    if (!doel) return send(res, 404, { error: 'Gebruiker niet gevonden' });
+    if (!doel) return send(res, 404, { error: 'User not found' });
     db.koppelcodes = db.koppelcodes.filter(k => k.userId !== doel.id);
     const code = crypto.randomBytes(4).toString('hex');
     db.koppelcodes.push({ code, userId: doel.id, aangemaakt: new Date().toISOString() });
     save();
-    return send(res, 200, { code, uitleg: `Laat ${doel.naam} in Discord "/koppel code:${code}" typen` });
+    return send(res, 200, { code, uitleg: `Ask ${doel.naam} to type "/link code:${code}" in Discord` });
   }
 
   // -- to-do's --
   if (route === 'GET /api/todos') return send(res, 200, { todos: db.todos });
   if (route === 'POST /api/todos') {
     const body = await readBody(req);
-    if (!body.tekst) return send(res, 400, { error: 'Tekst is verplicht' });
+    if (!body.tekst) return send(res, 400, { error: 'Text is required' });
     const todo = {
       id: id(), tekst: String(body.tekst), channelId: body.channelId || null,
       assigneeId: body.assigneeId || null, deadline: body.deadline || null,
@@ -505,63 +505,63 @@ async function api(req, res, url) {
   if (req.method === 'POST' && /^\/api\/todos\/[^/]+\/toggle$/.test(url.pathname)) {
     const tid = url.pathname.split('/')[3];
     const todo = db.todos.find(t => t.id === tid);
-    if (!todo) return send(res, 404, { error: 'Niet gevonden' });
+    if (!todo) return send(res, 404, { error: 'Not found' });
     todo.klaar = !todo.klaar;
     save();
     return send(res, 200, { todo });
   }
 
-  // -- gebruikers (toegangsbeheer) --
+  // -- users (access control) --
   if (route === 'GET /api/users') {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Alleen admin/manager' });
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
     return send(res, 200, { users: db.users.map(auth.publicUser), rollen: auth.ROLLEN, functies: auth.FUNCTIES });
   }
   if (route === 'GET /api/team') {
-    // Iedereen mag namen/functies zien om taken te kunnen herkennen.
+    // Everyone may see names and roles so they can recognise their tasks.
     return send(res, 200, { team: db.users.map(u => ({ id: u.id, naam: u.naam, functie: u.functie, rol: u.rol })) });
   }
   if (route === 'POST /api/users') {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const body = await readBody(req);
-    if (!body.naam || !body.email || !body.password) return send(res, 400, { error: 'Naam, e-mail en wachtwoord zijn verplicht' });
-    if (db.users.find(u => u.email.toLowerCase() === body.email.toLowerCase())) return send(res, 400, { error: 'E-mail bestaat al' });
+    if (!body.naam || !body.email || !body.password) return send(res, 400, { error: 'Name, email and password are required' });
+    if (db.users.find(u => u.email.toLowerCase() === body.email.toLowerCase())) return send(res, 400, { error: 'That email address is already in use' });
     const nieuw = {
       id: id(), naam: body.naam, email: body.email,
       rol: auth.ROLLEN.includes(body.rol) ? body.rol : 'freelancer',
-      functie: auth.FUNCTIES.includes(body.functie) ? body.functie : 'overig',
+      functie: auth.FUNCTIES.includes(body.functie) ? body.functie : 'other',
       passwordHash: auth.hashPassword(body.password),
       moetWachtwoordWijzigen: true
     };
     db.users.push(nieuw);
     save();
-    logActivity(user.naam, `voegde gebruiker "${nieuw.naam}" toe (${nieuw.rol}, ${nieuw.functie})`);
+    logActivity(user.naam, `added user "${nieuw.naam}" (${nieuw.rol}, ${nieuw.functie})`);
     return send(res, 200, { user: auth.publicUser(nieuw) });
   }
   if (req.method === 'DELETE' && url.pathname.startsWith('/api/users/')) {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const uid = url.pathname.split('/')[3];
-    if (uid === user.id) return send(res, 400, { error: 'Je kunt jezelf niet verwijderen' });
+    if (uid === user.id) return send(res, 400, { error: 'You cannot delete your own account' });
     const idx = db.users.findIndex(u => u.id === uid);
-    if (idx === -1) return send(res, 404, { error: 'Niet gevonden' });
+    if (idx === -1) return send(res, 404, { error: 'Not found' });
     const [weg] = db.users.splice(idx, 1);
     save();
-    logActivity(user.naam, `verwijderde gebruiker "${weg.naam}"`);
+    logActivity(user.naam, `deleted user "${weg.naam}"`);
     return send(res, 200, { ok: true });
   }
 
   // -- vault (Channel Admin) --
   if (route === 'GET /api/vault') {
-    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Geen toegang tot de vault' });
-    // Geheimen worden hier NIET meegestuurd; onthullen is een aparte admin-actie.
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'No access to the vault' });
+    // Secrets are NOT included here; revealing one is a separate admin action.
     return send(res, 200, {
       entries: db.vault.map(({ secretEncrypted, ...rest }) => rest),
       magOnthullen: auth.magMinstens(user, 'admin')
     });
   }
   if (route === 'POST /api/vault') {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const body = await readBody(req);
-    if (!body.label) return send(res, 400, { error: 'Label is verplicht' });
+    if (!body.label) return send(res, 400, { error: 'Label is required' });
     const entry = {
       id: id(), channelId: body.channelId || null, label: String(body.label),
       gebruikersnaam: String(body.gebruikersnaam || ''),
@@ -570,32 +570,32 @@ async function api(req, res, url) {
     };
     db.vault.push(entry);
     save();
-    logActivity(user.naam, `voegde vault-item "${entry.label}" toe`);
+    logActivity(user.naam, `added vault entry "${entry.label}"`);
     const { secretEncrypted, ...rest } = entry;
     return send(res, 200, { entry: rest });
   }
   if (req.method === 'POST' && /^\/api\/vault\/[^/]+\/onthul$/.test(url.pathname)) {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin mag geheimen onthullen' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Only an admin can reveal secrets' });
     const vid = url.pathname.split('/')[3];
     const entry = db.vault.find(e => e.id === vid);
-    if (!entry) return send(res, 404, { error: 'Niet gevonden' });
-    logActivity(user.naam, `onthulde geheim van vault-item "${entry.label}"`);
+    if (!entry) return send(res, 404, { error: 'Not found' });
+    logActivity(user.naam, `revealed the secret of vault entry "${entry.label}"`);
     return send(res, 200, { secret: entry.secretEncrypted ? vault.decryptSecret(entry.secretEncrypted) : '' });
   }
   if (req.method === 'DELETE' && url.pathname.startsWith('/api/vault/')) {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const vid = url.pathname.split('/')[3];
     const idx = db.vault.findIndex(e => e.id === vid);
-    if (idx === -1) return send(res, 404, { error: 'Niet gevonden' });
-    logActivity(user.naam, `verwijderde vault-item "${db.vault[idx].label}"`);
+    if (idx === -1) return send(res, 404, { error: 'Not found' });
+    logActivity(user.naam, `deleted vault entry "${db.vault[idx].label}"`);
     db.vault.splice(idx, 1);
     save();
     return send(res, 200, { ok: true });
   }
 
-  // -- instellingen (Discord-webhook) --
+  // -- settings (Discord webhook) --
   if (route === 'GET /api/settings') {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     return send(res, 200, {
       settings: {
         ...db.settings,
@@ -604,7 +604,7 @@ async function api(req, res, url) {
     });
   }
   if (route === 'PUT /api/settings') {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const body = await readBody(req);
     db.settings.discordWebhookUrl = String(body.discordWebhookUrl || '');
     db.settings.discordEnabled = Boolean(body.discordEnabled);
@@ -616,24 +616,24 @@ async function api(req, res, url) {
       if (body.youtube.clientSecret) db.settings.youtube.clientSecret = String(body.youtube.clientSecret);
     }
     save();
-    logActivity(user.naam, 'wijzigde de instellingen');
+    logActivity(user.naam, 'changed the settings');
     return send(res, 200, { settings: db.settings });
   }
   if (route === 'POST /api/settings/bot-token') {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     db.settings.botToken = crypto.randomBytes(24).toString('hex');
     save();
-    logActivity(user.naam, 'genereerde een nieuw bot-token');
+    logActivity(user.naam, 'generated a new bot token');
     return send(res, 200, { botToken: db.settings.botToken });
   }
 
-  // -- open taken van de ingelogde (of via Discord gekoppelde) gebruiker --
+  // -- open tasks for the signed-in (or Discord-linked) user --
   if (route === 'GET /api/mijn-taken') {
     const taken = [];
     for (const v of db.videos) {
       if (v.afgerond) continue;
       for (const s of v.stappen) {
-        if (s.assigneeId === user.id && ['bezig', 'afgekeurd', 'ter_goedkeuring'].includes(s.status)) {
+        if (s.assigneeId === user.id && ['in_progress', 'rejected', 'awaiting_approval'].includes(s.status)) {
           taken.push({
             videoId: v.id, werktitel: v.werktitel,
             kanaal: db.channels.find(c => c.id === v.channelId)?.naam || '?',
@@ -646,21 +646,21 @@ async function api(req, res, url) {
     return send(res, 200, { taken, naam: user.naam });
   }
   if (route === 'POST /api/settings/discord-test') {
-    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
-    const ok = await notify('info', '🔔 Testbericht', ['De Discord-koppeling van het Rossing T&M CMS werkt!']);
-    return send(res, ok ? 200 : 400, ok ? { ok: true } : { error: 'Webhook niet geconfigureerd of niet bereikbaar' });
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
+    const ok = await notify('info', '🔔 Test message', ['The Discord integration of the Rossing T&M CMS is working.']);
+    return send(res, ok ? 200 : 400, ok ? { ok: true } : { error: 'Webhook not configured or unreachable' });
   }
 
-  return send(res, 404, { error: 'Onbekende route' });
+  return send(res, 404, { error: 'Unknown route' });
 }
 
-// --- statische bestanden -----------------------------------------------------
+// --- static files ------------------------------------------------------------
 function serveStatic(req, res, url) {
   let p = url.pathname === '/' ? '/index.html' : url.pathname;
   const file = path.join(PUBLIC_DIR, path.normalize(p));
   if (!file.startsWith(PUBLIC_DIR) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
-    return res.end('Niet gevonden');
+    return res.end('Not found');
   }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
   fs.createReadStream(file).pipe(res);
@@ -683,12 +683,12 @@ kalender.planKalenderAlarm();
 youtube.planAutoSync();
 
 server.listen(PORT, () => {
-  console.log(`\nRossing T&M CMS draait op http://localhost:${PORT}`);
+  console.log(`\nRossing T&M CMS running on http://localhost:${PORT}`);
   if (tijdelijkWachtwoord) {
-    console.log('\n=== EERSTE START ===');
-    console.log('Admin-account aangemaakt:');
-    console.log('  e-mail:     info@rossingtm.com');
-    console.log(`  wachtwoord: ${tijdelijkWachtwoord}`);
-    console.log('Wijzig dit wachtwoord direct na de eerste login.\n');
+    console.log('\n=== FIRST START ===');
+    console.log('Admin account created:');
+    console.log('  email:    info@rossingtm.com');
+    console.log(`  password: ${tijdelijkWachtwoord}`);
+    console.log('Change this password immediately after the first sign-in.\n');
   }
 });

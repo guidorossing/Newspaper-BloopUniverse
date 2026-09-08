@@ -1,28 +1,27 @@
-// Rekenkern van het CMS: capaciteit en productiekosten per kanaal.
+// The CMS calculation core: capacity and production cost per channel.
 //
-// Dit bestand wordt door twee kanten gebruikt en moet daarom puur blijven —
-// alleen invoer in, uitkomst uit, geen DOM en geen bestandssysteem:
-//   - de browser rekent er live mee terwijl je aan een schuifbalk sleept
-//   - de server rekent er de totalen voor het dashboard mee
-// Eén bron van waarheid, zodat het scherm en het dashboard nooit uit elkaar
-// kunnen lopen.
+// This file is used from two sides and therefore has to stay pure — input in,
+// result out, no DOM and no file system:
+//   - the browser recalculates live while you drag a slider
+//   - the server uses it for the totals on the dashboard
+// One source of truth, so the screen and the dashboard can never drift apart.
 
-export const WEKEN_PER_MAAND = 52 / 12; // 4,33
+export const WEKEN_PER_MAAND = 52 / 12; // 4.33
 
-// De vijf betaalde productiestappen. 'idee' staat er bewust niet bij: die
-// stap kost denkwerk, geen factuur.
+// The five paid production steps. 'idee' is deliberately absent: that step
+// costs thinking, not an invoice.
 export const STAPPEN = [
   { key: 'script', label: 'Script', functie: 'scriptwriter' },
-  { key: 'voice', label: 'Voice / avatar', functie: 'voice-artiest' },
-  { key: 'video', label: 'Video-edit', functie: 'video-editor' },
-  { key: 'thumbnail', label: 'Thumbnail', functie: 'thumbnail-artiest' },
+  { key: 'voice', label: 'Voice / avatar', functie: 'voice-artist' },
+  { key: 'video', label: 'Video edit', functie: 'video-editor' },
+  { key: 'thumbnail', label: 'Thumbnail', functie: 'thumbnail-artist' },
   { key: 'upload', label: 'Upload / SEO', functie: 'uploader' }
 ];
 
-// Startwaarden voor een nieuw kanaal: marktconforme freelancetarieven voor
-// faceless-content van ~10 minuten. Bedoeld om meteen aan te passen naar je
-// eigen tarieven — ze staan hier zodat een nieuw kanaal nooit op nul begint
-// en de berekening dus altijd iets zinnigs laat zien.
+// Starting values for a new channel: market-rate freelance fees for roughly
+// ten minutes of faceless content. Meant to be replaced with your own rates —
+// they are here so a new channel never starts at zero and the calculation
+// always shows something meaningful.
 export const STANDAARD = {
   kostenPerStap: { script: 35, voice: 10, video: 90, thumbnail: 20, upload: 10 },
   urenPerStap: { script: 3, voice: 1, video: 5, thumbnail: 1, upload: 0.5 },
@@ -38,7 +37,7 @@ function getal(v, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-/** Vult de productie-instellingen van een kanaal aan met de standaardwaarden. */
+/** Fills in a channel's production settings with the defaults. */
 export function productieVan(kanaal = {}) {
   const p = kanaal.productie || {};
   return {
@@ -53,8 +52,8 @@ export function productieVan(kanaal = {}) {
 }
 
 /**
- * Wat er nodig is om de gekozen uploadfrequentie vol te houden.
- * Alles hangt aan één getal: video's per week.
+ * What it takes to sustain the chosen upload frequency.
+ * Everything hangs off one number: videos per week.
  */
 export function capaciteit(kanaal = {}) {
   const p = productieVan(kanaal);
@@ -62,14 +61,13 @@ export function capaciteit(kanaal = {}) {
   const perMaand = perWeek * WEKEN_PER_MAAND;
   const levertijd = getal(kanaal.kpis?.levertijdDagen, 0);
 
-  // Niet elk gepitcht idee haalt de pipeline. Bij een goedkeuringspercentage
-  // van 50% heb je twee ideeën nodig per video die je wilt maken.
+  // Not every pitched idea makes it into the pipeline. At a 50% approval rate
+  // you need two ideas for every video you want to make.
   const ratio = Math.max(p.ideeGoedkeuringsPct, 1) / 100;
   const ideeenPerMaand = perMaand / ratio;
 
-  // Hoeveel video's er tegelijk onderhanden zijn: een video die 14 dagen
-  // doorlooptijd heeft bij 3 uploads per week, betekent 6 video's in de
-  // pipeline op elk moment.
+  // How many videos are in progress at once: a fourteen-day lead time at three
+  // uploads a week means six videos sitting in the pipeline at any moment.
   const onderhandenWerk = levertijd > 0 ? Math.ceil((levertijd / 7) * perWeek) : 0;
 
   const urenPerWeek = {};
@@ -99,8 +97,8 @@ export function capaciteit(kanaal = {}) {
 }
 
 /**
- * Wat het kost, en wat het moet opleveren om uit te komen.
- * Bedragen in euro's; RPM is euro per 1.000 weergaven.
+ * What it costs, and what it has to earn to break even.
+ * Amounts in euros; RPM is euros per 1,000 views.
  */
 export function kosten(kanaal = {}) {
   const p = productieVan(kanaal);
@@ -118,8 +116,8 @@ export function kosten(kanaal = {}) {
   const variabelPerMaand = perVideo * perMaand;
   const totaalPerMaand = variabelPerMaand + p.vasteKostenPerMaand;
 
-  // Vaste kosten omslaan over de video's van die maand, zodat break-even en
-  // marge per video de volledige kostprijs meenemen.
+  // Spread the fixed costs across that month's videos, so break-even and
+  // margin per video reflect the full cost price.
   const vasteKostenPerVideo = perMaand > 0 ? p.vasteKostenPerMaand / perMaand : 0;
   const kostprijsPerVideo = perVideo + vasteKostenPerVideo;
 
@@ -148,12 +146,12 @@ export function kosten(kanaal = {}) {
   };
 }
 
-/** Capaciteit en kosten in één keer — wat de schuifbalken laten zien. */
+/** Capacity and cost in one go — what the sliders show. */
 export function doorrekenen(kanaal = {}) {
   return { capaciteit: capaciteit(kanaal), kosten: kosten(kanaal) };
 }
 
-/** Optelsom over alle kanalen, voor het dashboard. */
+/** The sum across all channels, for the dashboard. */
 export function bedrijfsTotalen(kanalen = []) {
   const t = {
     kanalen: kanalen.length,

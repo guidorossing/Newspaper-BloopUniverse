@@ -1,4 +1,4 @@
-// Rossing T&M CMS — frontend (vanilla JS, geen build-stap).
+// Rossing T&M CMS — frontend (vanilla JS, no build step).
 import * as calc from '/calc.js';
 let ME = null;
 let CACHE = { channels: [], team: [] };
@@ -13,7 +13,7 @@ async function api(path, opts = {}) {
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Fout (${res.status})`);
+  if (!res.ok) throw new Error(data.error || `Error (${res.status})`);
   return data;
 }
 
@@ -22,7 +22,7 @@ function magMinstens(rol) {
   return ME && niveaus[ME.rol] <= niveaus[rol];
 }
 
-// ---------- login / bootstrap ----------
+// ---------- sign-in / bootstrap ----------
 async function init() {
   try {
     const { user } = await api('/api/me');
@@ -58,13 +58,13 @@ function toonApp() {
   document.querySelectorAll('.nav-btn').forEach(btn =>
     btn.addEventListener('click', () => openTab(btn.dataset.tab)));
   if (ME.moetWachtwoordWijzigen) {
-    const nieuw = prompt('Eerste login: kies een nieuw wachtwoord (min. 8 tekens)');
+    const nieuw = prompt('First sign-in: choose a new password (at least 8 characters)');
     if (nieuw && nieuw.length >= 8) api('/api/me/password', { method: 'POST', body: { nieuw } });
   }
   openTab('dashboard');
 }
 
-window.openTab = openTab;   // de knoppen in het dashboard roepen dit inline aan
+window.openTab = openTab;   // the dashboard buttons call this inline
 function openTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   const render = VIEWS[tab];
@@ -78,65 +78,65 @@ const VIEWS = {
     $('#content').innerHTML = `
       <h2>Dashboard</h2>
       <div class="grid">
-        <div class="card stat"><div class="big">${d.kanalen}</div><div class="muted">Kanalen</div></div>
-        <div class="card stat"><div class="big">${d.videosInProductie}</div><div class="muted">Video's in productie</div></div>
-        <div class="card stat"><div class="big">${d.videosAfgerond}</div><div class="muted">Video's afgerond</div></div>
-        <div class="card stat"><div class="big">${d.ideeenOpVoorraad ?? 0}</div><div class="muted">Ideeën op voorraad</div></div>
-        <div class="card stat"><div class="big">${d.openTodos}</div><div class="muted">Open to-do's</div></div>
+        <div class="card stat"><div class="big">${d.kanalen}</div><div class="muted">Channels</div></div>
+        <div class="card stat"><div class="big">${d.videosInProductie}</div><div class="muted">Videos in production</div></div>
+        <div class="card stat"><div class="big">${d.videosAfgerond}</div><div class="muted">Videos finished</div></div>
+        <div class="card stat"><div class="big">${d.ideeenOpVoorraad ?? 0}</div><div class="muted">Ideas in stock</div></div>
+        <div class="card stat"><div class="big">${d.openTodos}</div><div class="muted">Open to-dos</div></div>
         ${d.totalen ? `
-          <div class="card stat"><div class="big">${eur(d.totalen.kostenPerMaand)}</div><div class="muted">Productiekosten p/m</div></div>
-          <div class="card stat"><div class="big">${nl(d.totalen.videosPerMaand, 0)}</div><div class="muted">Video's p/m gepland</div></div>
-          <div class="card stat"><div class="big">${nl(d.totalen.urenPerWeek, 0)}</div><div class="muted">Uur werk per week</div></div>` : ''}
+          <div class="card stat"><div class="big">${eur(d.totalen.kostenPerMaand)}</div><div class="muted">Production cost / month</div></div>
+          <div class="card stat"><div class="big">${nl(d.totalen.videosPerMaand, 0)}</div><div class="muted">Videos / month planned</div></div>
+          <div class="card stat"><div class="big">${nl(d.totalen.urenPerWeek, 0)}</div><div class="muted">Hours of work per week</div></div>` : ''}
       </div>
       ${d.totalen?.perKanaal?.length ? `
-        <h3>💶 Kosten en capaciteit per kanaal</h3>
+        <h3>💶 Cost and capacity per channel</h3>
         <div class="card">
           ${d.totalen.perKanaal.map(k => `
             <div class="reken-rij">
               <span><b>${esc(k.naam)}</b></span>
-              <span class="muted">${nl(k.videosPerMaand, 1)} video's p/m · ${nl(k.urenPerWeek, 0)} uur p/w</span>
+              <span class="muted">${nl(k.videosPerMaand, 1)} videos/mo · ${nl(k.urenPerWeek, 0)} hrs/wk</span>
               <span class="muted">${eur(k.kostprijsPerVideo, 2)} per video</span>
               <span class="muted">break-even ${k.breakEvenViews == null ? '—' : nl(k.breakEvenViews, 0) + ' views'}</span>
               <b class="${k.margePerMaand >= 0 ? 'goed' : 'slecht'}">${eur(k.margePerMaand)}</b>
             </div>`).join('')}
           <div class="reken-rij totaal">
-            <span><b>Alle kanalen samen</b></span>
-            <span class="muted">${eur(d.totalen.kostenPerMaand)} kosten p/m · ${eur(d.totalen.omzetPerMaand)} verwachte omzet</span>
+            <span><b>All channels combined</b></span>
+            <span class="muted">${eur(d.totalen.kostenPerMaand)} cost/mo · ${eur(d.totalen.omzetPerMaand)} expected revenue</span>
             <b class="${d.totalen.margePerMaand >= 0 ? 'goed' : 'slecht'}">${eur(d.totalen.margePerMaand)}</b>
           </div>
         </div>` : ''}
       ${d.ideeenAlarm?.length ? `
         <div class="card" style="border-color:var(--red)">
-          <b>💡 Ideeënvoorraad kritiek — de pipeline dreigt op te drogen:</b>
+          <b>💡 Idea stock critical — the pipeline is about to run dry:</b>
           ${d.ideeenAlarm.map(v => `
             <div class="todo-rij">
-              <span class="badge kritiek">${v.wekenVoorraad ?? 0} wk</span>
-              <span><b>${esc(v.kanaal)}</b> — ${v.beschikbaar} ideeën, ${v.perWeek}×/week nodig</span>
-              <span style="margin-left:auto"><button class="btn small" onclick="openTab('ideeen')">Naar ideeënbank →</button></span>
+              <span class="badge critical">${v.wekenVoorraad ?? 0} wk</span>
+              <span><b>${esc(v.kanaal)}</b> — ${v.beschikbaar} ideas, ${v.perWeek}×/week needed</span>
+              <span style="margin-left:auto"><button class="btn small" onclick="openTab('ideeen')">Go to idea bank →</button></span>
             </div>`).join('')}
         </div>` : ''}
       ${d.openCheckpoints.length ? `
-        <h3>⏸️ Wacht op jouw goedkeuring</h3>
+        <h3>⏸️ Waiting for your approval</h3>
         <div class="card">${d.openCheckpoints.map(c => `
           <div class="todo-rij">
-            <span class="badge ter_goedkeuring">${esc(c.stap)}</span>
+            <span class="badge awaiting_approval">${esc(c.stap)}</span>
             <span><b>${esc(c.werktitel)}</b> — ${esc(c.kanaal)}</span>
-            ${c.opleverLink ? `<a href="${esc(c.opleverLink)}" target="_blank" class="muted">bekijk oplevering</a>` : ''}
-            <span style="margin-left:auto"><button class="btn small" onclick="openTab('pipeline')">Naar pipeline →</button></span>
+            ${c.opleverLink ? `<a href="${esc(c.opleverLink)}" target="_blank" class="muted">view delivery</a>` : ''}
+            <span style="margin-left:auto"><button class="btn small" onclick="openTab('pipeline')">Go to pipeline →</button></span>
           </div>`).join('')}
         </div>` : ''}
       ${d.deadlines.length ? `
         <h3>⏰ Deadlines</h3>
         <div class="card">${d.deadlines.map(x => `
           <div class="todo-rij">
-            <span class="badge ${x.urgentie}">${x.urgentie === 'te_laat' ? 'TE LAAT' : 'BINNEN 24u'}</span>
+            <span class="badge ${x.urgentie}">${x.urgentie === 'overdue' ? 'OVERDUE' : 'WITHIN 24H'}</span>
             <span><b>${esc(x.werktitel)}</b> · ${esc(x.stap)} · ${esc(x.assignee)} · deadline ${esc(x.deadline)}</span>
           </div>`).join('')}
         </div>` : ''}
       ${d.activity.length ? `
-        <h3>Recente activiteit</h3>
+        <h3>Recent activity</h3>
         <div class="card">${d.activity.map(a => `
-          <div class="todo-rij"><span class="muted">${new Date(a.ts).toLocaleString('nl-NL')}</span><span><b>${esc(a.user)}</b> ${esc(a.tekst)}</span></div>`).join('')}
+          <div class="todo-rij"><span class="muted">${new Date(a.ts).toLocaleString('en-GB')}</span><span><b>${esc(a.user)}</b> ${esc(a.tekst)}</span></div>`).join('')}
         </div>` : ''}`;
   },
 
@@ -145,9 +145,9 @@ const VIEWS = {
     CACHE.channels = channels;
     const isManager = magMinstens('manager');
     $('#content').innerHTML = `
-      <h2>Kanalen</h2>
-      ${channels.map(c => kanaalKaart(c, isManager)).join('') || '<p class="muted">Nog geen kanalen.</p>'}
-      ${isManager ? `<h3>Nieuw kanaal</h3><div class="card">${kanaalForm({})}</div>` : ''}`;
+      <h2>Channels</h2>
+      ${channels.map(c => kanaalKaart(c, isManager)).join('') || '<p class="muted">No channels yet.</p>'}
+      ${isManager ? `<h3>New channel</h3><div class="card">${kanaalForm({})}</div>` : ''}`;
     if (isManager) bindKanaalForms();
     bindYoutubeActies();
   },
@@ -162,20 +162,20 @@ const VIEWS = {
     const klaar = videos.filter(v => v.afgerond);
     $('#content').innerHTML = `
       <h2>Pipeline</h2>
-      <p class="muted">Idee → Script → Voice/Avatar → Video-edit → Thumbnail → Upload. Elke stap is een checkpoint: pas na goedkeuring gaat het werk door naar de volgende freelancer.</p>
+      <p class="muted">Idea → Script → Voice/Avatar → Video edit → Thumbnail → Upload. Every step is a checkpoint: work only moves to the next freelancer after approval.</p>
       ${isManager ? `
         <div class="card">
-          <h3 style="margin-top:0">🎬 Nieuwe video starten</h3>
+          <h3 style="margin-top:0">🎬 Start a new video</h3>
           <div class="form-row">
-            <div><label>Kanaal</label><select id="nv-kanaal">${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
-            <div><label>Werktitel</label><input id="nv-titel" placeholder="bijv. Top 10 ruimtemysteries"></div>
-            <div><label>Geplande publicatiedatum</label><input id="nv-publicatie" type="date"></div>
+            <div><label>Channel</label><select id="nv-kanaal">${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
+            <div><label>Working title</label><input id="nv-titel" placeholder="e.g. Top 10 space mysteries"></div>
+            <div><label>Planned publish date</label><input id="nv-publicatie" type="date"></div>
           </div>
-          <label>Idee / korte omschrijving</label><textarea id="nv-idee"></textarea>
+          <label>Idea / short description</label><textarea id="nv-idee"></textarea>
           <div style="margin-top:.7rem"><button class="btn primary" id="nv-start">Start in pipeline</button> <span class="error" id="nv-error"></span></div>
         </div>` : ''}
-      ${actief.map(v => videoKaart(v, isManager)).join('') || '<p class="muted">Geen video\'s in productie.</p>'}
-      ${klaar.length ? `<h3>✅ Afgerond (${klaar.length})</h3>${klaar.map(v => `<div class="card"><b>${esc(v.werktitel)}</b> — ${esc(kanaalNaam(v.channelId))} <span class="badge goedgekeurd">afgerond</span></div>`).join('')}` : ''}`;
+      ${actief.map(v => videoKaart(v, isManager)).join('') || '<p class="muted">No videos in production.</p>'}
+      ${klaar.length ? `<h3>✅ Finished (${klaar.length})</h3>${klaar.map(v => `<div class="card"><b>${esc(v.werktitel)}</b> — ${esc(kanaalNaam(v.channelId))} <span class="badge approved">finished</span></div>`).join('')}` : ''}`;
     bindVideoExtras();
     if (isManager) {
       $('#nv-start')?.addEventListener('click', async () => {
@@ -192,23 +192,23 @@ const VIEWS = {
     const [{ todos }, { channels }] = await Promise.all([api('/api/todos'), api('/api/channels')]);
     CACHE.channels = channels;
     $('#content').innerHTML = `
-      <h2>To-do's</h2>
+      <h2>To-dos</h2>
       <div class="card">
         <div class="form-row">
-          <input id="todo-tekst" placeholder="Nieuwe to-do…">
-          <select id="todo-kanaal"><option value="">— algemeen —</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select>
+          <input id="todo-tekst" placeholder="New to-do…">
+          <select id="todo-kanaal"><option value="">— general —</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select>
           <input id="todo-deadline" type="date">
-          <button class="btn primary" id="todo-add">Toevoegen</button>
+          <button class="btn primary" id="todo-add">Add</button>
         </div>
       </div>
       <div class="card" id="todo-lijst">
         ${todos.map(t => `
-          <div class="todo-rij ${t.klaar ? 'klaar' : ''}">
+          <div class="todo-rij ${t.klaar ? 'done' : ''}">
             <input type="checkbox" ${t.klaar ? 'checked' : ''} data-toggle="${t.id}">
             <span class="tekst">${esc(t.tekst)}</span>
             ${t.channelId ? `<span class="badge">${esc(kanaalNaam(t.channelId))}</span>` : ''}
             ${t.deadline ? `<span class="muted">📅 ${esc(t.deadline)}</span>` : ''}
-          </div>`).join('') || '<p class="muted">Geen to-do\'s.</p>'}
+          </div>`).join('') || '<p class="muted">No to-dos.</p>'}
       </div>`;
     $('#todo-add').addEventListener('click', async () => {
       if (!$('#todo-tekst').value) return;
@@ -224,42 +224,42 @@ const VIEWS = {
     CACHE.channels = channels;
     const isManager = magMinstens('manager');
     const asLabels = {
-      outlierPotentie: 'Outlier-potentie',
-      zoekvolume: 'Zoekvolume',
-      productiegemak: 'Productiegemak',
-      kanaalfit: 'Kanaalfit'
+      outlierPotentie: 'Outlier potential',
+      zoekvolume: 'Search volume',
+      productiegemak: 'Ease of production',
+      kanaalfit: 'Channel fit'
     };
-    const open = ideeen.filter(i => i.status === 'nieuw' || i.status === 'goedgekeurd');
-    const rest = ideeen.filter(i => i.status === 'afgewezen' || i.status === 'gepromoveerd');
+    const open = ideeen.filter(i => i.status === 'new' || i.status === 'approved');
+    const rest = ideeen.filter(i => i.status === 'rejected' || i.status === 'promoted');
     $('#content').innerHTML = `
-      <h2>💡 Ideeënbank</h2>
-      <p class="muted">De voorraad vóór de pipeline. Iedereen mag pitchen; jij scoort op vier assen en promoveert de beste ideeën naar productie. Zo staat de pipeline nooit droog en houd je de uploadfrequentie overeind.</p>
+      <h2>💡 Idea bank</h2>
+      <p class="muted">The stock that sits in front of the pipeline. Anyone can pitch; you score on four axes and promote the best ideas into production. That way the pipeline never runs dry and the upload frequency holds.</p>
 
       <div class="card">
-        <h3 style="margin-top:0">📦 Voorraad per kanaal</h3>
+        <h3 style="margin-top:0">📦 Stock per channel</h3>
         ${voorraad.map(v => `
           <div class="kalender-rij">
             <span class="badge ${v.status}">${v.wekenVoorraad ?? '?'} wk</span>
             <b>${esc(v.kanaal)}</b>
-            <span class="muted">${v.beschikbaar} ideeën op de plank · ${v.perWeek}×/week nodig${v.status === 'kritiek' ? ' — <b>tijd om te brainstormen!</b>' : ''}</span>
-          </div>`).join('') || '<p class="muted">Nog geen kanalen.</p>'}
+            <span class="muted">${v.beschikbaar} ideas on the shelf · ${v.perWeek}×/week needed${v.status === 'critical' ? ' — <b>time to brainstorm</b>' : ''}</span>
+          </div>`).join('') || '<p class="muted">No channels yet.</p>'}
       </div>
 
       <div class="card">
-        <h3 style="margin-top:0">➕ Idee pitchen</h3>
+        <h3 style="margin-top:0">➕ Pitch an idea</h3>
         <div class="form-row">
-          <div><label>Titel / werktitel</label><input id="i-titel" placeholder="bijv. De 5 vreemdste signalen uit de ruimte"></div>
-          <div><label>Kanaal</label><select id="i-kanaal"><option value="">— nog niet bepaald —</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
+          <div><label>Title / working title</label><input id="i-titel" placeholder="e.g. The 5 strangest signals from space"></div>
+          <div><label>Channel</label><select id="i-kanaal"><option value="">— not decided yet —</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
         </div>
-        <label>Waarom is dit een goed idee?</label><textarea id="i-omschrijving" placeholder="Wat is de hook? Voor wie is dit? Wat maakt het anders dan wat er al is?"></textarea>
-        <label>Bron / inspiratie (link naar de outlier of concurrent)</label><input id="i-bron" placeholder="https://youtube.com/watch?v=...">
-        <div style="margin-top:.7rem"><button class="btn primary" id="i-add">Idee toevoegen</button> <span class="error" id="i-error"></span></div>
+        <label>Why is this a good idea?</label><textarea id="i-omschrijving" placeholder="What is the hook? Who is it for? What makes it different from what already exists?"></textarea>
+        <label>Source / inspiration (link to the outlier or competitor)</label><input id="i-bron" placeholder="https://youtube.com/watch?v=...">
+        <div style="margin-top:.7rem"><button class="btn primary" id="i-add">Add idea</button> <span class="error" id="i-error"></span></div>
       </div>
 
-      <h3>Op de plank (${open.length})</h3>
-      ${open.map(i => ideeKaart(i, isManager, asLabels)).join('') || '<p class="muted">Nog geen ideeën. Pitch er hierboven een!</p>'}
+      <h3>On the shelf (${open.length})</h3>
+      ${open.map(i => ideeKaart(i, isManager, asLabels)).join('') || '<p class="muted">No ideas yet — pitch one above.</p>'}
 
-      ${rest.length ? `<h3>Archief (${rest.length})</h3>${rest.map(i => `
+      ${rest.length ? `<h3>Archive (${rest.length})</h3>${rest.map(i => `
         <div class="card">
           <b>${esc(i.titel)}</b> <span class="badge ${i.status}">${i.status}</span>
           ${i.score != null ? `<span class="muted"> · score ${i.score}/5</span>` : ''}
@@ -267,7 +267,7 @@ const VIEWS = {
         </div>`).join('')}` : ''}`;
 
     $('#i-add').addEventListener('click', async () => {
-      if (!$('#i-titel').value.trim()) { $('#i-error').textContent = 'Titel is verplicht'; return; }
+      if (!$('#i-titel').value.trim()) { $('#i-error').textContent = 'Title is required'; return; }
       try {
         await api('/api/ideeen', { method: 'POST', body: {
           titel: $('#i-titel').value, channelId: $('#i-kanaal').value || null,
@@ -282,22 +282,22 @@ const VIEWS = {
     const [{ weken, inGevaar }, { channels }] = await Promise.all([api('/api/kalender'), api('/api/channels')]);
     CACHE.channels = channels;
     $('#content').innerHTML = `
-      <h2>📅 Publicatiekalender</h2>
-      <p class="muted">Bewaakt per kanaal of de uploadfrequentie gehaald wordt. Geef video's een publicatiedatum (Pipeline → bewerken) en de kalender rekent alles uit. Bij gevaar gaat er 's ochtends automatisch een Discord-alarm af.</p>
+      <h2>📅 Publishing calendar</h2>
+      <p class="muted">Watches per channel whether the upload frequency is being met. Give videos a publish date (Pipeline → edit) and the calendar works out the rest. When a week is at risk, a Discord alert goes out automatically in the morning.</p>
       ${inGevaar.length ? `
         <div class="card" style="border-color:var(--red)">
-          <b>⚠️ Schema in gevaar:</b>
-          ${inGevaar.map(p => `<div class="todo-rij"><span class="badge leeg">${p.ingepland}/${p.benodigd}</span><span><b>${esc(p.kanaal)}</b> — week ${esc(p.week)}</span></div>`).join('')}
-        </div>` : '<div class="card" style="border-color:var(--green)">✅ Alle kanalen liggen op schema voor deze en volgende week.</div>'}
+          <b>⚠️ Schedule at risk:</b>
+          ${inGevaar.map(p => `<div class="todo-rij"><span class="badge empty">${p.ingepland}/${p.benodigd}</span><span><b>${esc(p.kanaal)}</b> — week ${esc(p.week)}</span></div>`).join('')}
+        </div>` : '<div class="card" style="border-color:var(--green)">✅ Every channel is on track for this week and next.</div>'}
       ${weken.map(w => `
         <div class="card kalender-week">
-          <h3 style="margin-top:0">Week ${esc(w.maandag)} t/m ${esc(w.zondag)}</h3>
+          <h3 style="margin-top:0">Week ${esc(w.maandag)} to ${esc(w.zondag)}</h3>
           ${w.kanalen.map(k => `
             <div class="kalender-rij">
               <span class="badge ${k.status}">${k.gepubliceerd + k.gepland}/${k.benodigd}</span>
               <b>${esc(k.kanaal)}</b>
-              <span class="videos">${k.videos.map(v => `${v.afgerond ? '✅' : '🎬'} ${esc(v.werktitel)} (${esc(v.datum)})`).join(' · ') || 'niets ingepland'}</span>
-            </div>`).join('') || '<p class="muted">Nog geen kanalen.</p>'}
+              <span class="videos">${k.videos.map(v => `${v.afgerond ? '✅' : '🎬'} ${esc(v.werktitel)} (${esc(v.datum)})`).join(' · ') || 'nothing scheduled'}</span>
+            </div>`).join('') || '<p class="muted">No channels yet.</p>'}
         </div>`).join('')}`;
   },
 
@@ -305,32 +305,32 @@ const VIEWS = {
     const [{ templates }, { channels }] = await Promise.all([api('/api/templates'), api('/api/channels')]);
     CACHE.channels = channels;
     const isManager = magMinstens('manager');
-    const types = { titel: '📝 Titelformules', thumbnail: '🖼️ Thumbnailconcepten', hook: '🪝 Hooks', beschrijving: '📄 Beschrijvingen', script: '✍️ Scriptstructuren' };
+    const types = { titel: '📝 Title formulas', thumbnail: '🖼️ Thumbnail concepts', hook: '🪝 Hooks', beschrijving: '📄 Descriptions', script: '✍️ Script structures' };
     $('#content').innerHTML = `
-      <h2>🧩 Templatebibliotheek</h2>
-      <p class="muted">Bewezen titelformules, thumbnailconcepten, hooks en beschrijvingen. Werkt iets goed (hoge CTR of AVD)? Sla het hier op — zo wordt het systeem elke maand slimmer.</p>
+      <h2>🧩 Template library</h2>
+      <p class="muted">Proven title formulas, thumbnail concepts, hooks and descriptions. Did something work well (high CTR or AVD)? Save it here — that is how the system gets smarter every month.</p>
       ${Object.entries(types).map(([type, kop]) => {
         const items = templates.filter(t => t.type === type);
         if (!items.length) return '';
         return `<h3>${kop}</h3>${items.map(t => `
           <div class="card">
-            <b>${esc(t.naam)}</b> ${t.channelId ? `<span class="badge">${esc(kanaalNaam(t.channelId))}</span>` : '<span class="badge">alle kanalen</span>'}
+            <b>${esc(t.naam)}</b> ${t.channelId ? `<span class="badge">${esc(kanaalNaam(t.channelId))}</span>` : '<span class="badge">all channels</span>'}
             ${isManager ? `<button class="btn small red" style="float:right" data-deltemplate="${t.id}">🗑️</button>` : ''}
             <p style="white-space:pre-wrap;margin-top:.4rem">${esc(t.inhoud)}</p>
             ${t.prestatie ? `<p class="muted" style="font-size:.82rem">📈 ${esc(t.prestatie)}</p>` : ''}
           </div>`).join('')}`;
-      }).join('') || '<p class="muted">Nog geen templates.</p>'}
+      }).join('') || '<p class="muted">No templates yet.</p>'}
       ${isManager ? `
-      <h3>Nieuwe template</h3>
+      <h3>New template</h3>
       <div class="card">
         <div class="form-row">
           <div><label>Type</label><select id="t-type">${Object.keys(types).map(t => `<option>${t}</option>`).join('')}</select></div>
-          <div><label>Naam</label><input id="t-naam" placeholder="bijv. Getal + mysterie + curiosity gap"></div>
-          <div><label>Kanaal</label><select id="t-kanaal"><option value="">alle kanalen</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
+          <div><label>Name</label><input id="t-naam" placeholder="e.g. Number + mystery + curiosity gap"></div>
+          <div><label>Channel</label><select id="t-kanaal"><option value="">all channels</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
         </div>
-        <label>Inhoud / formule</label><textarea id="t-inhoud" placeholder="bijv. [Getal] [onderwerpen] die [onverwacht gevolg] — max 55 tekens"></textarea>
-        <label>Prestatie-notitie (waarom werkt dit?)</label><input id="t-prestatie" placeholder="bijv. 8,1% CTR op video X">
-        <div style="margin-top:.7rem"><button class="btn primary" id="t-add">Opslaan</button> <span class="error" id="t-error"></span></div>
+        <label>Content / formula</label><textarea id="t-inhoud" placeholder="e.g. [Number] [topics] that [unexpected consequence] — max 55 characters"></textarea>
+        <label>Performance note (why does this work?)</label><input id="t-prestatie" placeholder="e.g. 8.1% CTR on video X">
+        <div style="margin-top:.7rem"><button class="btn primary" id="t-add">Save</button> <span class="error" id="t-error"></span></div>
       </div>` : ''}`;
     $('#t-add')?.addEventListener('click', async () => {
       try {
@@ -341,7 +341,7 @@ const VIEWS = {
       } catch (e) { $('#t-error').textContent = e.message; }
     });
     document.querySelectorAll('[data-deltemplate]').forEach(b => b.addEventListener('click', async () => {
-      if (confirm('Template verwijderen?')) {
+      if (confirm('Delete this template?')) {
         await api(`/api/templates/${b.dataset.deltemplate}`, { method: 'DELETE' });
         VIEWS.templates();
       }
@@ -350,13 +350,13 @@ const VIEWS = {
 
   instructies: () => {
     $('#content').innerHTML = `
-      <h2>📚 Instructiecentrum</h2>
-      <p class="muted">Vaste werkinstructies per rol. Nieuw teamlid? Eerst dit lezen, dan pas aan de slag.</p>
+      <h2>📚 Instruction centre</h2>
+      <p class="muted">Fixed working instructions per role. New team member? Read this first, then start.</p>
       <div class="instructie-nav">
         <button class="btn" data-inst="scriptwriter">✍️ Scriptwriter</button>
-        <button class="btn" data-inst="editor">🎞️ Video-editor</button>
-        <button class="btn" data-inst="thumbnail">🖼️ Thumbnail-artiest</button>
-        <button class="btn" data-inst="algemeen">🧭 Algemene afspraken</button>
+        <button class="btn" data-inst="editor">🎞️ Video editor</button>
+        <button class="btn" data-inst="thumbnail">🖼️ Thumbnail artist</button>
+        <button class="btn" data-inst="algemeen">🧭 House rules</button>
       </div>
       <div class="card instructie-body" id="instructie-body"></div>`;
     document.querySelectorAll('[data-inst]').forEach(b =>
@@ -370,10 +370,10 @@ const VIEWS = {
     CACHE.channels = channels;
     $('#content').innerHTML = `
       <h2>🔐 Channel Admin</h2>
-      <p class="muted">Alle kanaalinformatie en inloggegevens op één plek. Geheimen zijn versleuteld opgeslagen; alleen de admin kan ze onthullen en elke onthulling wordt gelogd.</p>
+      <p class="muted">All channel information and credentials in one place. Secrets are stored encrypted; only the admin can reveal them, and every reveal is logged.</p>
       <div class="card">
         <table>
-          <tr><th>Label</th><th>Kanaal</th><th>Gebruikersnaam</th><th>URL</th><th>Notities</th><th></th></tr>
+          <tr><th>Label</th><th>Channel</th><th>Username</th><th>URL</th><th>Notes</th><th></th></tr>
           ${entries.map(e => `
             <tr>
               <td><b>${esc(e.label)}</b></td>
@@ -382,24 +382,24 @@ const VIEWS = {
               <td>${e.url ? `<a href="${esc(e.url)}" target="_blank">link</a>` : ''}</td>
               <td class="muted">${esc(e.notities)}</td>
               <td>
-                ${magOnthullen ? `<button class="btn small" data-onthul="${e.id}">👁️ Toon geheim</button>
+                ${magOnthullen ? `<button class="btn small" data-onthul="${e.id}">👁️ Show secret</button>
                 <button class="btn small red" data-verwijder="${e.id}">🗑️</button>` : ''}
               </td>
-            </tr>`).join('') || '<tr><td colspan="6" class="muted">Nog geen items.</td></tr>'}
+            </tr>`).join('') || '<tr><td colspan="6" class="muted">No entries yet.</td></tr>'}
         </table>
       </div>
       ${magOnthullen ? `
-      <h3>Nieuw item</h3>
+      <h3>New entry</h3>
       <div class="card">
         <div class="form-row">
-          <div><label>Label</label><input id="v-label" placeholder="bijv. YouTube-login hoofdkanaal"></div>
-          <div><label>Kanaal</label><select id="v-kanaal"><option value="">—</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
-          <div><label>Gebruikersnaam / e-mail</label><input id="v-user"></div>
-          <div><label>Wachtwoord / geheim</label><input id="v-secret" type="password"></div>
+          <div><label>Label</label><input id="v-label" placeholder="e.g. YouTube login main channel"></div>
+          <div><label>Channel</label><select id="v-kanaal"><option value="">—</option>${channels.map(c => `<option value="${c.id}">${esc(c.naam)}</option>`).join('')}</select></div>
+          <div><label>Username / email</label><input id="v-user"></div>
+          <div><label>Password / secret</label><input id="v-secret" type="password"></div>
           <div><label>URL</label><input id="v-url" placeholder="https://…"></div>
-          <div><label>Notities</label><input id="v-notities" placeholder="bijv. 2FA via admin-telefoon"></div>
+          <div><label>Notes</label><input id="v-notities" placeholder="e.g. 2FA on the admin phone"></div>
         </div>
-        <div style="margin-top:.7rem"><button class="btn primary" id="v-add">Opslaan</button> <span class="error" id="v-error"></span></div>
+        <div style="margin-top:.7rem"><button class="btn primary" id="v-add">Save</button> <span class="error" id="v-error"></span></div>
       </div>` : ''}`;
     $('#v-add')?.addEventListener('click', async () => {
       try {
@@ -412,10 +412,10 @@ const VIEWS = {
     });
     document.querySelectorAll('[data-onthul]').forEach(b => b.addEventListener('click', async () => {
       const { secret } = await api(`/api/vault/${b.dataset.onthul}/onthul`, { method: 'POST' });
-      alert(`Geheim:\n\n${secret || '(leeg)'}\n\nDeze onthulling is gelogd.`);
+      alert(`Secret:\n\n${secret || '(empty)'}\n\nThis reveal has been logged.`);
     }));
     document.querySelectorAll('[data-verwijder]').forEach(b => b.addEventListener('click', async () => {
-      if (confirm('Dit vault-item definitief verwijderen?')) {
+      if (confirm('Permanently delete this vault entry?')) {
         await api(`/api/vault/${b.dataset.verwijder}`, { method: 'DELETE' });
         VIEWS.vault();
       }
@@ -426,31 +426,31 @@ const VIEWS = {
     const { users, rollen, functies } = await api('/api/users');
     const isAdmin = magMinstens('admin');
     $('#content').innerHTML = `
-      <h2>👥 Team & toegangsbeheer</h2>
-      <p class="muted">admin = alles · manager = beheer zonder geheimen · freelancer = alleen pipeline, to-do's en instructies.</p>
+      <h2>👥 Team &amp; access control</h2>
+      <p class="muted">admin = everything · manager = management without secrets · freelancer = pipeline, to-dos and instructions only.</p>
       <div class="card">
         <table>
-          <tr><th>Naam</th><th>E-mail</th><th>Rol</th><th>Functie</th><th></th></tr>
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Job</th><th></th></tr>
           ${users.map(u => `
             <tr>
               <td><b>${esc(u.naam)}</b></td><td class="muted">${esc(u.email)}</td>
               <td><span class="badge">${esc(u.rol)}</span></td><td>${esc(u.functie)}</td>
-              <td>${u.discordUserId ? '<span class="badge" title="Discord gekoppeld">🎮 Discord ✓</span>' : (isAdmin ? `<button class="btn small" data-koppelcode="${u.id}">🎮 Koppelcode</button>` : '')}
+              <td>${u.discordUserId ? '<span class="badge" title="Discord linked">🎮 Discord ✓</span>' : (isAdmin ? `<button class="btn small" data-koppelcode="${u.id}">🎮 Link code</button>` : '')}
               ${isAdmin && u.id !== ME.id ? `<button class="btn small red" data-deluser="${u.id}">🗑️</button>` : ''}</td>
             </tr>`).join('')}
         </table>
       </div>
       ${isAdmin ? `
-      <h3>Nieuw teamlid</h3>
+      <h3>New team member</h3>
       <div class="card">
         <div class="form-row">
-          <div><label>Naam</label><input id="u-naam"></div>
-          <div><label>E-mail</label><input id="u-email" type="email"></div>
-          <div><label>Tijdelijk wachtwoord</label><input id="u-pass"></div>
-          <div><label>Rol</label><select id="u-rol">${rollen.map(r => `<option ${r === 'freelancer' ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
-          <div><label>Functie</label><select id="u-functie">${functies.map(f => `<option>${f}</option>`).join('')}</select></div>
+          <div><label>Name</label><input id="u-naam"></div>
+          <div><label>Email</label><input id="u-email" type="email"></div>
+          <div><label>Temporary password</label><input id="u-pass"></div>
+          <div><label>Role</label><select id="u-rol">${rollen.map(r => `<option ${r === 'freelancer' ? 'selected' : ''}>${r}</option>`).join('')}</select></div>
+          <div><label>Job</label><select id="u-functie">${functies.map(f => `<option>${f}</option>`).join('')}</select></div>
         </div>
-        <div style="margin-top:.7rem"><button class="btn primary" id="u-add">Toevoegen</button> <span class="error" id="u-error"></span></div>
+        <div style="margin-top:.7rem"><button class="btn primary" id="u-add">Add</button> <span class="error" id="u-error"></span></div>
       </div>` : ''}`;
     $('#u-add')?.addEventListener('click', async () => {
       try {
@@ -462,10 +462,10 @@ const VIEWS = {
     });
     document.querySelectorAll('[data-koppelcode]').forEach(b => b.addEventListener('click', async () => {
       const { code, uitleg } = await api(`/api/users/${b.dataset.koppelcode}/koppelcode`, { method: 'POST' });
-      alert(`Koppelcode: ${code}\n\n${uitleg}`);
+      alert(`Link code: ${code}\n\n${uitleg}`);
     }));
     document.querySelectorAll('[data-deluser]').forEach(b => b.addEventListener('click', async () => {
-      if (confirm('Gebruiker verwijderen? Toegang vervalt direct.')) {
+      if (confirm('Delete this user? Their access ends immediately.')) {
         await api(`/api/users/${b.dataset.deluser}`, { method: 'DELETE' });
         VIEWS.team();
       }
@@ -475,43 +475,43 @@ const VIEWS = {
   instellingen: async () => {
     const { settings } = await api('/api/settings');
     $('#content').innerHTML = `
-      <h2>⚙️ Instellingen</h2>
+      <h2>⚙️ Settings</h2>
       <div class="card">
-        <h3 style="margin-top:0">Discord-koppeling</h3>
-        <p class="muted">Maak in je Discord-server een webhook aan (Serverinstellingen → Integraties → Webhooks, bijv. voor #productie-updates) en plak de URL hieronder. Het CMS post dan automatisch bij elke checkpoint, goedkeuring, afkeuring en nieuwe video. Zie docs/discord-integratie.md voor de volwaardige bot met goedkeuringsknoppen.</p>
-        <label>Webhook-URL</label>
+        <h3 style="margin-top:0">Discord integration</h3>
+        <p class="muted">Create a webhook in your Discord server (Server Settings → Integrations → Webhooks, for example for #production-updates) and paste the URL below. The CMS then posts automatically on every checkpoint, approval, rejection and new video. See docs/discord-integration.md for the full bot with approval buttons.</p>
+        <label>Webhook URL</label>
         <input id="s-webhook" value="${esc(settings.discordWebhookUrl)}" placeholder="https://discord.com/api/webhooks/…">
-        <label><input type="checkbox" id="s-enabled" style="width:auto" ${settings.discordEnabled ? 'checked' : ''}> Notificaties aan</label>
+        <label><input type="checkbox" id="s-enabled" style="width:auto" ${settings.discordEnabled ? 'checked' : ''}> Notifications on</label>
         <div style="margin-top:.7rem">
-          <button class="btn primary" id="s-save">Alle instellingen opslaan</button>
-          <button class="btn" id="s-test">Test versturen</button>
+          <button class="btn primary" id="s-save">Save all settings</button>
+          <button class="btn" id="s-test">Send a test</button>
           <span id="s-msg" class="muted"></span>
         </div>
       </div>
       <div class="card">
-        <h3 style="margin-top:0">Discord-bot</h3>
-        <p class="muted">De bot in <code>discord-bot/</code> logt in op het CMS met dit token. Genereer het één keer en zet het in de <code>.env</code> van de bot als <code>CMS_BOT_TOKEN</code>. Opnieuw genereren maakt het oude token ongeldig.</p>
-        <p>${settings.botToken ? `Huidig token: <code>${esc(settings.botToken)}</code>` : '<span class="muted">Nog geen token gegenereerd.</span>'}</p>
-        <button class="btn" id="s-bottoken">🎮 Genereer ${settings.botToken ? 'nieuw ' : ''}bot-token</button>
+        <h3 style="margin-top:0">Discord bot</h3>
+        <p class="muted">The bot in <code>discord-bot/</code> signs in to the CMS with this token. Generate it once and put it in the bot's <code>.env</code> as <code>CMS_BOT_TOKEN</code>. Generating a new one invalidates the old token.</p>
+        <p>${settings.botToken ? `Current token: <code>${esc(settings.botToken)}</code>` : '<span class="muted">No token generated yet.</span>'}</p>
+        <button class="btn" id="s-bottoken">🎮 Generate ${settings.botToken ? 'a new ' : 'a '}bot token</button>
       </div>
       <div class="card">
         <h3 style="margin-top:0">YouTube API</h3>
-        <p class="muted">Voor automatische KPI's (views, AVD, omzet). Maak een OAuth-client aan in de Google Cloud Console (zie docs/youtube-api.md), vul hieronder in, en koppel daarna per kanaal via het Kanalen-tabblad. Thumbnail-CTR geeft YouTube niet via de API — die vul je handmatig in bij een video.</p>
+        <p class="muted">For automatic KPIs (views, AVD, revenue). Create an OAuth client in the Google Cloud Console (see docs/youtube-api.md), fill it in below, then link each channel from the Channels tab. YouTube does not expose thumbnail CTR through the API — you enter that by hand on a video.</p>
         <div class="form-row">
-          <div><label>Client-id</label><input id="s-ytclient" value="${esc(settings.youtube?.clientId || '')}" placeholder="xxxx.apps.googleusercontent.com"></div>
-          <div><label>Client-secret ${settings.youtube?.clientSecretIngesteld ? '(ingesteld — alleen invullen om te vervangen)' : ''}</label><input id="s-ytsecret" type="password" placeholder="${settings.youtube?.clientSecretIngesteld ? '••••••••' : 'GOCSPX-…'}"></div>
+          <div><label>Client ID</label><input id="s-ytclient" value="${esc(settings.youtube?.clientId || '')}" placeholder="xxxx.apps.googleusercontent.com"></div>
+          <div><label>Client secret ${settings.youtube?.clientSecretIngesteld ? '(set — only fill in to replace it)' : ''}</label><input id="s-ytsecret" type="password" placeholder="${settings.youtube?.clientSecretIngesteld ? '••••••••' : 'GOCSPX-…'}"></div>
         </div>
       </div>
       <div class="card">
-        <h3 style="margin-top:0">QC-checklist (vóór upload)</h3>
-        <p class="muted">Eén regel per checkpunt. Nieuwe video's krijgen deze lijst; de upload-stap kan pas ingeleverd worden als alles is afgevinkt.</p>
+        <h3 style="margin-top:0">QC checklist (before upload)</h3>
+        <p class="muted">One line per check. New videos get this list; the upload step can only be submitted once everything is ticked off.</p>
         <textarea id="s-qc" style="min-height:140px">${esc((settings.qcItems || []).join('\n'))}</textarea>
       </div>
       <div class="card">
-        <h3 style="margin-top:0">Wachtwoord wijzigen</h3>
+        <h3 style="margin-top:0">Change password</h3>
         <div class="form-row">
-          <input id="pw-nieuw" type="password" placeholder="Nieuw wachtwoord (min. 8 tekens)">
-          <button class="btn" id="pw-save">Wijzigen</button>
+          <input id="pw-nieuw" type="password" placeholder="New password (at least 8 characters)">
+          <button class="btn" id="pw-save">Change</button>
         </div>
       </div>`;
     $('#s-save').addEventListener('click', async () => {
@@ -521,25 +521,25 @@ const VIEWS = {
         qcItems: $('#s-qc').value.split('\n').map(s => s.trim()).filter(Boolean),
         youtube: { clientId: $('#s-ytclient').value, clientSecret: $('#s-ytsecret').value }
       } });
-      $('#s-msg').textContent = 'Opgeslagen ✔';
+      $('#s-msg').textContent = 'Saved ✔';
     });
     $('#s-bottoken').addEventListener('click', async () => {
-      if (!confirm('Nieuw bot-token genereren? Een eventueel oud token stopt direct met werken.')) return;
+      if (!confirm('Generate a new bot token? Any existing token stops working immediately.')) return;
       await api('/api/settings/bot-token', { method: 'POST' });
       VIEWS.instellingen();
     });
     $('#s-test').addEventListener('click', async () => {
-      try { await api('/api/settings/discord-test', { method: 'POST' }); $('#s-msg').textContent = 'Testbericht verstuurd ✔'; }
+      try { await api('/api/settings/discord-test', { method: 'POST' }); $('#s-msg').textContent = 'Test message sent ✔'; }
       catch (e) { $('#s-msg').textContent = e.message; }
     });
     $('#pw-save').addEventListener('click', async () => {
-      try { await api('/api/me/password', { method: 'POST', body: { nieuw: $('#pw-nieuw').value } }); $('#pw-nieuw').value = ''; alert('Wachtwoord gewijzigd'); }
+      try { await api('/api/me/password', { method: 'POST', body: { nieuw: $('#pw-nieuw').value } }); $('#pw-nieuw').value = ''; alert('Password changed'); }
       catch (e) { alert(e.message); }
     });
   }
 };
 
-// ---------- helpers: kanalen ----------
+// ---------- helpers: channels ----------
 function kanaalNaam(cid) {
   return CACHE.channels.find(c => c.id === cid)?.naam || '—';
 }
@@ -551,26 +551,26 @@ function kanaalKaart(c, isManager) {
       <h3 style="margin-top:0">📺 ${esc(c.naam)}</h3>
       <p class="muted">${esc(c.onderwerp)}</p>
       <div class="grid" style="margin:.8rem 0">
-        <div><b>Uploadfrequentie</b><br>${k.uploadFrequentiePerWeek ?? '?'}× per week ${c.uploadDagen ? `(${esc(c.uploadDagen)})` : ''}</div>
-        ${k.avdMinuten != null ? `<div><b>Doel AVD</b><br>${k.avdMinuten} min</div>` : ''}
-        ${k.ctrPct != null ? `<div><b>Doel CTR</b><br>${k.ctrPct}%</div>` : ''}
-        ${k.levertijdDagen != null ? `<div><b>Levertijd</b><br>${k.levertijdDagen} dagen per video</div>` : ''}
-        ${k.omzetgroeiPctPerMaand != null ? `<div><b>Doel omzetgroei</b><br>${k.omzetgroeiPctPerMaand}% per maand</div>` : ''}
+        <div><b>Upload frequency</b><br>${k.uploadFrequentiePerWeek ?? '?'}× per week ${c.uploadDagen ? `(${esc(c.uploadDagen)})` : ''}</div>
+        ${k.avdMinuten != null ? `<div><b>Target AVD</b><br>${k.avdMinuten} min</div>` : ''}
+        ${k.ctrPct != null ? `<div><b>Target CTR</b><br>${k.ctrPct}%</div>` : ''}
+        ${k.levertijdDagen != null ? `<div><b>Lead time</b><br>${k.levertijdDagen} days per video</div>` : ''}
+        ${k.omzetgroeiPctPerMaand != null ? `<div><b>Target revenue growth</b><br>${k.omzetgroeiPctPerMaand}% per month</div>` : ''}
       </div>
-      ${c.titelFormat ? `<p><b>Titelformat:</b> <span class="muted">${esc(c.titelFormat)}</span></p>` : ''}
-      ${c.thumbnailFormat ? `<p><b>Thumbnailformat:</b> <span class="muted">${esc(c.thumbnailFormat)}</span></p>` : ''}
-      ${c.concurrenten?.length ? `<p><b>Concurrenten:</b> ${c.concurrenten.map(x => `<span class="badge">${esc(x)}</span>`).join(' ')}</p>` : ''}
+      ${c.titelFormat ? `<p><b>Title format:</b> <span class="muted">${esc(c.titelFormat)}</span></p>` : ''}
+      ${c.thumbnailFormat ? `<p><b>Thumbnail format:</b> <span class="muted">${esc(c.thumbnailFormat)}</span></p>` : ''}
+      ${c.concurrenten?.length ? `<p><b>Competitors:</b> ${c.concurrenten.map(x => `<span class="badge">${esc(x)}</span>`).join(' ')}</p>` : ''}
       ${c.notities ? `<p class="muted">${esc(c.notities)}</p>` : ''}
       ${youtubeBlok(c, isManager)}
-      ${isManager ? `<details style="margin-top:.6rem"><summary class="muted" style="cursor:pointer">Bewerken</summary>${kanaalForm(c)}</details>` : ''}
+      ${isManager ? `<details style="margin-top:.6rem"><summary class="muted" style="cursor:pointer">Edit</summary>${kanaalForm(c)}</details>` : ''}
     </div>`;
 }
 
-// Doel vs. realisatie: groen = doel gehaald, geel = >75%, rood = eronder.
+// Target vs. actual: green = target met, amber = above 75%, red = below.
 function stoplicht(realisatie, doel, hogerIsBeter = true) {
   if (realisatie == null || doel == null) return '';
   const ratio = hogerIsBeter ? realisatie / doel : doel / realisatie;
-  const kleur = ratio >= 1 ? 'groen' : ratio >= 0.75 ? 'geel' : 'rood';
+  const kleur = ratio >= 1 ? 'green' : ratio >= 0.75 ? 'amber' : 'red';
   return `<span class="kpi-stoplicht ${kleur}"></span>`;
 }
 
@@ -583,12 +583,12 @@ function youtubeBlok(c, isManager) {
   return `
     <div style="border-top:1px solid var(--border);margin-top:.8rem;padding-top:.6rem">
       ${yt?.youtubeChannelId
-        ? `<p style="font-size:.85rem">▶️ Gekoppeld aan <b>${esc(yt.youtubeNaam || yt.youtubeChannelId)}</b>
-            ${s ? `<span class="muted">· ${esc(s.periode)}: <b>${s.views}</b> views · ${stoplicht(avdMin, k.avdMinuten)}AVD <b>${avdMin ?? '?'} min</b> (doel ${k.avdMinuten ?? '–'}) · +${s.abonneesErbij} abonnees${s.omzetUsd != null ? ` · $${Number(s.omzetUsd).toFixed(2)}` : ''}</span>` : '<span class="muted">· nog geen cijfers — druk op Sync</span>'}
+        ? `<p style="font-size:.85rem">▶️ Linked to <b>${esc(yt.youtubeNaam || yt.youtubeChannelId)}</b>
+            ${s ? `<span class="muted">· ${esc(s.periode)}: <b>${s.views}</b> views · ${stoplicht(avdMin, k.avdMinuten)}AVD <b>${avdMin ?? '?'} min</b> (target ${k.avdMinuten ?? '–'}) · +${s.abonneesErbij} subscribers${s.omzetUsd != null ? ` · $${Number(s.omzetUsd).toFixed(2)}` : ''}</span>` : '<span class="muted">· no figures yet — press Sync</span>'}
            </p>`
-        : (isManager ? '<p class="muted" style="font-size:.85rem">▶️ Nog niet aan YouTube gekoppeld — cijfers komen dan automatisch binnen.</p>' : '')}
-      ${magMinstens('admin') && !yt?.youtubeChannelId ? `<button class="btn small" data-ytkoppel="${c.id}">▶️ Koppel YouTube</button>` : ''}
-      ${isManager && yt?.youtubeChannelId ? `<button class="btn small" data-ytsync="1">🔄 Sync cijfers</button>` : ''}
+        : (isManager ? '<p class="muted" style="font-size:.85rem">▶️ Not linked to YouTube yet — once linked, the figures come in automatically.</p>' : '')}
+      ${magMinstens('admin') && !yt?.youtubeChannelId ? `<button class="btn small" data-ytkoppel="${c.id}">▶️ Link YouTube</button>` : ''}
+      ${isManager && yt?.youtubeChannelId ? `<button class="btn small" data-ytsync="1">🔄 Sync figures</button>` : ''}
     </div>`;
 }
 
@@ -597,23 +597,23 @@ function bindYoutubeActies() {
     try {
       const { url } = await api(`/api/youtube/koppel?channelId=${b.dataset.ytkoppel}`);
       window.open(url, '_blank');
-      alert('Log in met het Google-account van dit YouTube-kanaal. Kom daarna terug en druk op "Sync cijfers".');
+      alert('Sign in with the Google account that owns this YouTube channel, then come back and press "Sync figures".');
     } catch (e) { alert(e.message); }
   }));
   document.querySelectorAll('[data-ytsync]').forEach(b => b.addEventListener('click', async () => {
-    b.textContent = '⏳ bezig…';
+    b.textContent = '⏳ working…';
     try {
       const { resultaten } = await api('/api/youtube/sync', { method: 'POST' });
-      alert(resultaten.map(r => `${r.kanaal}: ${r.videos} video's bijgewerkt${r.fouten.length ? `\n  fouten: ${r.fouten.join('; ')}` : ''}`).join('\n'));
+      alert(resultaten.map(r => `${r.kanaal}: ${r.videos} videos updated${r.fouten.length ? `\n  errors: ${r.fouten.join('; ')}` : ''}`).join('\n'));
       VIEWS.kanalen();
     } catch (e) { alert(e.message); VIEWS.kanalen(); }
   }));
 }
 
-// ---------- kanaalformulier met schuifbalken ----------
-// Elke schuifbalk is een <input type="range"> met een leesbaar getal ernaast.
-// Bij elke beweging wordt het hele kanaal opnieuw doorgerekend met calc.js —
-// dezelfde functies die de server voor het dashboard gebruikt.
+// ---------- channel form with sliders ----------
+// Every slider is an <input type="range"> with a readable number beside it.
+// On every movement the whole channel is recalculated through calc.js — the
+// same functions the server uses for the dashboard.
 function schuif(cls, label, o) {
   const waarde = o.waarde ?? o.standaard ?? o.min;
   return `
@@ -631,7 +631,7 @@ function toonWaarde(v, o) {
   return o.eenheid === '€' ? `€ ${tekst}` : `${tekst}${o.eenheid ? ' ' + o.eenheid : ''}`;
 }
 
-const nl = (n, dec = 0) => new Intl.NumberFormat('nl-NL', {
+const nl = (n, dec = 0) => new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: dec, maximumFractionDigits: dec
 }).format(Number.isFinite(Number(n)) ? Number(n) : 0);
 const eur = (n, dec = 0) => '€ ' + nl(n, dec);
@@ -640,81 +640,82 @@ function kanaalForm(c) {
   const k = c.kpis || {};
   const p = calc.productieVan(c);
   const cid = c.id || 'nieuw';
+  // Fees move in steps of 2.50 so half-euro rates land exactly on the slider.
   const kost = (key, label, max) => schuif(`f-kost-${key}`, label,
-    { min: 0, max, step: 5, waarde: p.kostenPerStap[key], eenheid: '€' });
+    { min: 0, max, step: 2.5, waarde: p.kostenPerStap[key], eenheid: '€', decimalen: 2 });
   const uur = (key, label) => schuif(`f-uur-${key}`, label,
-    { min: 0, max: 20, step: 0.5, waarde: p.urenPerStap[key], eenheid: 'uur', decimalen: 1 });
+    { min: 0, max: 20, step: 0.5, waarde: p.urenPerStap[key], eenheid: 'hrs', decimalen: 1 });
 
   return `
     <div data-kanaalform="${cid}">
       <div class="form-row">
-        <div><label>Kanaalnaam *</label><input class="f-naam" value="${esc(c.naam || '')}"></div>
-        <div><label>Onderwerp / niche</label><input class="f-onderwerp" value="${esc(c.onderwerp || '')}" placeholder="bijv. ruimtemysteries, faceless"></div>
-        <div><label>Uploaddagen</label><input class="f-dagen" value="${esc(c.uploadDagen || '')}" placeholder="bijv. di + vr 17:00"></div>
+        <div><label>Channel name *</label><input class="f-naam" value="${esc(c.naam || '')}"></div>
+        <div><label>Topic / niche</label><input class="f-onderwerp" value="${esc(c.onderwerp || '')}" placeholder="e.g. space mysteries, faceless"></div>
+        <div><label>Upload days</label><input class="f-dagen" value="${esc(c.uploadDagen || '')}" placeholder="e.g. Tue + Fri 17:00"></div>
       </div>
 
-      <h4 class="blok-kop">📈 Ritme en doelen</h4>
+      <h4 class="blok-kop">📈 Rhythm and targets</h4>
       <div class="schuif-rij">
-        ${schuif('f-freq', 'Uploadfrequentie per week *', {
+        ${schuif('f-freq', 'Upload frequency per week *', {
           min: 1, max: 14, step: 1, waarde: k.uploadFrequentiePerWeek || 2, eenheid: '× / week',
-          uitleg: 'Het getal waar al het andere aan hangt.' })}
-        ${schuif('f-levertijd', 'Levertijd per video', {
-          min: 1, max: 45, step: 1, waarde: k.levertijdDagen || 14, eenheid: 'dagen',
-          uitleg: 'Van idee tot upload. Bepaalt de deadlines per stap.' })}
-        ${schuif('f-avd', 'Doel gemiddelde kijktijd (AVD)', {
+          uitleg: 'The number everything else hangs off.' })}
+        ${schuif('f-levertijd', 'Lead time per video', {
+          min: 1, max: 45, step: 1, waarde: k.levertijdDagen || 14, eenheid: 'days',
+          uitleg: 'From idea to upload. Sets the deadline for each step.' })}
+        ${schuif('f-avd', 'Target average view duration (AVD)', {
           min: 0, max: 30, step: 0.5, waarde: k.avdMinuten ?? 4, eenheid: 'min', decimalen: 1 })}
-        ${schuif('f-ctr', 'Doel CTR', {
+        ${schuif('f-ctr', 'Target CTR', {
           min: 0, max: 20, step: 0.1, waarde: k.ctrPct ?? 6, eenheid: '%', decimalen: 1 })}
-        ${schuif('f-omzet', 'Doel omzetgroei', {
-          min: 0, max: 50, step: 0.5, waarde: k.omzetgroeiPctPerMaand ?? 10, eenheid: '% / maand', decimalen: 1 })}
+        ${schuif('f-omzet', 'Target revenue growth', {
+          min: 0, max: 50, step: 0.5, waarde: k.omzetgroeiPctPerMaand ?? 10, eenheid: '% / month', decimalen: 1 })}
       </div>
 
-      <h4 class="blok-kop">💶 Wat één video kost</h4>
+      <h4 class="blok-kop">💶 What one video costs</h4>
       <div class="schuif-rij">
         ${kost('script', 'Script', 300)}
         ${kost('voice', 'Voice / avatar', 300)}
-        ${kost('video', 'Video-edit', 600)}
+        ${kost('video', 'Video edit', 600)}
         ${kost('thumbnail', 'Thumbnail', 200)}
         ${kost('upload', 'Upload / SEO', 200)}
-        ${schuif('f-vast', 'Vaste kosten per maand', {
-          min: 0, max: 2000, step: 10, waarde: p.vasteKostenPerMaand, eenheid: '€',
-          uitleg: 'Tools, abonnementen, stockmateriaal.' })}
+        ${schuif('f-vast', 'Fixed cost per month', {
+          min: 0, max: 2000, step: 2.5, waarde: p.vasteKostenPerMaand, eenheid: '€', decimalen: 2,
+          uitleg: 'Tools, subscriptions, stock footage.' })}
       </div>
 
-      <h4 class="blok-kop">⏱️ Hoeveel werk één video is</h4>
+      <h4 class="blok-kop">⏱️ How much work one video is</h4>
       <div class="schuif-rij">
         ${uur('script', 'Script')}
         ${uur('voice', 'Voice / avatar')}
-        ${uur('video', 'Video-edit')}
+        ${uur('video', 'Video edit')}
         ${uur('thumbnail', 'Thumbnail')}
         ${uur('upload', 'Upload / SEO')}
-        ${schuif('f-uren-per-freelancer', 'Beschikbaar per freelancer', {
-          min: 4, max: 40, step: 2, waarde: p.urenPerFreelancerPerWeek, eenheid: 'uur / week',
-          uitleg: 'Waarmee wordt gerekend hoeveel mensen je nodig hebt.' })}
+        ${schuif('f-uren-per-freelancer', 'Available per freelancer', {
+          min: 4, max: 40, step: 2, waarde: p.urenPerFreelancerPerWeek, eenheid: 'hrs / week',
+          uitleg: 'Used to work out how many people you need.' })}
       </div>
 
-      <h4 class="blok-kop">🎯 Aannames voor de terugverdientijd</h4>
+      <h4 class="blok-kop">🎯 Assumptions for the payback</h4>
       <div class="schuif-rij">
-        ${schuif('f-rpm', 'RPM (opbrengst per 1.000 weergaven)', {
+        ${schuif('f-rpm', 'RPM (revenue per 1,000 views)', {
           min: 0, max: 30, step: 0.25, waarde: p.rpm, eenheid: '€', decimalen: 2 })}
-        ${schuif('f-views', 'Verwachte weergaven per video', {
+        ${schuif('f-views', 'Expected views per video', {
           min: 0, max: 200000, step: 1000, waarde: p.verwachteViewsPerVideo, eenheid: 'views' })}
-        ${schuif('f-ideeratio', 'Deel van de ideeën dat doorgaat', {
+        ${schuif('f-ideeratio', 'Share of ideas that make it through', {
           min: 5, max: 100, step: 5, waarde: p.ideeGoedkeuringsPct, eenheid: '%',
-          uitleg: 'Bij 50% heb je twee ideeën nodig per video.' })}
+          uitleg: 'At 50% you need two ideas per video.' })}
       </div>
 
       <div class="rekenblok" data-rekenblok></div>
 
-      <label>Titelformat / -structuur</label><input class="f-titelformat" value="${esc(c.titelFormat || '')}" placeholder="bijv. [Getal] + [onderwerp] + curiosity gap — max 55 tekens">
-      <label>Thumbnailformat / -structuur</label><input class="f-thumbformat" value="${esc(c.thumbnailFormat || '')}" placeholder="bijv. 1 gezicht/object rechts, 3-4 woorden links, felle contrastkleur">
-      <label>Concurrenten (komma-gescheiden)</label><input class="f-concurrenten" value="${esc((c.concurrenten || []).join(', '))}">
-      <label>Notities</label><textarea class="f-notities">${esc(c.notities || '')}</textarea>
-      <div style="margin-top:.7rem"><button class="btn primary f-save">Opslaan</button> <span class="error f-error"></span></div>
+      <label>Title format / structure</label><input class="f-titelformat" value="${esc(c.titelFormat || '')}" placeholder="e.g. [Number] + [topic] + curiosity gap — max 55 characters">
+      <label>Thumbnail format / structure</label><input class="f-thumbformat" value="${esc(c.thumbnailFormat || '')}" placeholder="e.g. one face/object on the right, 3-4 words on the left, bright contrast colour">
+      <label>Competitors (comma separated)</label><input class="f-concurrenten" value="${esc((c.concurrenten || []).join(', '))}">
+      <label>Notes</label><textarea class="f-notities">${esc(c.notities || '')}</textarea>
+      <div style="margin-top:.7rem"><button class="btn primary f-save">Save</button> <span class="error f-error"></span></div>
     </div>`;
 }
 
-/** Leest het formulier uit als kanaalobject — voor de live berekening én het opslaan. */
+/** Reads the form back as a channel object — for both the live calculation and saving. */
 function kanaalUitForm(form) {
   const v = cls => form.querySelector('.' + cls)?.value;
   const n = cls => { const x = Number(v(cls)); return Number.isFinite(x) ? x : null; };
@@ -746,54 +747,54 @@ function kanaalUitForm(form) {
   };
 }
 
-/** Het paneel onder de schuifbalken: wat de gekozen instellingen betekenen. */
+/** The panel under the sliders: what the chosen settings actually mean. */
 function rekenblokHtml(kanaal) {
   const { capaciteit: cap, kosten: g } = calc.doorrekenen(kanaal);
   const winst = g.margePerMaand >= 0;
   const bemensing = calc.STAPPEN.map(s => `
     <div class="reken-rij">
       <span>${s.label}</span>
-      <span class="muted">${nl(cap.urenPerWeek[s.key], 1)} uur/week</span>
+      <span class="muted">${nl(cap.urenPerWeek[s.key], 1)} hrs/week</span>
       <b>${cap.freelancersNodig[s.key]}×</b>
     </div>`).join('');
 
   return `
     <div class="reken-kolommen">
       <div>
-        <h5>Ritme</h5>
-        <div class="reken-groot">${nl(cap.perMaand, 1)}<small>video's per maand</small></div>
-        <div class="reken-rij"><span>Per jaar</span><b>${nl(cap.perJaar, 0)}</b></div>
-        <div class="reken-rij"><span>Ideeën nodig per maand</span><b>${nl(cap.ideeenPerMaand, 0)}</b></div>
-        <div class="reken-rij"><span>Tegelijk onderhanden</span><b>${cap.onderhandenWerk} video's</b></div>
+        <h5>Rhythm</h5>
+        <div class="reken-groot">${nl(cap.perMaand, 1)}<small>videos per month</small></div>
+        <div class="reken-rij"><span>Per year</span><b>${nl(cap.perJaar, 0)}</b></div>
+        <div class="reken-rij"><span>Ideas needed per month</span><b>${nl(cap.ideeenPerMaand, 0)}</b></div>
+        <div class="reken-rij"><span>In progress at once</span><b>${cap.onderhandenWerk} videos</b></div>
       </div>
       <div>
-        <h5>Bemensing</h5>
-        <div class="reken-groot">${nl(cap.urenTotaalPerWeek, 1)}<small>uur werk per week</small></div>
+        <h5>Staffing</h5>
+        <div class="reken-groot">${nl(cap.urenTotaalPerWeek, 1)}<small>hours of work per week</small></div>
         ${bemensing}
-        <div class="reken-rij totaal"><span>Freelancers nodig</span><b>${cap.freelancersTotaal}</b></div>
+        <div class="reken-rij totaal"><span>Freelancers needed</span><b>${cap.freelancersTotaal}</b></div>
       </div>
       <div>
-        <h5>Geld</h5>
-        <div class="reken-groot">${eur(g.kostprijsPerVideo, 2)}<small>kostprijs per video</small></div>
-        <div class="reken-rij"><span>Productiekosten per maand</span><b>${eur(g.perMaand)}</b></div>
-        <div class="reken-rij"><span>Per jaar</span><b>${eur(g.perJaar)}</b></div>
+        <h5>Money</h5>
+        <div class="reken-groot">${eur(g.kostprijsPerVideo, 2)}<small>cost price per video</small></div>
+        <div class="reken-rij"><span>Production cost per month</span><b>${eur(g.perMaand)}</b></div>
+        <div class="reken-rij"><span>Per year</span><b>${eur(g.perJaar)}</b></div>
         <div class="reken-rij"><span>Break-even</span><b>${g.breakEvenViews == null ? '—' : nl(g.breakEvenViews, 0) + ' views'}</b></div>
-        <div class="reken-rij"><span>Verwachte omzet per maand</span><b>${eur(g.omzetPerMaand)}</b></div>
-        <div class="reken-rij totaal"><span>Marge per maand</span>
+        <div class="reken-rij"><span>Expected revenue per month</span><b>${eur(g.omzetPerMaand)}</b></div>
+        <div class="reken-rij totaal"><span>Margin per month</span>
           <b class="${winst ? 'goed' : 'slecht'}">${eur(g.margePerMaand)}</b></div>
       </div>
     </div>
     <p class="reken-conclusie ${winst ? 'goed' : 'slecht'}">
       ${winst
-        ? `Bij ${nl(g.verwachteViewsPerVideo, 0)} weergaven per video houd je hier ${eur(g.margePerVideo, 2)} per video aan over — ${eur(g.margePerMaand)} per maand.`
-        : `Bij ${nl(g.verwachteViewsPerVideo, 0)} weergaven per video kost dit kanaal je ${eur(Math.abs(g.margePerMaand))} per maand. Je hebt ${g.breakEvenViews == null ? 'een hogere RPM' : nl(g.breakEvenViews, 0) + ' weergaven per video'} nodig om quitte te spelen.`}
+        ? `At ${nl(g.verwachteViewsPerVideo, 0)} views per video you keep ${eur(g.margePerVideo, 2)} per video — ${eur(g.margePerMaand)} per month.`
+        : `At ${nl(g.verwachteViewsPerVideo, 0)} views per video this channel costs you ${eur(Math.abs(g.margePerMaand))} per month. You need ${g.breakEvenViews == null ? 'a higher RPM' : nl(g.breakEvenViews, 0) + ' views per video'} to break even.`}
     </p>`;
 }
 
 function bindKanaalForms() {
   document.querySelectorAll('[data-kanaalform]').forEach(form => {
     const herbereken = () => {
-      // Getal naast de schuifbalk bijwerken.
+      // Update the number beside the slider.
       form.querySelectorAll('input[type=range]').forEach(r => {
         const uit = form.querySelector(`[data-uit="${r.className}"]`);
         if (uit) uit.textContent = toonWaarde(r.value, {
@@ -817,13 +818,13 @@ function bindKanaalForms() {
   });
 }
 
-// ---------- helpers: ideeënbank ----------
+// ---------- helpers: idea bank ----------
 function ideeKaart(i, isManager, asLabels) {
-  const klasse = i.score == null ? '' : i.score >= 4 ? 'hoog' : i.score >= 3 ? 'midden' : 'laag';
+  const klasse = i.score == null ? '' : i.score >= 4 ? 'high' : i.score >= 3 ? 'mid' : 'low';
   return `
     <div class="card">
       <div class="idee-kaart">
-        <div class="idee-score ${klasse}">${i.score ?? '–'}<small>van 5</small></div>
+        <div class="idee-score ${klasse}">${i.score ?? '–'}<small>out of 5</small></div>
         <div class="idee-body">
           <b>${esc(i.titel)}</b>
           <span class="badge ${i.status}">${esc(i.status)}</span>
@@ -831,12 +832,12 @@ function ideeKaart(i, isManager, asLabels) {
           ${i.omschrijving ? `<p class="muted" style="margin-top:.35rem;white-space:pre-wrap">${esc(i.omschrijving)}</p>` : ''}
           <p class="muted" style="font-size:.8rem">
             💬 ${esc(i.aangedragenDoor)}
-            ${i.bron ? ` · 🔗 <a href="${esc(i.bron)}" target="_blank">bron</a>` : ''}
+            ${i.bron ? ` · 🔗 <a href="${esc(i.bron)}" target="_blank">source</a>` : ''}
             ${i.notitie ? ` · 📝 ${esc(i.notitie)}` : ''}
           </p>
           ${isManager ? `
             <details>
-              <summary class="muted" style="cursor:pointer">⭐ Scoren (1 = slecht, 5 = uitstekend)</summary>
+              <summary class="muted" style="cursor:pointer">⭐ Score it (1 = poor, 5 = excellent)</summary>
               <div class="score-assen" data-scoreform="${i.id}">
                 ${Object.entries(asLabels).map(([as, label]) => `
                   <div class="score-as">
@@ -847,13 +848,13 @@ function ideeKaart(i, isManager, asLabels) {
                     </select>
                   </div>`).join('')}
               </div>
-              <label>Notitie</label><input class="s-notitie" value="${esc(i.notitie || '')}" data-notitie="${i.id}" placeholder="bijv. concurrent haalde hier 400k views mee">
-              <div style="margin-top:.6rem"><button class="btn small primary" data-scoreopslaan="${i.id}">Score opslaan</button></div>
+              <label>Note</label><input class="s-notitie" value="${esc(i.notitie || '')}" data-notitie="${i.id}" placeholder="e.g. a competitor got 400k views with this">
+              <div style="margin-top:.6rem"><button class="btn small primary" data-scoreopslaan="${i.id}">Save score</button></div>
             </details>
             <div class="acties" style="margin-top:.6rem">
-              <button class="btn small green" data-promoveer="${i.id}">🎬 Naar pipeline</button>
-              <button class="btn small" data-status="${i.id}:goedgekeurd">👍 Goedkeuren</button>
-              <button class="btn small red" data-status="${i.id}:afgewezen">👎 Afwijzen</button>
+              <button class="btn small green" data-promoveer="${i.id}">🎬 To pipeline</button>
+              <button class="btn small" data-status="${i.id}:approved">👍 Approve</button>
+              <button class="btn small red" data-status="${i.id}:rejected">👎 Reject</button>
               <button class="btn small red" data-delidee="${i.id}">🗑️</button>
             </div>` : ''}
         </div>
@@ -879,19 +880,19 @@ function bindIdeeActies() {
   }));
   document.querySelectorAll('[data-promoveer]').forEach(b => b.addEventListener('click', async () => {
     const opties = CACHE.channels.map((c, n) => `${n + 1}. ${c.naam}`).join('\n');
-    const keuze = prompt(`Voor welk kanaal?\n${opties}\n\nNummer:`);
+    const keuze = prompt(`Which channel?\n${opties}\n\nNumber:`);
     if (keuze === null) return;
     const kanaal = CACHE.channels[Number(keuze) - 1];
-    if (!kanaal) { alert('Geen geldig kanaal gekozen'); return; }
-    const datum = prompt('Geplande publicatiedatum (JJJJ-MM-DD, leeg = later bepalen):') || null;
+    if (!kanaal) { alert('That is not a valid channel'); return; }
+    const datum = prompt('Planned publish date (YYYY-MM-DD, leave empty to decide later):') || null;
     try {
       await api(`/api/ideeen/${b.dataset.promoveer}/promoveer`, { method: 'POST', body: { channelId: kanaal.id, geplandePublicatie: datum } });
-      alert('🎬 Idee staat nu in de pipeline!');
+      alert('🎬 The idea is now in the pipeline.');
       VIEWS.ideeen();
     } catch (e) { alert(e.message); }
   }));
   document.querySelectorAll('[data-delidee]').forEach(b => b.addEventListener('click', async () => {
-    if (confirm('Idee definitief verwijderen?')) {
+    if (confirm('Permanently delete this idea?')) {
       await api(`/api/ideeen/${b.dataset.delidee}`, { method: 'DELETE' });
       VIEWS.ideeen();
     }
@@ -900,24 +901,24 @@ function bindIdeeActies() {
 
 // ---------- helpers: pipeline ----------
 function videoKaart(v, isManager) {
-  const uploadActief = v.stappen.find(s => s.key === 'upload' && s.status !== 'wachtend');
+  const uploadActief = v.stappen.find(s => s.key === 'upload' && s.status !== 'waiting');
   const s = v.stats;
   return `
     <div class="card" data-video="${v.id}">
       <h3 style="margin-top:0">🎬 ${esc(v.werktitel)} <span class="muted" style="font-weight:400">— ${esc(kanaalNaam(v.channelId))}</span></h3>
       ${v.idee ? `<p class="muted">${esc(v.idee)}</p>` : ''}
       <p class="muted" style="font-size:.85rem">
-        ${v.geplandePublicatie ? `📅 publicatie: <b>${esc(v.geplandePublicatie)}</b>` : '📅 nog geen publicatiedatum'}
+        ${v.geplandePublicatie ? `📅 publishes: <b>${esc(v.geplandePublicatie)}</b>` : '📅 no publish date yet'}
         ${v.youtubeVideoId ? ` · ▶️ <a href="https://youtu.be/${esc(v.youtubeVideoId)}" target="_blank">${esc(v.youtubeVideoId)}</a>` : ''}
         ${s ? ` · 👁 ${s.views ?? '?'} views${s.ctrPct != null ? ` · CTR ${s.ctrPct}%` : ''}${s.avdMinuten != null ? ` · AVD ${s.avdMinuten} min` : ''}` : ''}
-        ${isManager ? ` · <a href="#" data-videoedit="${v.id}">bewerken</a>` : ''}
+        ${isManager ? ` · <a href="#" data-videoedit="${v.id}">edit</a>` : ''}
       </p>
       <div class="stappen">
         ${v.stappen.map(st => stapBlok(v, st, isManager)).join('')}
       </div>
       ${v.qc?.length ? `
       <details ${uploadActief ? 'open' : ''} style="margin-top:.5rem">
-        <summary class="muted" style="cursor:pointer">✅ QC-checklist vóór upload (${v.qc.filter(q => q.done).length}/${v.qc.length})</summary>
+        <summary class="muted" style="cursor:pointer">✅ QC checklist before upload (${v.qc.filter(q => q.done).length}/${v.qc.length})</summary>
         <div class="qc-lijst">
           ${v.qc.map((q, i) => `
             <label class="qc-item ${q.done ? 'done' : ''}">
@@ -937,12 +938,12 @@ function bindVideoExtras() {
   document.querySelectorAll('[data-videoedit]').forEach(a => a.addEventListener('click', async e => {
     e.preventDefault();
     const vid = a.dataset.videoedit;
-    const datum = prompt('Geplande publicatiedatum (JJJJ-MM-DD, leeg = geen):');
+    const datum = prompt('Planned publish date (YYYY-MM-DD, empty = none):');
     if (datum === null) return;
-    const ytId = prompt('YouTube video-id na upload (bijv. dQw4w9WgXcQ, leeg = geen):');
+    const ytId = prompt('YouTube video id after upload (e.g. dQw4w9WgXcQ, empty = none):');
     if (ytId === null) return;
     await api(`/api/videos/${vid}`, { method: 'PUT', body: { geplandePublicatie: datum || null, youtubeVideoId: ytId || '' } });
-    const stats = prompt('Handmatige KPI-invoer views,CTR%,AVDmin (bijv. 15000,6.2,4.5 — leeg = overslaan):');
+    const stats = prompt('Manual KPI entry views,CTR%,AVDmin (e.g. 15000,6.2,4.5 — empty = skip):');
     if (stats) {
       const [views, ctrPct, avdMinuten] = stats.split(',').map(x => x.trim());
       await api(`/api/videos/${vid}/stats`, { method: 'POST', body: { views, ctrPct, avdMinuten } });
@@ -954,17 +955,17 @@ function bindVideoExtras() {
 function stapBlok(v, s, isManager) {
   const assignee = CACHE.team.find(u => u.id === s.assigneeId);
   const isMijn = ME && s.assigneeId === ME.id;
-  const magInleveren = (s.status === 'bezig' || s.status === 'afgekeurd') && (isManager || isMijn || !s.assigneeId);
+  const magInleveren = (s.status === 'in_progress' || s.status === 'rejected') && (isManager || isMijn || !s.assigneeId);
   return `
-    <div class="stap ${s.status === 'bezig' || s.status === 'ter_goedkeuring' || s.status === 'afgekeurd' ? 'actief' : ''}">
+    <div class="stap ${s.status === 'in_progress' || s.status === 'awaiting_approval' || s.status === 'rejected' ? 'active' : ''}">
       <div class="stap-naam">${esc(s.naam)}</div>
       <span class="badge ${s.status}">${s.status.replace('_', ' ')}</span>
-      <div class="stap-meta">${assignee ? `👤 ${esc(assignee.naam)}` : '👤 niet toegewezen'}${s.deadline ? ` · 📅 ${esc(s.deadline)}` : ''}</div>
-      ${s.opleverLink ? `<div class="stap-meta">🔗 <a href="${esc(s.opleverLink)}" target="_blank">oplevering</a></div>` : ''}
+      <div class="stap-meta">${assignee ? `👤 ${esc(assignee.naam)}` : '👤 unassigned'}${s.deadline ? ` · 📅 ${esc(s.deadline)}` : ''}</div>
+      ${s.opleverLink ? `<div class="stap-meta">🔗 <a href="${esc(s.opleverLink)}" target="_blank">delivery</a></div>` : ''}
       ${s.feedback.map(f => `<div class="feedback-blok"><b>${esc(f.door)}:</b> ${esc(f.tekst)}</div>`).join('')}
       <div class="acties">
-        ${magInleveren ? `<button class="btn small" data-actie="inleveren" data-v="${v.id}" data-s="${s.key}">📤 Inleveren</button>` : ''}
-        ${isManager && s.status === 'ter_goedkeuring' ? `
+        ${magInleveren ? `<button class="btn small" data-actie="inleveren" data-v="${v.id}" data-s="${s.key}">📤 Submit</button>` : ''}
+        ${isManager && s.status === 'awaiting_approval' ? `
           <button class="btn small green" data-actie="goedkeuren" data-v="${v.id}" data-s="${s.key}">✅</button>
           <button class="btn small red" data-actie="afkeuren" data-v="${v.id}" data-s="${s.key}">❌</button>` : ''}
         ${isManager ? `<button class="btn small" data-actie="toewijzen" data-v="${v.id}" data-s="${s.key}">👤</button>` : ''}
@@ -977,20 +978,20 @@ function bindStapActies() {
     const { actie, v, s } = b.dataset;
     try {
       if (actie === 'inleveren') {
-        const link = prompt('Link naar je oplevering (Drive, Frame.io, …) — mag leeg zijn:') ?? '';
+        const link = prompt('Link to your delivery (Drive, Frame.io, …) — may be left empty:') ?? '';
         await api(`/api/videos/${v}/stappen/${s}/inleveren`, { method: 'POST', body: { opleverLink: link } });
       } else if (actie === 'goedkeuren') {
         await api(`/api/videos/${v}/stappen/${s}/goedkeuren`, { method: 'POST', body: {} });
       } else if (actie === 'afkeuren') {
-        const feedback = prompt('Feedback voor de freelancer (wat moet anders?):');
+        const feedback = prompt('Feedback for the freelancer (what needs to change?):');
         if (feedback === null) return;
         await api(`/api/videos/${v}/stappen/${s}/afkeuren`, { method: 'POST', body: { feedback } });
       } else if (actie === 'toewijzen') {
         const opties = CACHE.team.map((u, i) => `${i + 1}. ${u.naam} (${u.functie})`).join('\n');
-        const keuze = prompt(`Wie krijgt deze stap?\n${opties}\n\nNummer (leeg = niemand):`);
+        const keuze = prompt(`Who takes this step?\n${opties}\n\nNumber (empty = nobody):`);
         if (keuze === null) return;
         const gekozen = CACHE.team[Number(keuze) - 1];
-        const deadline = prompt('Deadline (JJJJ-MM-DD, leeg = geen):') || null;
+        const deadline = prompt('Deadline (YYYY-MM-DD, empty = none):') || null;
         await api(`/api/videos/${v}/stappen/${s}/toewijzen`, { method: 'POST', body: { assigneeId: gekozen?.id || null, deadline } });
       }
       VIEWS.pipeline();
@@ -998,51 +999,51 @@ function bindStapActies() {
   }));
 }
 
-// ---------- instructiecentrum (inhoud) ----------
+// ---------- instruction centre (content) ----------
 const INSTRUCTIES = {
   algemeen: `
-    <h4>🧭 Zo werken we bij Rossing T&amp;M</h4>
+    <h4>🧭 How we work at Rossing T&amp;M</h4>
     <ol>
-      <li><b>De pipeline is heilig.</b> Idee → Script → Voice/Avatar → Video-edit → Thumbnail → Upload. Jouw stap begint pas als de vorige stap is goedgekeurd — je krijgt automatisch bericht (hier en in Discord).</li>
-      <li><b>Elke stap eindigt met een checkpoint.</b> Lever in via de knop "Inleveren" met een link naar je werk. De admin keurt goed of geeft feedback. Afgekeurd = één revisieronde, daarna overleg.</li>
-      <li><b>Deadlines zijn afspraken.</b> Zie je dat je een deadline niet gaat halen? Meld het minimaal 24 uur van tevoren in Discord — dan schuiven we, zonder melding niet.</li>
-      <li><b>Kanaalinstellingen zijn de wet.</b> Titelformat, thumbnailformat, toon en uploadfrequentie staan per kanaal vast onder "Kanalen". Wijk je af, dan alleen met expliciete goedkeuring vooraf.</li>
-      <li><b>Communicatie loopt via Discord</b> in het kanaal van jouw stap. Geen losse appjes of DM's over werk — dan raakt informatie kwijt.</li>
-      <li><b>Bestandsnamen:</b> <code>[kanaal]-[werktitel]-[stap]-[versie]</code>, bijv. <code>bloopuniverse-ruimtemysteries-script-v2</code>.</li>
+      <li><b>The pipeline is sacred.</b> Idea → Script → Voice/Avatar → Video edit → Thumbnail → Upload. Your step only starts once the previous one has been approved — you are notified automatically, here and in Discord.</li>
+      <li><b>Every step ends at a checkpoint.</b> Hand in through the "Submit" button with a link to your work. The admin either approves it or sends feedback. Rejected means one revision round; after that we talk it through.</li>
+      <li><b>Deadlines are commitments.</b> See a deadline you are not going to make? Say so in Discord at least 24 hours in advance and we will move it. Without that warning, we will not.</li>
+      <li><b>Channel settings are the law.</b> Title format, thumbnail format, tone and upload frequency are fixed per channel under "Channels". Deviate only with explicit approval up front.</li>
+      <li><b>Work talk happens in Discord</b>, in the channel for your step. No side conversations or DMs about work — that is how information gets lost.</li>
+      <li><b>File names:</b> <code>[channel]-[working title]-[step]-[version]</code>, for example <code>bloopuniverse-space-mysteries-script-v2</code>.</li>
     </ol>`,
   scriptwriter: `
-    <h4>✍️ Instructies scriptwriter</h4>
+    <h4>✍️ Scriptwriter instructions</h4>
     <ol>
-      <li><b>Lees eerst het idee en de kanaalinstellingen</b> (onderwerp, toon, doelgroep, titelformat). Het script moet de titel en thumbnail waarmaken — geen clickbait die de video niet inlost.</li>
-      <li><b>Hook (0–30 sec) is 80% van je werk.</b> Open met de kernbelofte van de titel, stel een vraag of schets het mysterie. Geen "welkom terug bij het kanaal".</li>
-      <li><b>Structuur:</b> hook → context → opbouw in blokken met mini-cliffhangers elke 60–90 sec (voor AVD) → payoff → uitleiding met doorkijk naar een andere video.</li>
-      <li><b>Schrijf voor het oor, niet voor het oog:</b> korte zinnen, actieve vorm, spreektaal. Lees hardop voor je inlevert.</li>
-      <li><b>Lengte:</b> volg de doellengte van het kanaal (zie kanaalinstellingen); reken ±150 woorden per minuut voiceover.</li>
-      <li><b>Markeer regie-aanwijzingen</b> voor de editor tussen [blokhaken]: [B-ROLL: raketlancering], [PAUZE], [NADRUK].</li>
-      <li><b>Feiten checken:</b> elke claim moet klopbaar zijn; zet bronnen onderaan het script.</li>
-      <li><b>Inleveren:</b> Google Doc-link via de knop "Inleveren", commentaarrechten aan. Eén revisieronde zit in de prijs.</li>
+      <li><b>Read the idea and the channel settings first</b> (topic, tone, audience, title format). The script has to deliver on the title and the thumbnail — no clickbait the video does not pay off.</li>
+      <li><b>The hook (0–30 seconds) is 80% of your job.</b> Open with the core promise of the title, ask a question, or set up the mystery. Never "welcome back to the channel".</li>
+      <li><b>Structure:</b> hook → context → build in blocks with a mini cliffhanger every 60–90 seconds (this is what drives AVD) → payoff → outro that points at another video.</li>
+      <li><b>Write for the ear, not the eye:</b> short sentences, active voice, spoken language. Read it out loud before you submit.</li>
+      <li><b>Length:</b> follow the channel's target length (see channel settings); count roughly 150 words per minute of voiceover.</li>
+      <li><b>Mark direction notes</b> for the editor in [square brackets]: [B-ROLL: rocket launch], [PAUSE], [EMPHASIS].</li>
+      <li><b>Check your facts:</b> every claim must be verifiable; list your sources at the bottom of the script.</li>
+      <li><b>Submitting:</b> a Google Doc link through the "Submit" button, with comment access enabled. One revision round is included in the fee.</li>
     </ol>`,
   editor: `
-    <h4>🎞️ Instructies video-editor</h4>
+    <h4>🎞️ Video editor instructions</h4>
     <ol>
-      <li><b>Werk vanuit het goedgekeurde script + voiceover.</b> Volg de [regie-aanwijzingen] in het script; wijk alleen af als het de video sterker maakt en meld dat bij inlevering.</li>
-      <li><b>Eerste 30 seconden:</b> hoogste tempo, beste beelden. Elke 3–5 seconden een visuele wissel (beeld, zoom, tekst of overlay) — hier winnen of verliezen we de kijker.</li>
-      <li><b>Retentie-ritme:</b> geen shot langer dan ~6 sec zonder beweging of verandering; subtiele zoom op statische beelden; muziek onder de hele video, ducken onder voiceover (-15 tot -20 dB).</li>
-      <li><b>Stijl per kanaal:</b> kleuren, lettertype en overlay-stijl staan in de kanaalinstellingen. Consistentie gaat boven creativiteit.</li>
-      <li><b>Audio eerst:</b> voiceover schoon (geen clipping, ruis weg), loudness rond -14 LUFS voor YouTube.</li>
-      <li><b>Rechten:</b> alleen stock/licentievrij materiaal van de afgesproken bibliotheken; bronvermelding in het projectbestand.</li>
-      <li><b>Oplevering:</b> MP4 1080p (of 4K indien afgesproken), H.264, + projectbestand in de gedeelde map. Lever in via de knop met de link. Eén revisieronde zit in de prijs.</li>
+      <li><b>Work from the approved script and voiceover.</b> Follow the [direction notes] in the script; deviate only when it makes the video stronger, and say so when you submit.</li>
+      <li><b>The first 30 seconds:</b> highest pace, best footage. A visual change every 3–5 seconds (shot, zoom, text or overlay) — this is where we win or lose the viewer.</li>
+      <li><b>Retention rhythm:</b> no shot longer than about 6 seconds without movement or change; a subtle zoom on stills; music under the whole video, ducked under the voiceover (-15 to -20 dB).</li>
+      <li><b>Style per channel:</b> colours, typeface and overlay style are in the channel settings. Consistency beats creativity here.</li>
+      <li><b>Audio first:</b> a clean voiceover (no clipping, no hiss), loudness around -14 LUFS for YouTube.</li>
+      <li><b>Rights:</b> only stock or licence-free material from the agreed libraries, with the source noted in the project file.</li>
+      <li><b>Delivery:</b> MP4 1080p (or 4K if agreed), H.264, plus the project file in the shared folder. Submit through the button with the link. One revision round is included in the fee.</li>
     </ol>`,
   thumbnail: `
-    <h4>🖼️ Instructies thumbnail-artiest</h4>
+    <h4>🖼️ Thumbnail artist instructions</h4>
     <ol>
-      <li><b>Volg het thumbnailformat van het kanaal</b> (zie kanaalinstellingen): vaste opbouw, kleurgebruik en tekstpositie. De thumbnail moet naast de andere video's van het kanaal als familie herkenbaar zijn.</li>
-      <li><b>Eén idee per thumbnail.</b> Eén onderwerp/gezicht/object als blikvanger, maximaal 3–4 woorden tekst, en die tekst mag NIET letterlijk de titel herhalen — ze vullen elkaar aan.</li>
-      <li><b>Leesbaar op 120 pixels:</b> check je ontwerp op telefoonformaat. Hoog contrast, dikke outlines, geen dunne letters.</li>
-      <li><b>Curiosity gap:</b> de thumbnail roept een vraag op die alleen de video beantwoordt — maar belooft niets dat er niet in zit.</li>
-      <li><b>Kijk naar de concurrenten</b> (lijst per kanaal): val op in de zoekresultaten náást hun thumbnails, kopieer ze niet.</li>
-      <li><b>Specificaties:</b> 1280×720, JPG/PNG onder 2 MB, plus het bronbestand (PSD/Figma) in de gedeelde map.</li>
-      <li><b>Lever 2 varianten</b> per video zodat we kunnen A/B-testen. Eén revisieronde zit in de prijs.</li>
+      <li><b>Follow the channel's thumbnail format</b> (see channel settings): fixed composition, colour use and text position. The thumbnail has to look like family next to the channel's other videos.</li>
+      <li><b>One idea per thumbnail.</b> One subject, face or object as the eye-catcher, at most 3–4 words of text, and that text must NOT repeat the title literally — they complement each other.</li>
+      <li><b>Readable at 120 pixels:</b> check your design at phone size. High contrast, thick outlines, no thin typefaces.</li>
+      <li><b>Curiosity gap:</b> the thumbnail raises a question only the video answers — but never promises something the video does not contain.</li>
+      <li><b>Look at the competitors</b> (listed per channel): stand out next to their thumbnails in the results rather than copying them.</li>
+      <li><b>Specifications:</b> 1280×720, JPG or PNG under 2 MB, plus the source file (PSD/Figma) in the shared folder.</li>
+      <li><b>Deliver two variants</b> per video so we can A/B test. One revision round is included in the fee.</li>
     </ol>`
 };
 

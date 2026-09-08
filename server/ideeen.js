@@ -1,30 +1,30 @@
-// Ideeënbank: de backlog vóór de pipeline.
+// Idea bank: the backlog that sits in front of the pipeline.
 //
-// Iedereen (ook freelancers, ook via Discord) mag ideeën pitchen. De admin
-// scoort ze op vier assen; het systeem rekent er één prioriteitsscore van.
-// De beste ideeën promoveer je met één klik naar de productiepipeline —
-// zo staat de pipeline nooit droog en valt de uploadfrequentie niet om.
+// Anyone (freelancers included, also through Discord) can pitch an idea. The
+// admin scores it on four axes and the system turns those into a single
+// priority score. The best ideas are promoted to the production pipeline with
+// one click — so the pipeline never runs dry and the upload frequency holds.
 //
-// Scores lopen van 1 (slecht) tot 5 (uitstekend). Productiekosten is
-// omgekeerd: 5 = heel goedkoop te maken.
+// Scores run from 1 (poor) to 5 (excellent). Ease of production is inverted:
+// 5 means very cheap and quick to make.
 import { load, save, id, logActivity } from './store.js';
 import { notify } from './discord.js';
 
-export const STATUSSEN = ['nieuw', 'goedgekeurd', 'afgewezen', 'gepromoveerd'];
+export const STATUSSEN = ['new', 'approved', 'rejected', 'promoted'];
 
-// Wegingen: hoe zwaar telt elke as mee in de totaalscore.
-// Bewezen vraag weegt het zwaarst — een idee dat bij concurrenten al
-// aantoonbaar werkt, is veruit de beste voorspeller voor succes.
+// Weights: how heavily each axis counts towards the total score.
+// Proven demand weighs heaviest — an idea that demonstrably works for
+// competitors is by far the best predictor of success.
 export const WEGINGEN = {
-  outlierPotentie: 0.35,  // doet dit concept het aantoonbaar goed bij concurrenten?
-  zoekvolume: 0.25,       // zoeken mensen hier actief naar?
-  productiegemak: 0.20,   // 5 = snel/goedkoop te maken, 1 = duur en traag
-  kanaalfit: 0.20         // past het bij de niche en toon van het kanaal?
+  outlierPotentie: 0.35,  // does this concept demonstrably perform for competitors?
+  zoekvolume: 0.25,       // are people actively searching for this?
+  productiegemak: 0.20,   // 5 = quick and cheap to make, 1 = expensive and slow
+  kanaalfit: 0.20         // does it fit the channel's niche and tone?
 };
 
-// Gewogen gemiddelde van de vier assen, afgerond op 1 decimaal (0-5).
-// Niet-ingevulde assen tellen niet mee, zodat een half gescoord idee
-// niet kunstmatig laag uitkomt.
+// Weighted average of the four axes, rounded to one decimal (0-5).
+// Axes left blank are ignored, so a partly scored idea does not come out
+// artificially low.
 export function berekenScore(scores = {}) {
   let som = 0;
   let gewicht = 0;
@@ -46,14 +46,14 @@ export function nieuwIdee({ titel, omschrijving, channelId, bron, aangedragenDoo
     titel: String(titel).trim(),
     omschrijving: String(omschrijving || ''),
     channelId: channelId || null,
-    bron: String(bron || ''), // link naar de outlier/concurrent die dit inspireerde
-    aangedragenDoor: aangedragenDoor || 'onbekend',
+    bron: String(bron || ''), // link to the outlier or competitor that inspired this
+    aangedragenDoor: aangedragenDoor || 'unknown',
     aangemaakt: new Date().toISOString(),
-    status: 'nieuw',
+    status: 'new',
     scores: {},
     score: null,
     notitie: '',
-    videoId: null // gevuld zodra het idee naar de pipeline promoveert
+    videoId: null // filled in as soon as the idea is promoted to the pipeline
   };
   db.ideeen.push(idee);
   save();
@@ -63,22 +63,22 @@ export function nieuwIdee({ titel, omschrijving, channelId, bron, aangedragenDoo
 export async function meldNieuwIdee(idee) {
   const db = load();
   const kanaal = db.channels.find(c => c.id === idee.channelId)?.naam;
-  await notify('info', `💡 Nieuw idee: ${idee.titel}`,
-    [`**Door:** ${idee.aangedragenDoor}`,
-     kanaal ? `**Kanaal:** ${kanaal}` : '',
+  await notify('info', `💡 New idea: ${idee.titel}`,
+    [`**By:** ${idee.aangedragenDoor}`,
+     kanaal ? `**Channel:** ${kanaal}` : '',
      idee.omschrijving ? `${idee.omschrijving}` : '',
-     idee.bron ? `**Bron:** ${idee.bron}` : ''].filter(Boolean));
+     idee.bron ? `**Source:** ${idee.bron}` : ''].filter(Boolean));
 }
 
 export function scoorIdee(ideeId, scores, user) {
   const db = load();
   const idee = db.ideeen.find(i => i.id === ideeId);
-  if (!idee) throw new Error('Idee niet gevonden');
+  if (!idee) throw new Error('Idea not found');
   for (const as of Object.keys(WEGINGEN)) {
     if (scores[as] !== undefined && scores[as] !== '') {
       const waarde = Number(scores[as]);
       if (!Number.isFinite(waarde) || waarde < 1 || waarde > 5) {
-        throw new Error(`Score voor "${as}" moet tussen 1 en 5 liggen`);
+        throw new Error(`Score for "${as}" must be between 1 and 5`);
       }
       idee.scores[as] = waarde;
     }
@@ -87,23 +87,23 @@ export function scoorIdee(ideeId, scores, user) {
   idee.score = berekenScore(idee.scores);
   idee.gescoordDoor = user.naam;
   save();
-  logActivity(user.naam, `scoorde idee "${idee.titel}" op ${idee.score ?? '?'}`);
+  logActivity(user.naam, `scored idea "${idee.titel}" at ${idee.score ?? '?'}`);
   return idee;
 }
 
 export function zetStatus(ideeId, status, user) {
-  if (!STATUSSEN.includes(status)) throw new Error('Onbekende status');
+  if (!STATUSSEN.includes(status)) throw new Error('Unknown status');
   const db = load();
   const idee = db.ideeen.find(i => i.id === ideeId);
-  if (!idee) throw new Error('Idee niet gevonden');
-  if (idee.status === 'gepromoveerd') throw new Error('Dit idee staat al in de pipeline');
+  if (!idee) throw new Error('Idea not found');
+  if (idee.status === 'promoted') throw new Error('This idea is already in the pipeline');
   idee.status = status;
   save();
-  logActivity(user.naam, `zette idee "${idee.titel}" op ${status}`);
+  logActivity(user.naam, `set idea "${idee.titel}" to ${status}`);
   return idee;
 }
 
-// Ideeën gesorteerd: hoogste score eerst, ongescoorde onderaan.
+// Ideas sorted: highest score first, unscored ones at the bottom.
 export function gesorteerd(filterStatus = null) {
   const db = load();
   return db.ideeen
@@ -111,20 +111,20 @@ export function gesorteerd(filterStatus = null) {
     .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
 }
 
-// Hoeveel bruikbare ideeën liggen er nog op de plank per kanaal?
-// Vergeleken met de uploadfrequentie zie je direct hoeveel weken
-// voorraad je hebt — de vroegste waarschuwing dat de pipeline opdroogt.
+// How many usable ideas are left on the shelf per channel? Compared against
+// the upload frequency this shows straight away how many weeks of stock you
+// have — the earliest warning that the pipeline is about to run dry.
 export function voorraad() {
   const db = load();
   return db.channels.map(c => {
     const beschikbaar = db.ideeen.filter(i =>
-      i.channelId === c.id && (i.status === 'nieuw' || i.status === 'goedgekeurd')).length;
+      i.channelId === c.id && (i.status === 'new' || i.status === 'approved')).length;
     const perWeek = c.kpis?.uploadFrequentiePerWeek || 0;
     const wekenVoorraad = perWeek > 0 ? Number((beschikbaar / perWeek).toFixed(1)) : null;
     return {
       channelId: c.id, kanaal: c.naam, beschikbaar, perWeek, wekenVoorraad,
-      // Minder dan 2 weken voorraad = tijd om te brainstormen.
-      status: wekenVoorraad === null ? 'onbekend' : wekenVoorraad >= 4 ? 'ruim' : wekenVoorraad >= 2 ? 'krap' : 'kritiek'
+      // Less than two weeks of stock means it is time to brainstorm.
+      status: wekenVoorraad === null ? 'unknown' : wekenVoorraad >= 4 ? 'healthy' : wekenVoorraad >= 2 ? 'tight' : 'critical'
     };
   });
 }

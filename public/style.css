@@ -84,12 +84,12 @@ label { display: block; font-size: .8rem; color: var(--muted); margin: .6rem 0 .
   display: inline-block; padding: .15rem .55rem; border-radius: 99px;
   font-size: .75rem; border: 1px solid var(--border); color: var(--muted);
 }
-.badge.bezig { border-color: var(--accent); color: var(--accent); }
-.badge.ter_goedkeuring { border-color: var(--yellow); color: var(--yellow); }
-.badge.goedgekeurd { border-color: var(--green); color: var(--green); }
-.badge.afgekeurd { border-color: var(--red); color: var(--red); }
-.badge.te_laat { background: var(--red); border-color: var(--red); color: #fff; }
-.badge.bijna { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
+.badge.in_progress { border-color: var(--accent); color: var(--accent); }
+.badge.awaiting_approval { border-color: var(--yellow); color: var(--yellow); }
+.badge.approved { border-color: var(--green); color: var(--green); }
+.badge.rejected { border-color: var(--red); color: var(--red); }
+.badge.overdue { background: var(--red); border-color: var(--red); color: #fff; }
+.badge.soon { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
 
 table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--border); }
@@ -101,14 +101,14 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; }
   flex: 1; min-width: 130px; background: var(--panel-2); border: 1px solid var(--border);
   border-radius: 10px; padding: .6rem .7rem; font-size: .82rem;
 }
-.stap.actief { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.stap.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .stap .stap-naam { font-weight: 600; margin-bottom: .3rem; }
 .stap .stap-meta { color: var(--muted); font-size: .75rem; margin: .2rem 0; }
 .stap .acties { display: flex; gap: .3rem; margin-top: .45rem; flex-wrap: wrap; }
 .feedback-blok { background: var(--bg); border-radius: 8px; padding: .45rem .6rem; margin-top: .4rem; font-size: .78rem; }
 
 .todo-rij { display: flex; align-items: center; gap: .7rem; padding: .45rem 0; border-bottom: 1px solid var(--border); }
-.todo-rij.klaar span.tekst { text-decoration: line-through; color: var(--muted); }
+.todo-rij.done span.tekst { text-decoration: line-through; color: var(--muted); }
 .todo-rij input[type=checkbox] { width: auto; }
 
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .8rem; }
@@ -125,27 +125,26 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: var(--panel-2); border: 2px solid var(--border); font-weight: 700; font-size: 1.35rem;
 }
-.idee-score.hoog { border-color: var(--green); color: var(--green); }
-.idee-score.midden { border-color: var(--yellow); color: var(--yellow); }
-.idee-score.laag { border-color: var(--red); color: var(--red); }
+.idee-score.high { border-color: var(--green); color: var(--green); }
+.idee-score.mid { border-color: var(--yellow); color: var(--yellow); }
+.idee-score.low { border-color: var(--red); color: var(--red); }
 .idee-score small { font-size: .6rem; font-weight: 400; color: var(--muted); }
 .idee-body { flex: 1; min-width: 0; }
 .score-assen { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .5rem; margin-top: .6rem; }
 .score-as label { margin: 0 0 .2rem; }
-.badge.nieuw { border-color: var(--accent); color: var(--accent); }
-.badge.gepromoveerd { border-color: var(--green); color: var(--green); }
-.badge.afgewezen { border-color: var(--red); color: var(--red); }
-.badge.ruim { border-color: var(--green); color: var(--green); }
-.badge.krap { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
-.badge.kritiek { background: var(--red); border-color: var(--red); color: #fff; }
+.badge.new { border-color: var(--accent); color: var(--accent); }
+.badge.promoted { border-color: var(--green); color: var(--green); }
+.badge.healthy { border-color: var(--green); color: var(--green); }
+.badge.tight { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
+.badge.critical { background: var(--red); border-color: var(--red); color: #fff; }
 
 /* Kalender */
 .kalender-week { margin-bottom: 1rem; }
 .kalender-rij { display: flex; align-items: center; gap: .7rem; padding: .45rem 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .kalender-rij .videos { color: var(--muted); font-size: .82rem; }
-.badge.op_schema { border-color: var(--green); color: var(--green); }
-.badge.onderbezet { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
-.badge.leeg { background: var(--red); border-color: var(--red); color: #fff; }
+.badge.on_track { border-color: var(--green); color: var(--green); }
+.badge.understaffed { background: var(--yellow); border-color: var(--yellow); color: #3a2a00; }
+.badge.empty { background: var(--red); border-color: var(--red); color: #fff; }
 
 /* QC-checklist */
 .qc-lijst { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .2rem .8rem; margin-top: .5rem; }
@@ -155,9 +154,9 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; }
 
 /* KPI doel vs realisatie */
 .kpi-stoplicht { display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .3rem; }
-.kpi-stoplicht.groen { background: var(--green); }
-.kpi-stoplicht.geel { background: var(--yellow); }
-.kpi-stoplicht.rood { background: var(--red); }
+.kpi-stoplicht.green { background: var(--green); }
+.kpi-stoplicht.amber { background: var(--yellow); }
+.kpi-stoplicht.red { background: var(--red); }
 
 @media (max-width: 800px) {
   #app-view { flex-direction: column; }

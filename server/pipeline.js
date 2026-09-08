@@ -1,22 +1,23 @@
-// Productiepipeline: Idee -> Script -> Voice/Avatar -> Video-edit ->
+// Production pipeline: Idea -> Script -> Voice/Avatar -> Video edit ->
 // Thumbnail -> Upload.
 //
-// Elke stap is een checkpoint: een freelancer levert in ("ter_goedkeuring"),
-// de admin/manager keurt goed of af. Pas na goedkeuring schuift de video
-// door en krijgt de volgende freelancer zijn taak (en een Discord-ping).
+// Every step is a checkpoint: a freelancer submits their work
+// ("awaiting_approval"), the admin or manager approves or rejects it. Only
+// after approval does the video move on and the next freelancer get their
+// task (and a Discord ping).
 import { load, save, id, logActivity } from './store.js';
 import { notify } from './discord.js';
 
 export const STAPPEN = [
-  { key: 'idee', naam: 'Idee', functie: 'overig' },
+  { key: 'idee', naam: 'Idea', functie: 'other' },
   { key: 'script', naam: 'Script', functie: 'scriptwriter' },
-  { key: 'voice', naam: 'Voice / Avatar', functie: 'voice-artiest' },
-  { key: 'video', naam: 'Video-edit', functie: 'video-editor' },
-  { key: 'thumbnail', naam: 'Thumbnail', functie: 'thumbnail-artiest' },
+  { key: 'voice', naam: 'Voice / Avatar', functie: 'voice-artist' },
+  { key: 'video', naam: 'Video edit', functie: 'video-editor' },
+  { key: 'thumbnail', naam: 'Thumbnail', functie: 'thumbnail-artist' },
   { key: 'upload', naam: 'Upload', functie: 'uploader' }
 ];
 
-export const STAP_STATUS = ['wachtend', 'bezig', 'ter_goedkeuring', 'goedgekeurd', 'afgekeurd'];
+export const STAP_STATUS = ['waiting', 'in_progress', 'awaiting_approval', 'approved', 'rejected'];
 
 export function nieuweVideo({ channelId, werktitel, idee, deadlines = {}, assignees = {}, geplandePublicatie = null }) {
   const db = load();
@@ -34,7 +35,7 @@ export function nieuweVideo({ channelId, werktitel, idee, deadlines = {}, assign
     stappen: STAPPEN.map((s, i) => ({
       key: s.key,
       naam: s.naam,
-      status: i === 0 ? 'bezig' : 'wachtend',
+      status: i === 0 ? 'in_progress' : 'waiting',
       assigneeId: assignees[s.key] || null,
       deadline: deadlines[s.key] || null,
       opleverLink: '',
@@ -49,115 +50,115 @@ export function nieuweVideo({ channelId, werktitel, idee, deadlines = {}, assign
 }
 
 export function huidigeStap(video) {
-  return video.stappen.find(s => s.status !== 'goedgekeurd') || null;
+  return video.stappen.find(s => s.status !== 'approved') || null;
 }
 
 function stapVan(video, stapKey) {
   const stap = video.stappen.find(s => s.key === stapKey);
-  if (!stap) throw new Error(`Onbekende stap: ${stapKey}`);
+  if (!stap) throw new Error(`Unknown step: ${stapKey}`);
   return stap;
 }
 
 function naamVan(db, userId) {
-  return db.users.find(u => u.id === userId)?.naam || 'niemand';
+  return db.users.find(u => u.id === userId)?.naam || 'nobody';
 }
 
-// Naam + Discord-mention (als het account gekoppeld is), zodat de juiste
-// freelancer direct een ping krijgt in het notificatiekanaal.
+// Name plus Discord mention (if the account is linked), so the right
+// freelancer gets pinged directly in the notification channel.
 function mentionVan(db, userId) {
   const u = db.users.find(x => x.id === userId);
-  if (!u) return 'niemand';
+  if (!u) return 'nobody';
   return u.discordUserId ? `${u.naam} <@${u.discordUserId}>` : u.naam;
 }
 
 function kanaalNaam(db, video) {
-  return db.channels.find(c => c.id === video.channelId)?.naam || 'onbekend kanaal';
+  return db.channels.find(c => c.id === video.channelId)?.naam || 'unknown channel';
 }
 
-// Freelancer levert werk in -> checkpoint "ter_goedkeuring".
+// A freelancer submits their work -> checkpoint "awaiting_approval".
 export async function leverIn(videoId, stapKey, user, opleverLink) {
   const db = load();
   const video = db.videos.find(v => v.id === videoId);
-  if (!video) throw new Error('Video niet gevonden');
+  if (!video) throw new Error('Video not found');
   const stap = stapVan(video, stapKey);
-  if (stap.status !== 'bezig' && stap.status !== 'afgekeurd') {
-    throw new Error(`Stap "${stap.naam}" staat niet open voor inleveren (status: ${stap.status})`);
+  if (stap.status !== 'in_progress' && stap.status !== 'rejected') {
+    throw new Error(`Step "${stap.naam}" is not open for submission (status: ${stap.status})`);
   }
   if (user.rol === 'freelancer' && stap.assigneeId && stap.assigneeId !== user.id) {
-    throw new Error('Deze stap is aan een andere freelancer toegewezen');
+    throw new Error('This step is assigned to another freelancer');
   }
-  // QC-gate: de upload-stap mag pas ingeleverd worden als de hele
-  // kwaliteitschecklist is afgevinkt.
+  // QC gate: the upload step can only be submitted once the whole quality
+  // checklist has been ticked off.
   if (stapKey === 'upload') {
     const open = (video.qc || []).filter(q => !q.done);
     if (open.length) {
-      throw new Error(`QC-checklist nog niet compleet. Open punten: ${open.map(q => q.label).join(' · ')}`);
+      throw new Error(`QC checklist is not complete yet. Still open: ${open.map(q => q.label).join(' · ')}`);
     }
   }
-  stap.status = 'ter_goedkeuring';
+  stap.status = 'awaiting_approval';
   stap.opleverLink = opleverLink || stap.opleverLink;
   stap.ingeleverdOp = new Date().toISOString();
   save();
-  logActivity(user.naam, `leverde "${stap.naam}" in voor video "${video.werktitel}"`);
-  await notify('checkpoint', `⏸️ Checkpoint: ${stap.naam} ingeleverd`,
+  logActivity(user.naam, `submitted "${stap.naam}" for video "${video.werktitel}"`);
+  await notify('checkpoint', `⏸️ Checkpoint: ${stap.naam} submitted`,
     [`**Video:** ${video.werktitel} (${kanaalNaam(db, video)})`,
-     `**Door:** ${user.naam}`,
-     stap.opleverLink ? `**Oplevering:** ${stap.opleverLink}` : '',
-     'Wacht op goedkeuring van de admin.'].filter(Boolean));
+     `**By:** ${user.naam}`,
+     stap.opleverLink ? `**Delivery:** ${stap.opleverLink}` : '',
+     'Waiting for the admin to approve.'].filter(Boolean));
   return video;
 }
 
-// Admin/manager keurt goed -> volgende stap wordt actief + notificatie.
+// Admin/manager approves -> the next step opens up and a notification goes out.
 export async function keurGoed(videoId, stapKey, user) {
   const db = load();
   const video = db.videos.find(v => v.id === videoId);
-  if (!video) throw new Error('Video niet gevonden');
+  if (!video) throw new Error('Video not found');
   const stap = stapVan(video, stapKey);
-  if (stap.status !== 'ter_goedkeuring') throw new Error('Deze stap is niet ter goedkeuring aangeboden');
-  stap.status = 'goedgekeurd';
+  if (stap.status !== 'awaiting_approval') throw new Error('This step has not been submitted for approval');
+  stap.status = 'approved';
   stap.goedgekeurdOp = new Date().toISOString();
 
   const idx = video.stappen.findIndex(s => s.key === stapKey);
   const volgende = video.stappen[idx + 1] || null;
   if (volgende) {
-    volgende.status = 'bezig';
+    volgende.status = 'in_progress';
   } else {
     video.afgerond = true;
   }
   save();
-  logActivity(user.naam, `keurde "${stap.naam}" goed voor video "${video.werktitel}"`);
+  logActivity(user.naam, `approved "${stap.naam}" for video "${video.werktitel}"`);
 
   if (volgende) {
-    await notify('goedgekeurd', `✅ ${stap.naam} goedgekeurd — door naar ${volgende.naam}`,
+    await notify('approved', `✅ ${stap.naam} approved — on to ${volgende.naam}`,
       [`**Video:** ${video.werktitel} (${kanaalNaam(db, video)})`,
-       `**Volgende stap:** ${volgende.naam} — ${mentionVan(db, volgende.assigneeId)}`,
+       `**Next step:** ${volgende.naam} — ${mentionVan(db, volgende.assigneeId)}`,
        volgende.deadline ? `**Deadline:** ${volgende.deadline}` : ''].filter(Boolean));
   } else {
-    await notify('goedgekeurd', `🎉 Video afgerond: ${video.werktitel}`,
-      [`**Kanaal:** ${kanaalNaam(db, video)}`, 'Alle stappen zijn goedgekeurd en de video is geüpload.']);
+    await notify('approved', `🎉 Video finished: ${video.werktitel}`,
+      [`**Channel:** ${kanaalNaam(db, video)}`, 'Every step has been approved and the video is uploaded.']);
   }
   return video;
 }
 
-// Admin/manager keurt af -> stap terug naar de freelancer, met feedback.
+// Admin/manager rejects -> the step goes back to the freelancer, with feedback.
 export async function keurAf(videoId, stapKey, user, feedbackTekst) {
   const db = load();
   const video = db.videos.find(v => v.id === videoId);
-  if (!video) throw new Error('Video niet gevonden');
+  if (!video) throw new Error('Video not found');
   const stap = stapVan(video, stapKey);
-  if (stap.status !== 'ter_goedkeuring') throw new Error('Deze stap is niet ter goedkeuring aangeboden');
-  stap.status = 'afgekeurd';
-  stap.feedback.push({ door: user.naam, tekst: feedbackTekst || '(geen toelichting)', ts: new Date().toISOString() });
+  if (stap.status !== 'awaiting_approval') throw new Error('This step has not been submitted for approval');
+  stap.status = 'rejected';
+  stap.feedback.push({ door: user.naam, tekst: feedbackTekst || '(no explanation given)', ts: new Date().toISOString() });
   save();
-  logActivity(user.naam, `keurde "${stap.naam}" af voor video "${video.werktitel}"`);
-  await notify('afgekeurd', `❌ ${stap.naam} afgekeurd — revisie nodig`,
+  logActivity(user.naam, `rejected "${stap.naam}" for video "${video.werktitel}"`);
+  await notify('rejected', `❌ ${stap.naam} rejected — revision needed`,
     [`**Video:** ${video.werktitel} (${kanaalNaam(db, video)})`,
-     `**Voor:** ${mentionVan(db, stap.assigneeId)}`,
-     `**Feedback:** ${feedbackTekst || '(geen toelichting)'}`]);
+     `**For:** ${mentionVan(db, stap.assigneeId)}`,
+     `**Feedback:** ${feedbackTekst || '(no explanation given)'}`]);
   return video;
 }
 
-// Deadlinebewaking: stappen die (bijna) over hun deadline zijn.
+// Deadline watch: steps that are past their deadline or nearly there.
 export function deadlineOverzicht() {
   const db = load();
   const nu = new Date();
@@ -166,9 +167,9 @@ export function deadlineOverzicht() {
   for (const v of db.videos) {
     if (v.afgerond) continue;
     for (const s of v.stappen) {
-      if (!s.deadline || s.status === 'goedgekeurd' || s.status === 'wachtend') continue;
+      if (!s.deadline || s.status === 'approved' || s.status === 'waiting') continue;
       const d = new Date(s.deadline + 'T23:59:59');
-      const status = d < nu ? 'te_laat' : d <= morgen ? 'bijna' : null;
+      const status = d < nu ? 'overdue' : d <= morgen ? 'soon' : null;
       if (status) {
         items.push({
           videoId: v.id, werktitel: v.werktitel, stap: s.naam, deadline: s.deadline,
