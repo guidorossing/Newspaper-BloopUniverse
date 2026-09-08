@@ -260,7 +260,7 @@ footer {
     <input type="checkbox" class="vink" id="c-v0-domein">
     <div class="stap-body">
       <h3>Kies een domeinnaam</h3>
-      <p>Bijvoorbeeld <code>cms.bloopuniverse.com</code>. Je hebt hem op twee plekken nodig: in de webserverconfiguratie en straks in de YouTube-koppeling. Kies hem nu, dan hoef je later niets te wijzigen.</p>
+      <p>Bijvoorbeeld <code>cms.rossingtm.com</code>. Je hebt hem op twee plekken nodig: in de webserverconfiguratie en straks in de YouTube-koppeling. Kies hem nu, dan hoef je later niets te wijzigen.</p>
     </div>
   </div>
 
@@ -268,7 +268,7 @@ footer {
     <input type="checkbox" class="vink" id="c-v0-vps">
     <div class="stap-body">
       <h3>Neem een VPS</h3>
-      <p>Hetzner CX22 of DigitalOcean Basic, ongeveer €5 per maand. Kies <b>Ubuntu 24.04</b> als besturingssysteem. Je krijgt een IP-adres en een root-wachtwoord — die heb je zo nodig.</p>
+      <p>Hetzner CPX12 (of DigitalOcean Basic), ongeveer €11 per maand. Kies <b>Ubuntu</b> als besturingssysteem, locatie Falkenstein of Nürnberg. Je krijgt een IP-adres (IPv4) en een root-wachtwoord — die heb je zo nodig.</p><p class="c">Staat de goedkopere CX-lijn op <i>limited availability</i>? Neem dan CPX12; die doet hetzelfde werk.</p>
     </div>
   </div>
 
@@ -311,12 +311,17 @@ footer {
     <div class="stap-body">
       <h3>Installeer de software en haal de code op</h3>
 <pre>adduser --disabled-password --gecos "" bloop
-apt update &amp;&amp; apt install -y nodejs npm git caddy
+apt update &amp;&amp; apt upgrade -y
+apt install -y git curl
+
+<span class="c"># Node 22 — de versie in Ubuntu zelf is te oud</span>
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt install -y nodejs
 node --version   <span class="c"># moet v18 of hoger tonen</span>
 
 git clone https://github.com/guidorossing/Newspaper-BloopUniverse.git /opt/bloop-universe
 chown -R bloop:bloop /opt/bloop-universe</pre>
-      <div class="let-op"><b>Let op</b>Toont <code>node --version</code> iets lager dan v18? Installeer dan eerst een nieuwere Node via <code>curl -fsSL https://deb.nodesource.com/setup_22.x | bash - &amp;&amp; apt install -y nodejs</code>.</div>
+      <div class="let-op"><b>Let op</b>Installeer Node <b>niet</b> met <code>apt install nodejs npm</code> zonder de regel van NodeSource erboven: Ubuntu levert een oudere Node waarop het CMS niet start.</div>
     </div>
   </div>
 
@@ -324,10 +329,18 @@ chown -R bloop:bloop /opt/bloop-universe</pre>
     <input type="checkbox" class="vink" id="c-v1-caddy">
     <div class="stap-body">
       <h3>Zet HTTPS aan met Caddy</h3>
-      <p>Caddy regelt het beveiligingscertificaat automatisch. Kopieer de meegeleverde configuratie en vervang het voorbeelddomein door dat van jou:</p>
+      <p>Caddy regelt het beveiligingscertificaat automatisch, maar zit <b>niet</b> in de standaard pakketbron van Ubuntu. Voeg eerst zijn eigen bron toe:</p>
+<pre>apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+  | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+  | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update &amp;&amp; apt install -y caddy</pre>
+      <p>Zet daarna de meegeleverde configuratie neer en vul je eigen (sub)domein in:</p>
 <pre>cp /opt/bloop-universe/deploy/Caddyfile /etc/caddy/Caddyfile
-nano /etc/caddy/Caddyfile   <span class="c"># vervang cms.bloopuniverse.com</span>
+nano /etc/caddy/Caddyfile   <span class="c"># vervang cms.rossingtm.com door jouw domein</span>
 systemctl reload caddy</pre>
+      <div class="let-op"><b>Let op</b>Caddy haalt het certificaat pas op als het A-record uit de vorige stap echt doorgekomen is. Controleer dat eerst met <code>ping JOUW-DOMEIN</code> — daar moet het IP van je VPS uit komen.</div>
     </div>
   </div>
 
@@ -510,7 +523,7 @@ journalctl -u bloop-discord-bot -n 20   <span class="c"># "Discord-bot online al
     <div class="stap-body">
       <h3>Maak de OAuth-client en vul hem in het CMS in</h3>
       <p>Onder <b>Credentials → Create credentials → OAuth client ID</b>, type <i>Web application</i>. Vul bij <b>Authorized redirect URIs</b> exact dit in, met jouw domein:</p>
-<pre>https://cms.bloopuniverse.com/api/youtube/callback</pre>
+<pre>https://cms.rossingtm.com/api/youtube/callback</pre>
       <p>Kopieer de client-id en het client-secret naar <b>Instellingen → YouTube API</b> in het CMS en sla op.</p>
     </div>
   </div>

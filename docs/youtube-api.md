@@ -17,7 +17,7 @@ vs. realisatie verschijnt met stoplichtkleuren op de kanaalkaarten.
    testmodus is prima voor eigen gebruik).
 4. **APIs & Services → Credentials → Create credentials → OAuth client ID**:
    - Type: *Web application*
-   - Authorized redirect URI: `https://cms.bloopuniverse.com/api/youtube/callback`
+   - Authorized redirect URI: `https://cms.rossingtm.com/api/youtube/callback`
      (jouw domein + exact dit pad; lokaal testen kan met
      `http://localhost:3000/api/youtube/callback`)
 5. Kopieer de **client-id** en het **client-secret** naar het CMS:
