@@ -172,9 +172,14 @@ als die niet sterk genoeg is, is het niet de prijs die het probleem is.
 Naast de krant staat in deze repo het **productiesysteem van Rossing T&M**:
 het CMS waarmee alle faceless YouTube-kanalen van het bedrijf gemaakt en
 beheerd worden — BloopUniverse is daarin één kanaal naast de andere.
-Kanaalbeheer, een productiepipeline met goedkeurings-checkpoints per stap,
-een ideeënbank, publicatiekalender, instructiecentrum voor freelancers,
-versleutelde wachtwoordkluis en een Discord-koppeling.
+Kanaalbeheer met schuifbalken die live doorrekenen wat een kanaal kost en
+oplevert, een productiepipeline met goedkeurings-checkpoints per stap, een
+ideeënbank, publicatiekalender, uitbetalingsoverzicht per freelancer, een
+doorlooptijd- en revisierapport, instructiecentrum, versleutelde
+wachtwoordkluis, en meldingen via Discord én e-mail.
+
+De interface is Engels, zodat een VA of buitenlandse freelancer er zonder
+taalbarrière in kan.
 
 Het draait los van de website — de krant is een statische site, het CMS is
 een Node-server die op `cms.rossingtm.com` staat.

@@ -13,7 +13,10 @@ import * as kalender from './kalender.js';
 import * as ideeen from './ideeen.js';
 import * as youtube from './youtube.js';
 import { notify } from './discord.js';
+import * as email from './email.js';
 import * as calc from '../public/calc.js';
+import * as payouts from './payouts.js';
+import * as rapport from './rapport.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -76,6 +79,7 @@ function valideerKanaal(body) {
     },
     uploadDagen: String(body.uploadDagen || ''),
     notities: String(body.notities || ''),
+    brandId: body.brandId || null,
     productie: valideerProductie(body.productie)
   };
 }
@@ -220,7 +224,7 @@ async function api(req, res, url) {
       ideeenAlarm: ideeen.voorraad().filter(v => v.status === 'critical'),
       // Capacity and cost across all channels. Contains rates, so admins and
       // managers only.
-      totalen: auth.magMinstens(user, 'manager') ? calc.bedrijfsTotalen(db.channels) : null,
+      totalen: auth.magMinstens(user, 'manager') ? calc.bedrijfsTotalen(db.channels, db.brands) : null,
       activity: auth.magMinstens(user, 'manager') ? db.activity.slice(0, 20) : []
     });
   }
@@ -419,6 +423,67 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true });
   }
 
+  // -- brands (channels grouped per brand or client) --
+  if (route === 'GET /api/brands') {
+    return send(res, 200, { brands: db.brands });
+  }
+  if (route === 'POST /api/brands') {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
+    const body = await readBody(req);
+    if (!String(body.naam || '').trim()) return send(res, 400, { error: 'Brand name is required' });
+    const brand = { id: id(), naam: String(body.naam).trim(), notities: String(body.notities || '') };
+    db.brands.push(brand);
+    save();
+    logActivity(user.naam, `created brand "${brand.naam}"`);
+    return send(res, 200, { brand });
+  }
+  if (req.method === 'PUT' && url.pathname.startsWith('/api/brands/')) {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
+    const brand = db.brands.find(b => b.id === url.pathname.split('/')[3]);
+    if (!brand) return send(res, 404, { error: 'Brand not found' });
+    const body = await readBody(req);
+    if (body.naam !== undefined) brand.naam = String(body.naam).trim() || brand.naam;
+    if (body.notities !== undefined) brand.notities = String(body.notities);
+    save();
+    return send(res, 200, { brand });
+  }
+  if (req.method === 'DELETE' && url.pathname.startsWith('/api/brands/')) {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
+    const bid = url.pathname.split('/')[3];
+    const idx = db.brands.findIndex(b => b.id === bid);
+    if (idx === -1) return send(res, 404, { error: 'Not found' });
+    // Deleting a brand must never silently orphan its channels, so the
+    // channels have to be moved out first.
+    const inGebruik = db.channels.filter(c => c.brandId === bid).map(c => c.naam);
+    if (inGebruik.length) {
+      return send(res, 400, { error: `Still used by: ${inGebruik.join(', ')}. Move those channels to another brand first.` });
+    }
+    logActivity(user.naam, `deleted brand "${db.brands[idx].naam}"`);
+    db.brands.splice(idx, 1);
+    save();
+    return send(res, 200, { ok: true });
+  }
+
+  // -- payouts (what each freelancer earned) --
+  if (route === 'GET /api/payouts') {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
+    const maanden = payouts.beschikbareMaanden();
+    const maand = url.searchParams.get('maand') || maanden[0] || new Date().toISOString().slice(0, 7);
+    return send(res, 200, { ...payouts.overzicht(maand), maanden });
+  }
+  if (route === 'POST /api/payouts/markeer') {
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
+    const { maand, userId, bedrag } = await readBody(req);
+    if (!maand || !userId) return send(res, 400, { error: 'Month and user are required' });
+    return send(res, 200, payouts.markeerBetaald(maand, userId, bedrag, user));
+  }
+
+  // -- throughput and revision report --
+  if (route === 'GET /api/rapport') {
+    if (!auth.magMinstens(user, 'manager')) return send(res, 403, { error: 'Admins and managers only' });
+    return send(res, 200, rapport.rapport(Number(url.searchParams.get('dagen')) || 90));
+  }
+
   // -- publishing calendar --
   if (route === 'GET /api/kalender') {
     return send(res, 200, {
@@ -599,7 +664,9 @@ async function api(req, res, url) {
     return send(res, 200, {
       settings: {
         ...db.settings,
-        youtube: { clientId: db.settings.youtube.clientId, clientSecretIngesteld: Boolean(db.settings.youtube.clientSecret) }
+        youtube: { clientId: db.settings.youtube.clientId, clientSecretIngesteld: Boolean(db.settings.youtube.clientSecret) },
+        // The mailbox password never leaves the server, only whether it is set.
+        smtp: { ...(db.settings.smtp || {}), passEncrypted: undefined, wachtwoordIngesteld: Boolean(db.settings.smtp?.passEncrypted) }
       }
     });
   }
@@ -614,6 +681,20 @@ async function api(req, res, url) {
     if (body.youtube) {
       db.settings.youtube.clientId = String(body.youtube.clientId || '');
       if (body.youtube.clientSecret) db.settings.youtube.clientSecret = String(body.youtube.clientSecret);
+    }
+    if (body.smtp) {
+      const oud = db.settings.smtp || {};
+      db.settings.smtp = {
+        enabled: Boolean(body.smtp.enabled),
+        host: String(body.smtp.host || ''),
+        port: Number(body.smtp.port) || 587,
+        secure: Boolean(body.smtp.secure),
+        user: String(body.smtp.user || ''),
+        from: String(body.smtp.from || ''),
+        // An empty password field means "leave it as it was", so saving the
+        // other settings does not wipe the stored password.
+        passEncrypted: body.smtp.pass ? vault.encryptSecret(body.smtp.pass) : oud.passEncrypted || ''
+      };
     }
     save();
     logActivity(user.naam, 'changed the settings');
@@ -649,6 +730,20 @@ async function api(req, res, url) {
     if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
     const ok = await notify('info', '🔔 Test message', ['The Discord integration of the Rossing T&M CMS is working.']);
     return send(res, ok ? 200 : 400, ok ? { ok: true } : { error: 'Webhook not configured or unreachable' });
+  }
+
+  if (route === 'POST /api/settings/mail-test') {
+    if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Admins only' });
+    try {
+      const ok = await email.stuurMail({
+        naar: [user.email],
+        onderwerp: 'Rossing T&M CMS — test message',
+        tekst: 'If you are reading this, the CMS can send email through your own mailbox.'
+      });
+      return send(res, ok ? 200 : 400, ok ? { ok: true } : { error: 'Email is switched off or not configured' });
+    } catch (e) {
+      return send(res, 400, { error: e.message });
+    }
   }
 
   return send(res, 404, { error: 'Unknown route' });

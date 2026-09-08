@@ -1,7 +1,7 @@
 // Rossing T&M CMS — frontend (vanilla JS, no build step).
 import * as calc from '/calc.js';
 let ME = null;
-let CACHE = { channels: [], team: [] };
+let CACHE = { channels: [], team: [], brands: [] };
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -88,6 +88,17 @@ const VIEWS = {
           <div class="card stat"><div class="big">${nl(d.totalen.videosPerMaand, 0)}</div><div class="muted">Videos / month planned</div></div>
           <div class="card stat"><div class="big">${nl(d.totalen.urenPerWeek, 0)}</div><div class="muted">Hours of work per week</div></div>` : ''}
       </div>
+      ${d.totalen?.perMerk?.length > 1 ? `
+        <h3>🏷️ Per brand</h3>
+        <div class="card">
+          ${d.totalen.perMerk.map(m => `
+            <div class="reken-rij">
+              <span><b>${esc(m.naam)}</b></span>
+              <span class="muted">${m.kanalen} channel${m.kanalen === 1 ? '' : 's'} · ${nl(m.videosPerMaand, 1)} videos/mo · ${nl(m.urenPerWeek, 0)} hrs/wk</span>
+              <span class="muted">${eur(m.kostenPerMaand)} cost/mo</span>
+              <b class="${m.margePerMaand >= 0 ? 'goed' : 'slecht'}">${eur(m.margePerMaand)}</b>
+            </div>`).join('')}
+        </div>` : ''}
       ${d.totalen?.perKanaal?.length ? `
         <h3>💶 Cost and capacity per channel</h3>
         <div class="card">
@@ -141,14 +152,52 @@ const VIEWS = {
   },
 
   kanalen: async () => {
-    const { channels } = await api('/api/channels');
+    const [{ channels }, { brands }] = await Promise.all([api('/api/channels'), api('/api/brands')]);
     CACHE.channels = channels;
+    CACHE.brands = brands;
     const isManager = magMinstens('manager');
+    // Channels are shown grouped by brand, with the unassigned ones last.
+    const groepen = [...brands.map(b => ({ brand: b, kanalen: channels.filter(c => c.brandId === b.id) })),
+                     { brand: null, kanalen: channels.filter(c => !c.brandId || !brands.some(b => b.id === c.brandId)) }]
+      .filter(g => g.kanalen.length);
     $('#content').innerHTML = `
       <h2>Channels</h2>
-      ${channels.map(c => kanaalKaart(c, isManager)).join('') || '<p class="muted">No channels yet.</p>'}
-      ${isManager ? `<h3>New channel</h3><div class="card">${kanaalForm({})}</div>` : ''}`;
-    if (isManager) bindKanaalForms();
+      ${groepen.map(g => `
+        ${brands.length ? `<h3>${g.brand ? '🏷️ ' + esc(g.brand.naam) : 'Without a brand'}</h3>` : ''}
+        ${g.kanalen.map(c => kanaalKaart(c, isManager)).join('')}`).join('')
+        || '<p class="muted">No channels yet.</p>'}
+      ${isManager ? `
+        <h3>Brands</h3>
+        <div class="card">
+          <p class="muted" style="margin-top:0">Group channels under a brand or client. The dashboard then reports cost and margin per brand as well.</p>
+          ${brands.map(b => `
+            <div class="todo-rij">
+              <b>🏷️ ${esc(b.naam)}</b>
+              <span class="muted">${channels.filter(c => c.brandId === b.id).length} channels${b.notities ? ' · ' + esc(b.notities) : ''}</span>
+              <span style="margin-left:auto"><button class="btn small red" data-delbrand="${b.id}">🗑️</button></span>
+            </div>`).join('') || '<p class="muted">No brands yet.</p>'}
+          <div class="form-row" style="margin-top:.6rem">
+            <input id="b-naam" placeholder="Brand or client name">
+            <input id="b-notities" placeholder="Note (optional)">
+            <button class="btn primary" id="b-add">Add brand</button>
+          </div>
+          <span class="error" id="b-error"></span>
+        </div>
+        <h3>New channel</h3><div class="card">${kanaalForm({})}</div>` : ''}`;
+    if (isManager) {
+      bindKanaalForms();
+      $('#b-add').addEventListener('click', async () => {
+        try {
+          await api('/api/brands', { method: 'POST', body: { naam: $('#b-naam').value, notities: $('#b-notities').value } });
+          VIEWS.kanalen();
+        } catch (e) { $('#b-error').textContent = e.message; }
+      });
+      document.querySelectorAll('[data-delbrand]').forEach(b => b.addEventListener('click', async () => {
+        if (!confirm('Delete this brand? Its channels stay, they just lose the label.')) return;
+        try { await api(`/api/brands/${b.dataset.delbrand}`, { method: 'DELETE' }); VIEWS.kanalen(); }
+        catch (e) { alert(e.message); }
+      }));
+    }
     bindYoutubeActies();
   },
 
@@ -472,6 +521,113 @@ const VIEWS = {
     }));
   },
 
+  payouts: async () => {
+    const gekozen = CACHE.payoutMaand || '';
+    const d = await api('/api/payouts' + (gekozen ? `?maand=${gekozen}` : ''));
+    CACHE.payoutMaand = d.maand;
+    const isAdmin = magMinstens('admin');
+    const maandNaam = m => new Date(m + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+    $('#content').innerHTML = `
+      <h2>💶 Payouts</h2>
+      <p class="muted">What each freelancer earned in a month. A step counts once it has been <b>approved</b> — work still awaiting approval is not owed yet. The amount comes from the fee set on that channel for that step.</p>
+
+      <div class="card">
+        <div class="form-row">
+          <div><label>Month</label><select id="p-maand">
+            ${(d.maanden.length ? d.maanden : [d.maand]).map(m => `<option value="${m}" ${m === d.maand ? 'selected' : ''}>${maandNaam(m)}</option>`).join('')}
+          </select></div>
+          <div><label>Total this month</label><div class="reken-groot" style="font-size:1.4rem">${eur(d.totaal, 2)}</div></div>
+          <div><label>Still to pay</label><div class="reken-groot ${d.nogTeBetalen > 0 ? 'slecht' : 'goed'}" style="font-size:1.4rem">${eur(d.nogTeBetalen, 2)}</div></div>
+        </div>
+      </div>
+
+      ${d.personen.map(p => `
+        <div class="card">
+          <div class="todo-rij">
+            <b>${esc(p.naam)}</b>
+            <span class="badge">${esc(p.functie)}</span>
+            ${p.betaald ? '<span class="badge approved">paid</span>' : ''}
+            <span style="margin-left:auto"><b>${eur(p.totaal, 2)}</b></span>
+            ${isAdmin ? `<button class="btn small ${p.betaald ? '' : 'green'}" data-betaal="${p.userId}:${p.totaal}">${p.betaald ? 'Undo' : 'Mark as paid'}</button>` : ''}
+          </div>
+          <details style="margin-top:.4rem">
+            <summary class="muted" style="cursor:pointer">${p.regels.length} step${p.regels.length === 1 ? '' : 's'} — show the breakdown</summary>
+            ${p.regels.map(r => `
+              <div class="reken-rij">
+                <span class="muted">${esc(r.datum)}</span>
+                <span>${esc(r.stap)} — <b>${esc(r.video)}</b></span>
+                <span class="muted">${esc(r.kanaal)}</span>
+                <b>${eur(r.bedrag, 2)}</b>
+              </div>`).join('')}
+          </details>
+        </div>`).join('') || '<p class="muted">Nothing was approved in this month yet.</p>'}
+
+      ${d.zonderToewijzing.regels.length ? `
+        <div class="card" style="border-color:var(--yellow)">
+          <b>⚠️ ${eur(d.zonderToewijzing.totaal, 2)} on steps without an assignee</b>
+          <p class="muted" style="margin:.3rem 0 0">Someone did this work, but the step was never assigned, so the system cannot tell who to pay. Assign the step in the pipeline and it moves into the right person's total.</p>
+          ${d.zonderToewijzing.regels.map(r => `
+            <div class="reken-rij"><span class="muted">${esc(r.datum)}</span><span>${esc(r.stap)} — ${esc(r.video)}</span><b>${eur(r.bedrag, 2)}</b></div>`).join('')}
+        </div>` : ''}`;
+
+    $('#p-maand').addEventListener('change', e => { CACHE.payoutMaand = e.target.value; VIEWS.payouts(); });
+    document.querySelectorAll('[data-betaal]').forEach(b => b.addEventListener('click', async () => {
+      const [userId, bedrag] = b.dataset.betaal.split(':');
+      await api('/api/payouts/markeer', { method: 'POST', body: { maand: d.maand, userId, bedrag: Number(bedrag) } });
+      VIEWS.payouts();
+    }));
+  },
+
+  rapport: async () => {
+    const dagen = CACHE.rapportDagen || 90;
+    const r = await api(`/api/rapport?dagen=${dagen}`);
+    const dag = n => n == null ? '—' : `${nl(n, 1)} d`;
+    const pct = n => n == null ? '—' : `${n}%`;
+    const tabel = (kop, rijen, eersteKop) => `
+      <h3>${kop}</h3>
+      <div class="card">
+        <table>
+          <tr><th>${eersteKop}</th><th>Finished</th><th>Avg. lead time</th><th>Needed a revision</th><th>On time</th></tr>
+          ${rijen.map(g => `
+            <tr>
+              <td><b>${esc(g.naam)}</b></td>
+              <td>${g.afgerond}</td>
+              <td>${dag(g.gemDoorlooptijd)}</td>
+              <td>${pct(g.revisiePct)}${g.revisies ? ` <span class="muted">(${g.revisies}×)</span>` : ''}</td>
+              <td>${pct(g.opTijdPct)}</td>
+            </tr>`).join('') || `<tr><td colspan="5" class="muted">Nothing finished in this period.</td></tr>`}
+        </table>
+      </div>`;
+
+    $('#content').innerHTML = `
+      <h2>📈 Throughput and revisions</h2>
+      <p class="muted">Where the production actually stalls. Lead time is measured in calendar days from the moment a step opens until it is approved — a script that sits untouched for four days costs the schedule four days, whoever is at fault.</p>
+
+      <div class="card">
+        <div class="form-row">
+          <div><label>Period</label><select id="r-dagen">
+            ${[30, 90, 180, 365].map(n => `<option value="${n}" ${n === dagen ? 'selected' : ''}>last ${n} days</option>`).join('')}
+          </select></div>
+          <div><label>Steps finished</label><div class="reken-groot" style="font-size:1.4rem">${r.totaal.afgerond}</div></div>
+          <div><label>Videos finished</label><div class="reken-groot" style="font-size:1.4rem">${r.videosAfgerond}</div></div>
+          <div><label>Idea to upload</label><div class="reken-groot" style="font-size:1.4rem">${dag(r.videoDoorlooptijd)}</div></div>
+        </div>
+      </div>
+
+      ${r.knelpunt ? `
+        <div class="card" style="border-color:var(--yellow)">
+          <b>🔎 Slowest step: ${esc(r.knelpunt.naam)}</b>
+          <p class="muted" style="margin:.3rem 0 0">Takes ${dag(r.knelpunt.gemDoorlooptijd)} on average${r.knelpunt.revisiePct ? `, and ${r.knelpunt.revisiePct}% of them needed a revision` : ''}. If you want to upload more often, this is the step to fix first — adding people anywhere else will not help.</p>
+        </div>` : ''}
+
+      ${tabel('Per step', r.perStap, 'Step')}
+      ${tabel('Per person', r.perPersoon, 'Person')}
+      ${tabel('Per channel', r.perKanaal, 'Channel')}`;
+
+    $('#r-dagen').addEventListener('change', e => { CACHE.rapportDagen = Number(e.target.value); VIEWS.rapport(); });
+  },
+
   instellingen: async () => {
     const { settings } = await api('/api/settings');
     $('#content').innerHTML = `
@@ -503,6 +659,25 @@ const VIEWS = {
         </div>
       </div>
       <div class="card">
+        <h3 style="margin-top:0">Email notifications</h3>
+        <p class="muted">Sends the same notices as Discord, from your own mailbox — no third-party service involved. Strato's outgoing server is <code>smtp.strato.com</code>, port <code>465</code> with implicit TLS, and the username is the full email address. The password is stored encrypted, the same way as the vault.</p>
+        <div class="form-row">
+          <div><label>SMTP server</label><input id="m-host" value="${esc(settings.smtp?.host || '')}" placeholder="smtp.strato.com"></div>
+          <div><label>Port</label><input id="m-port" type="number" value="${settings.smtp?.port || 465}"></div>
+          <div><label>Username</label><input id="m-user" value="${esc(settings.smtp?.user || '')}" placeholder="cms@rossingtm.com"></div>
+          <div><label>Password ${settings.smtp?.wachtwoordIngesteld ? '(set — only fill in to replace it)' : ''}</label><input id="m-pass" type="password" placeholder="${settings.smtp?.wachtwoordIngesteld ? '••••••••' : ''}"></div>
+          <div><label>Sender address</label><input id="m-from" value="${esc(settings.smtp?.from || '')}" placeholder="cms@rossingtm.com"></div>
+        </div>
+        <label><input type="checkbox" id="m-secure" style="width:auto" ${settings.smtp?.secure !== false ? 'checked' : ''}> Implicit TLS (leave on for port 465, off for 587)</label>
+        <label><input type="checkbox" id="m-enabled" style="width:auto" ${settings.smtp?.enabled ? 'checked' : ''}> Email notifications on</label>
+        <div style="margin-top:.7rem">
+          <button class="btn" id="m-test">Send a test to ${esc(ME.email)}</button>
+          <span id="m-msg" class="muted"></span>
+        </div>
+        <p class="muted" style="font-size:.8rem;margin-bottom:0">Save with the button at the top before testing — the test uses what is stored, not what is on screen.</p>
+      </div>
+
+      <div class="card">
         <h3 style="margin-top:0">QC checklist (before upload)</h3>
         <p class="muted">One line per check. New videos get this list; the upload step can only be submitted once everything is ticked off.</p>
         <textarea id="s-qc" style="min-height:140px">${esc((settings.qcItems || []).join('\n'))}</textarea>
@@ -519,8 +694,14 @@ const VIEWS = {
         discordWebhookUrl: $('#s-webhook').value,
         discordEnabled: $('#s-enabled').checked,
         qcItems: $('#s-qc').value.split('\n').map(s => s.trim()).filter(Boolean),
-        youtube: { clientId: $('#s-ytclient').value, clientSecret: $('#s-ytsecret').value }
+        youtube: { clientId: $('#s-ytclient').value, clientSecret: $('#s-ytsecret').value },
+        smtp: {
+          enabled: $('#m-enabled').checked, host: $('#m-host').value, port: $('#m-port').value,
+          secure: $('#m-secure').checked, user: $('#m-user').value, from: $('#m-from').value,
+          pass: $('#m-pass').value
+        }
       } });
+      $('#m-pass').value = '';
       $('#s-msg').textContent = 'Saved ✔';
     });
     $('#s-bottoken').addEventListener('click', async () => {
@@ -531,6 +712,11 @@ const VIEWS = {
     $('#s-test').addEventListener('click', async () => {
       try { await api('/api/settings/discord-test', { method: 'POST' }); $('#s-msg').textContent = 'Test message sent ✔'; }
       catch (e) { $('#s-msg').textContent = e.message; }
+    });
+    $('#m-test').addEventListener('click', async () => {
+      $('#m-msg').textContent = 'sending…';
+      try { await api('/api/settings/mail-test', { method: 'POST' }); $('#m-msg').textContent = 'Sent ✔ — check your inbox'; }
+      catch (e) { $('#m-msg').textContent = e.message; }
     });
     $('#pw-save').addEventListener('click', async () => {
       try { await api('/api/me/password', { method: 'POST', body: { nieuw: $('#pw-nieuw').value } }); $('#pw-nieuw').value = ''; alert('Password changed'); }
@@ -652,6 +838,10 @@ function kanaalForm(c) {
         <div><label>Channel name *</label><input class="f-naam" value="${esc(c.naam || '')}"></div>
         <div><label>Topic / niche</label><input class="f-onderwerp" value="${esc(c.onderwerp || '')}" placeholder="e.g. space mysteries, faceless"></div>
         <div><label>Upload days</label><input class="f-dagen" value="${esc(c.uploadDagen || '')}" placeholder="e.g. Tue + Fri 17:00"></div>
+        <div><label>Brand</label><select class="f-brand">
+          <option value="">— no brand —</option>
+          ${(CACHE.brands || []).map(b => `<option value="${b.id}" ${c.brandId === b.id ? 'selected' : ''}>${esc(b.naam)}</option>`).join('')}
+        </select></div>
       </div>
 
       <h4 class="blok-kop">📈 Rhythm and targets</h4>
@@ -728,6 +918,7 @@ function kanaalUitForm(form) {
     concurrenten: (v('f-concurrenten') || '').split(',').map(s => s.trim()).filter(Boolean),
     uploadDagen: v('f-dagen'),
     notities: v('f-notities'),
+    brandId: v('f-brand') || null,
     kpis: {
       uploadFrequentiePerWeek: n('f-freq'),
       avdMinuten: n('f-avd'),

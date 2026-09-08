@@ -12,6 +12,9 @@ const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 const EMPTY = {
   users: [],
+  // Brands group channels: one brand can hold several channels, and the
+  // dashboard reports cost and margin per brand as well as per channel.
+  brands: [],
   channels: [],
   videos: [],
   ideeen: [],
@@ -19,6 +22,8 @@ const EMPTY = {
   vault: [],
   templates: [],
   koppelcodes: [],
+  // Recorded payouts: which freelancer was paid for which month.
+  payouts: [],
   settings: {
     discordWebhookUrl: '',
     discordEnabled: false,

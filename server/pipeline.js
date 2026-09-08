@@ -7,6 +7,7 @@
 // task (and a Discord ping).
 import { load, save, id, logActivity } from './store.js';
 import { notify } from './discord.js';
+import { adresVan, beheerdersAdressen } from './email.js';
 
 export const STAPPEN = [
   { key: 'idee', naam: 'Idea', functie: 'other' },
@@ -129,10 +130,13 @@ export async function keurGoed(videoId, stapKey, user) {
   logActivity(user.naam, `approved "${stap.naam}" for video "${video.werktitel}"`);
 
   if (volgende) {
+    // The freelancer whose turn it now is gets the mail as well as the
+    // managers — for them this is the message that their work has started.
+    const naar = [...new Set([...beheerdersAdressen(), adresVan(volgende.assigneeId)].filter(Boolean))];
     await notify('approved', `✅ ${stap.naam} approved — on to ${volgende.naam}`,
       [`**Video:** ${video.werktitel} (${kanaalNaam(db, video)})`,
        `**Next step:** ${volgende.naam} — ${mentionVan(db, volgende.assigneeId)}`,
-       volgende.deadline ? `**Deadline:** ${volgende.deadline}` : ''].filter(Boolean));
+       volgende.deadline ? `**Deadline:** ${volgende.deadline}` : ''].filter(Boolean), naar);
   } else {
     await notify('approved', `🎉 Video finished: ${video.werktitel}`,
       [`**Channel:** ${kanaalNaam(db, video)}`, 'Every step has been approved and the video is uploaded.']);
@@ -154,7 +158,8 @@ export async function keurAf(videoId, stapKey, user, feedbackTekst) {
   await notify('rejected', `❌ ${stap.naam} rejected — revision needed`,
     [`**Video:** ${video.werktitel} (${kanaalNaam(db, video)})`,
      `**For:** ${mentionVan(db, stap.assigneeId)}`,
-     `**Feedback:** ${feedbackTekst || '(no explanation given)'}`]);
+     `**Feedback:** ${feedbackTekst || '(no explanation given)'}`],
+    [...new Set([...beheerdersAdressen(), adresVan(stap.assigneeId)].filter(Boolean))]);
   return video;
 }
 

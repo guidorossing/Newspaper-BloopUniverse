@@ -152,7 +152,7 @@ export function doorrekenen(kanaal = {}) {
 }
 
 /** The sum across all channels, for the dashboard. */
-export function bedrijfsTotalen(kanalen = []) {
+export function bedrijfsTotalen(kanalen = [], merken = []) {
   const t = {
     kanalen: kanalen.length,
     videosPerMaand: 0,
@@ -182,5 +182,35 @@ export function bedrijfsTotalen(kanalen = []) {
     });
   }
   t.margePerMaand = t.omzetPerMaand - t.kostenPerMaand;
+  t.perMerk = perMerk(t.perKanaal, kanalen, merken);
   return t;
+}
+
+/**
+ * The same totals rolled up per brand. Channels without a brand end up under
+ * "Unassigned", so the brand rows always add up to the company total.
+ */
+function perMerk(perKanaal, kanalen, merken) {
+  const merkVan = new Map(kanalen.map(k => [k.id, k.brandId || null]));
+  const naamVan = new Map(merken.map(m => [m.id, m.naam]));
+  const groepen = new Map();
+  for (const k of perKanaal) {
+    const mid = merkVan.get(k.id) || null;
+    if (!groepen.has(mid)) {
+      groepen.set(mid, {
+        brandId: mid,
+        naam: mid ? (naamVan.get(mid) || 'Unknown brand') : 'Unassigned',
+        kanalen: 0, videosPerMaand: 0, kostenPerMaand: 0, margePerMaand: 0, urenPerWeek: 0
+      });
+    }
+    const g = groepen.get(mid);
+    g.kanalen++;
+    g.videosPerMaand += k.videosPerMaand;
+    g.kostenPerMaand += k.kostenPerMaand;
+    g.margePerMaand += k.margePerMaand;
+    g.urenPerWeek += k.urenPerWeek;
+  }
+  // Brands with channels first, biggest spend on top; "Unassigned" last.
+  return [...groepen.values()].sort((a, b) =>
+    (a.brandId === null) - (b.brandId === null) || b.kostenPerMaand - a.kostenPerMaand);
 }
