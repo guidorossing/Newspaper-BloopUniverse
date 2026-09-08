@@ -1,4 +1,4 @@
-# Instructies thumbnail-artiest — Bloop Universe
+# Instructies thumbnail-artiest — Rossing T&M
 
 1. **Volg het thumbnailformat van het kanaal** (zie kanaalinstellingen in het
    CMS): vaste opbouw, kleurgebruik en tekstpositie. De thumbnail moet naast

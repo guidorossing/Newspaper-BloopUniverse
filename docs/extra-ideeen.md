@@ -2,7 +2,7 @@
 
 Jouw basislijst is volledig gebouwd. Hieronder eerst wat er al in zit, daarna
 extra ideeën (deels al gebouwd, deels als roadmap) om het systeem verder te
-laten groeien met Bloop Universe.
+laten groeien met Rossing T&M.
 
 ## Al gebouwd (jouw basislijst + extra opties)
 

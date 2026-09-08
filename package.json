@@ -1,7 +1,7 @@
 {
-  "name": "bloop-universe-cms",
+  "name": "rossingtm-cms",
   "version": "1.0.0",
-  "description": "Bloop Universe CMS — productie- en kanaalbeheersysteem voor faceless YouTube-kanalen",
+  "description": "Rossing T&M CMS — productie- en kanaalbeheersysteem voor faceless YouTube-kanalen",
   "type": "module",
   "scripts": {
     "start": "node server/index.js",

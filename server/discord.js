@@ -22,7 +22,7 @@ export async function notify(type, titel, regels = []) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: 'Bloop Universe CMS',
+        username: 'Rossing T&M CMS',
         embeds: [{
           title: titel,
           description: regels.join('\n'),

@@ -40,7 +40,7 @@ export function seedAdmin() {
   db.users.push({
     id: id(),
     naam: 'Admin',
-    email: 'admin@bloopuniverse.local',
+    email: 'info@rossingtm.com',
     rol: 'admin',
     functie: 'overig',
     passwordHash: hashPassword(tijdelijk),

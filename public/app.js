@@ -1,4 +1,4 @@
-// Bloop Universe CMS — frontend (vanilla JS, geen build-stap).
+// Rossing T&M CMS — frontend (vanilla JS, geen build-stap).
 let ME = null;
 let CACHE = { channels: [], team: [] };
 
@@ -823,14 +823,14 @@ function bindStapActies() {
 // ---------- instructiecentrum (inhoud) ----------
 const INSTRUCTIES = {
   algemeen: `
-    <h4>🧭 Zo werken we bij Bloop Universe</h4>
+    <h4>🧭 Zo werken we bij Rossing T&amp;M</h4>
     <ol>
       <li><b>De pipeline is heilig.</b> Idee → Script → Voice/Avatar → Video-edit → Thumbnail → Upload. Jouw stap begint pas als de vorige stap is goedgekeurd — je krijgt automatisch bericht (hier en in Discord).</li>
       <li><b>Elke stap eindigt met een checkpoint.</b> Lever in via de knop "Inleveren" met een link naar je werk. De admin keurt goed of geeft feedback. Afgekeurd = één revisieronde, daarna overleg.</li>
       <li><b>Deadlines zijn afspraken.</b> Zie je dat je een deadline niet gaat halen? Meld het minimaal 24 uur van tevoren in Discord — dan schuiven we, zonder melding niet.</li>
       <li><b>Kanaalinstellingen zijn de wet.</b> Titelformat, thumbnailformat, toon en uploadfrequentie staan per kanaal vast onder "Kanalen". Wijk je af, dan alleen met expliciete goedkeuring vooraf.</li>
       <li><b>Communicatie loopt via Discord</b> in het kanaal van jouw stap. Geen losse appjes of DM's over werk — dan raakt informatie kwijt.</li>
-      <li><b>Bestandsnamen:</b> <code>[kanaal]-[werktitel]-[stap]-[versie]</code>, bijv. <code>bloop-ruimtemysteries-script-v2</code>.</li>
+      <li><b>Bestandsnamen:</b> <code>[kanaal]-[werktitel]-[stap]-[versie]</code>, bijv. <code>bloopuniverse-ruimtemysteries-script-v2</code>.</li>
     </ol>`,
   scriptwriter: `
     <h4>✍️ Instructies scriptwriter</h4>

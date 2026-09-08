@@ -1,0 +1,17 @@
+# systemd-unit voor de Discord-bot van het Rossing T&M CMS
+# Installatie: zie docs/discord-integratie.md
+[Unit]
+Description=Rossing T&M CMS Discord-bot
+After=network.target cms-rossingtm.service
+Wants=cms-rossingtm.service
+
+[Service]
+Type=simple
+User=rossingtm
+WorkingDirectory=/opt/cms-rossingtm/discord-bot
+ExecStart=/usr/bin/node bot.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

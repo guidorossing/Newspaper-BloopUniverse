@@ -1,4 +1,4 @@
-<title>Bloop Universe Opstartgids</title>
+<title>Rossing T&amp;M CMS Opstartgids</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -242,7 +242,7 @@ footer {
 <div class="wrap">
 
 <header>
-  <p class="kicker">Bloop Universe CMS · installatiegids</p>
+  <p class="kicker">Rossing T&M CMS · installatiegids</p>
   <h1>Van lege server naar draaiende videofabriek</h1>
   <p class="lead">Werk de fases van boven naar beneden af en vink af wat klaar is — je voortgang blijft bewaard, ook als je het tabblad sluit. Reken op ongeveer twee uur voor alles, verspreid over zoveel sessies als je wilt.</p>
 </header>
@@ -310,7 +310,7 @@ footer {
     <input type="checkbox" class="vink" id="c-v1-install">
     <div class="stap-body">
       <h3>Installeer de software en haal de code op</h3>
-<pre>adduser --disabled-password --gecos "" bloop
+<pre>adduser --disabled-password --gecos "" rossingtm
 apt update &amp;&amp; apt upgrade -y
 apt install -y git curl
 
@@ -319,8 +319,8 @@ curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 apt install -y nodejs
 node --version   <span class="c"># moet v18 of hoger tonen</span>
 
-git clone https://github.com/guidorossing/Newspaper-BloopUniverse.git /opt/bloop-universe
-chown -R bloop:bloop /opt/bloop-universe</pre>
+git clone https://github.com/guidorossing/Newspaper-BloopUniverse.git /opt/cms-rossingtm
+chown -R rossingtm:rossingtm /opt/cms-rossingtm</pre>
       <div class="let-op"><b>Let op</b>Installeer Node <b>niet</b> met <code>apt install nodejs npm</code> zonder de regel van NodeSource erboven: Ubuntu levert een oudere Node waarop het CMS niet start.</div>
     </div>
   </div>
@@ -337,7 +337,7 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
   | tee /etc/apt/sources.list.d/caddy-stable.list
 apt update &amp;&amp; apt install -y caddy</pre>
       <p>Zet daarna de meegeleverde configuratie neer en vul je eigen (sub)domein in:</p>
-<pre>cp /opt/bloop-universe/deploy/Caddyfile /etc/caddy/Caddyfile
+<pre>cp /opt/cms-rossingtm/deploy/Caddyfile /etc/caddy/Caddyfile
 nano /etc/caddy/Caddyfile   <span class="c"># vervang cms.rossingtm.com door jouw domein</span>
 systemctl reload caddy</pre>
       <div class="let-op"><b>Let op</b>Caddy haalt het certificaat pas op als het A-record uit de vorige stap echt doorgekomen is. Controleer dat eerst met <code>ping JOUW-DOMEIN</code> — daar moet het IP van je VPS uit komen.</div>
@@ -349,10 +349,10 @@ systemctl reload caddy</pre>
     <div class="stap-body">
       <h3>Start het CMS als achtergronddienst</h3>
       <p>Zo start het systeem vanzelf opnieuw op na een herstart van de server:</p>
-<pre>cp /opt/bloop-universe/deploy/bloop-cms.service /etc/systemd/system/
+<pre>cp /opt/cms-rossingtm/deploy/cms-rossingtm.service /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now bloop-cms
-journalctl -u bloop-cms -n 20</pre>
+systemctl enable --now cms-rossingtm
+journalctl -u cms-rossingtm -n 20</pre>
       <div class="tip"><b>Belangrijk</b>Die laatste regel toont je <b>tijdelijke admin-wachtwoord</b>. Het verschijnt maar één keer. Kopieer het nu.</div>
     </div>
   </div>
@@ -361,9 +361,9 @@ journalctl -u bloop-cms -n 20</pre>
     <input type="checkbox" class="vink" id="c-v1-login">
     <div class="stap-body">
       <h3>Log in en wijzig direct je wachtwoord</h3>
-      <p>Open je domein in de browser. Log in met <code>admin@bloopuniverse.local</code> en het tijdelijke wachtwoord. Het systeem vraagt meteen om een nieuw wachtwoord — kies iets sterks en zet het in je wachtwoordmanager.</p>
+      <p>Open je domein in de browser. Log in met <code>info@rossingtm.com</code> en het tijdelijke wachtwoord. Het systeem vraagt meteen om een nieuw wachtwoord — kies iets sterks en zet het in je wachtwoordmanager.</p>
       <figure>
-        <img src="{{IMG_LOGIN}}" alt="Het inlogscherm van het Bloop Universe CMS met velden voor e-mailadres en wachtwoord">
+        <img src="{{IMG_LOGIN}}" alt="Het inlogscherm van het Rossing T&M CMS met velden voor e-mailadres en wachtwoord">
         <figcaption>Dit inlogscherm zie je als alles goed staat. Krijg je een foutmelding over het certificaat, wacht dan nog even — DNS is dan nog niet doorgekomen.</figcaption>
       </figure>
     </div>
@@ -474,15 +474,15 @@ journalctl -u bloop-cms -n 20</pre>
     <input type="checkbox" class="vink" id="c-v3-start">
     <div class="stap-body">
       <h3>Start de bot op je server</h3>
-<pre>cd /opt/bloop-universe/discord-bot
-sudo -u bloop npm install
-sudo -u bloop cp .env.example .env
-sudo -u bloop nano .env   <span class="c"># vul de vijf waarden in</span>
+<pre>cd /opt/cms-rossingtm/discord-bot
+sudo -u rossingtm npm install
+sudo -u rossingtm cp .env.example .env
+sudo -u rossingtm nano .env   <span class="c"># vul de vijf waarden in</span>
 
-cp /opt/bloop-universe/deploy/bloop-discord-bot.service /etc/systemd/system/
+cp /opt/cms-rossingtm/deploy/cms-rossingtm-discord-bot.service /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now bloop-discord-bot
-journalctl -u bloop-discord-bot -n 20   <span class="c"># "Discord-bot online als ..."</span></pre>
+systemctl enable --now cms-rossingtm-discord-bot
+journalctl -u cms-rossingtm-discord-bot -n 20   <span class="c"># "Discord-bot online als ..."</span></pre>
       <p>In <code>.env</code> vul je in: het Discord-token, de Application ID, de Server-ID, <code>CMS_URL=http://localhost:3000</code> en het CMS-bot-token.</p>
     </div>
   </div>
@@ -510,7 +510,7 @@ journalctl -u bloop-discord-bot -n 20   <span class="c"># "Discord-bot online al
     <div class="stap-body">
       <h3>Maak een Google Cloud-project</h3>
       <ol>
-        <li>Ga naar <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> en maak een nieuw project, bijvoorbeeld "Bloop Universe CMS".</li>
+        <li>Ga naar <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> en maak een nieuw project, bijvoorbeeld "Rossing T&M CMS".</li>
         <li><b>APIs &amp; Services → Library</b>: schakel <b>YouTube Data API v3</b> én <b>YouTube Analytics API</b> in.</li>
         <li><b>OAuth consent screen</b>: type <i>External</i>, vul naam en e-mail in. Voeg bij <b>Test users</b> elk Google-account toe waarmee je een kanaal gaat koppelen.</li>
       </ol>
@@ -680,7 +680,7 @@ journalctl -u bloop-discord-bot -n 20   <span class="c"># "Discord-bot online al
     <div class="stap-body">
       <h3>Zet de dagelijkse back-up aan</h3>
       <p>Draai <code>crontab -e</code> als root en voeg deze regel toe:</p>
-<pre>0 3 * * * tar czf /root/backup-bloop-$(date +\%u).tar.gz -C /opt/bloop-universe data</pre>
+<pre>0 3 * * * tar czf /root/backup-cms-$(date +\%u).tar.gz -C /opt/cms-rossingtm data</pre>
       <p>Dit bewaart zeven roterende dagelijkse back-ups van je database én je versleutelingssleutel.</p>
       <div class="let-op"><b>Cruciaal</b>De map <code>data/</code> bevat <code>vault.key</code>. Zonder dat bestand zijn de wachtwoorden in de Channel Admin niet meer te ontsleutelen — ook niet door mij. Kopieer de back-ups regelmatig naar je eigen computer of een cloudopslag.</div>
     </div>
@@ -690,7 +690,7 @@ journalctl -u bloop-discord-bot -n 20   <span class="c"># "Discord-bot online al
     <input type="checkbox" class="vink" id="c-v7-check">
     <div class="stap-body">
       <h3>Controleer of alles draait</h3>
-<pre>systemctl status bloop-cms bloop-discord-bot --no-pager</pre>
+<pre>systemctl status cms-rossingtm cms-rossingtm-discord-bot --no-pager</pre>
       <p>Beide moeten <b>active (running)</b> tonen. Het dashboard geeft je vanaf nu het volledige overzicht: openstaande goedkeuringen, deadlines die verlopen, ideeënvoorraad en wie wat deed.</p>
       <figure>
         <img src="{{IMG_DASHBOARD}}" alt="Het dashboard met tellers voor kanalen, video's in productie, ideeën op voorraad en open to-do's, plus het activiteitenlog">

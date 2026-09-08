@@ -1,4 +1,4 @@
-# Instructies scriptwriter — Bloop Universe
+# Instructies scriptwriter — Rossing T&M
 
 1. **Lees eerst het idee en de kanaalinstellingen** (onderwerp, toon,
    doelgroep, titelformat). Het script moet de titel en thumbnail waarmaken —

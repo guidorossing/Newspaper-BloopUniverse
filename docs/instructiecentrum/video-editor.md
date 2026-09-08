@@ -1,4 +1,4 @@
-# Instructies video-editor — Bloop Universe
+# Instructies video-editor — Rossing T&M
 
 1. **Werk vanuit het goedgekeurde script + voiceover.** Volg de
    [regie-aanwijzingen] in het script; wijk alleen af als het de video

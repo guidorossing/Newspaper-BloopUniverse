@@ -167,15 +167,17 @@ als die niet sterk genoeg is, is het niet de prijs die het probleem is.
 
 ---
 
-## 🪐 Bloop Universe CMS — de productiekant
+## 🎬 Rossing T&M CMS — de productiekant
 
-Naast de krant staat in deze repo het **CMS waarmee de video's gemaakt
-worden**: kanaalbeheer, een productiepipeline met goedkeurings-checkpoints
-per stap, een ideeënbank, publicatiekalender, instructiecentrum voor
-freelancers, versleutelde wachtwoordkluis en een Discord-koppeling.
+Naast de krant staat in deze repo het **productiesysteem van Rossing T&M**:
+het CMS waarmee alle faceless YouTube-kanalen van het bedrijf gemaakt en
+beheerd worden — BloopUniverse is daarin één kanaal naast de andere.
+Kanaalbeheer, een productiepipeline met goedkeurings-checkpoints per stap,
+een ideeënbank, publicatiekalender, instructiecentrum voor freelancers,
+versleutelde wachtwoordkluis en een Discord-koppeling.
 
 Het draait los van de website — de krant is een statische site, het CMS is
-een Node-server die je op een eigen (sub)domein zet.
+een Node-server die op `cms.rossingtm.com` staat.
 
 ```bash
 npm start          # → http://localhost:3000, geen dependencies nodig

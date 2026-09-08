@@ -1,4 +1,4 @@
-# Onderzoek: Discord-server koppelen aan het Bloop Universe CMS
+# Onderzoek: Discord-server koppelen aan het Rossing T&M CMS
 
 Dit document beschrijft **hoe** je de Discord-server aan het systeem koppelt,
 welke opties er zijn, en welke inrichting wordt aanbevolen. Beide onderdelen

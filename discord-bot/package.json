@@ -1,7 +1,7 @@
 {
-  "name": "bloop-universe-discord-bot",
+  "name": "rossingtm-cms-discord-bot",
   "version": "1.0.0",
-  "description": "Discord-bot voor het Bloop Universe CMS: taken, checkpoints en goedkeuringsknoppen in Discord",
+  "description": "Discord-bot voor het Rossing T&M CMS: taken, checkpoints en goedkeuringsknoppen in Discord",
   "type": "module",
   "main": "bot.js",
   "scripts": {

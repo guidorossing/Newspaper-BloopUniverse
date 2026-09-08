@@ -1,4 +1,4 @@
-// Bloop Universe Discord-bot ("Discord Robot")
+// Rossing T&M CMS Discord-bot ("Discord Robot")
 //
 // Freelancers werken volledig via Discord:
 //   /koppel <code>     — koppel je Discord-account aan je CMS-account

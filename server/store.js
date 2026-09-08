@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import crypto from 'node:crypto';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const DATA_DIR = process.env.BLOOP_DATA_DIR || path.join(ROOT, 'data');
+export const DATA_DIR = process.env.CMS_DATA_DIR || path.join(ROOT, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 const EMPTY = {

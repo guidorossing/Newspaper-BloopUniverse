@@ -7,7 +7,7 @@ vs. realisatie verschijnt met stoplichtkleuren op de kanaalkaarten.
 ## Eenmalig: Google Cloud-project (±10 minuten)
 
 1. Ga naar https://console.cloud.google.com → nieuw project, bijv.
-   "Bloop Universe CMS".
+   "Rossing T&M CMS".
 2. **APIs & Services → Library**: schakel in:
    - *YouTube Data API v3*
    - *YouTube Analytics API*

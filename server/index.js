@@ -1,4 +1,4 @@
-// Bloop Universe CMS — hoofdserver.
+// Rossing T&M CMS — hoofdserver.
 // Zero-dependency: draait op kale Node.js (>= 18). Start met `npm start`.
 import http from 'node:http';
 import fs from 'node:fs';
@@ -612,7 +612,7 @@ async function api(req, res, url) {
   }
   if (route === 'POST /api/settings/discord-test') {
     if (!auth.magMinstens(user, 'admin')) return send(res, 403, { error: 'Alleen admin' });
-    const ok = await notify('info', '🔔 Testbericht', ['De Discord-koppeling van het Bloop Universe CMS werkt!']);
+    const ok = await notify('info', '🔔 Testbericht', ['De Discord-koppeling van het Rossing T&M CMS werkt!']);
     return send(res, ok ? 200 : 400, ok ? { ok: true } : { error: 'Webhook niet geconfigureerd of niet bereikbaar' });
   }
 
@@ -648,11 +648,11 @@ kalender.planKalenderAlarm();
 youtube.planAutoSync();
 
 server.listen(PORT, () => {
-  console.log(`\nBloop Universe CMS draait op http://localhost:${PORT}`);
+  console.log(`\nRossing T&M CMS draait op http://localhost:${PORT}`);
   if (tijdelijkWachtwoord) {
     console.log('\n=== EERSTE START ===');
     console.log('Admin-account aangemaakt:');
-    console.log('  e-mail:     admin@bloopuniverse.local');
+    console.log('  e-mail:     info@rossingtm.com');
     console.log(`  wachtwoord: ${tijdelijkWachtwoord}`);
     console.log('Wijzig dit wachtwoord direct na de eerste login.\n');
   }

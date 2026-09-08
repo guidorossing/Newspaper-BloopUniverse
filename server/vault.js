@@ -1,6 +1,6 @@
 // Channel Admin vault: kanaalinformatie + inloggegevens, versleuteld op
 // schijf met AES-256-GCM. De sleutel staat in data/vault.key (gitignored)
-// of in de env-variabele BLOOP_VAULT_KEY (hex, 64 tekens).
+// of in de env-variabele CMS_VAULT_KEY (hex, 64 tekens).
 //
 // Belangrijk: dit is een pragmatische kluis voor een klein team. Voor
 // YouTube zelf geldt: deel bij voorkeur GEEN wachtwoorden, maar nodig
@@ -15,8 +15,8 @@ let KEY = null;
 
 export function initVaultKey() {
   if (KEY) return;
-  if (process.env.BLOOP_VAULT_KEY) {
-    KEY = Buffer.from(process.env.BLOOP_VAULT_KEY, 'hex');
+  if (process.env.CMS_VAULT_KEY) {
+    KEY = Buffer.from(process.env.CMS_VAULT_KEY, 'hex');
   } else {
     const keyFile = path.join(DATA_DIR, 'vault.key');
     fs.mkdirSync(DATA_DIR, { recursive: true });

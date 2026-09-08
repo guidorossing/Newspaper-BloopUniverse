@@ -19,7 +19,7 @@ activiteitenlog op het dashboard — je ziet dus altijd wie wat deed.
 ## Hoe de vault werkt
 
 - Geheimen worden versleuteld opgeslagen met AES-256-GCM.
-- De sleutel staat in `data/vault.key` (of env `BLOOP_VAULT_KEY`) en de hele
+- De sleutel staat in `data/vault.key` (of env `CMS_VAULT_KEY`) en de hele
   `data/`-map is **gitignored**: er komt nooit een wachtwoord in git.
 - Geheimen worden nooit in lijst-API's meegestuurd; onthullen is een aparte,
   gelogde admin-actie.
