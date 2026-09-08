@@ -1,4 +1,5 @@
 // Rossing T&M CMS — frontend (vanilla JS, geen build-stap).
+import * as calc from '/calc.js';
 let ME = null;
 let CACHE = { channels: [], team: [] };
 
@@ -63,6 +64,7 @@ function toonApp() {
   openTab('dashboard');
 }
 
+window.openTab = openTab;   // de knoppen in het dashboard roepen dit inline aan
 function openTab(tab) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   const render = VIEWS[tab];
@@ -81,7 +83,28 @@ const VIEWS = {
         <div class="card stat"><div class="big">${d.videosAfgerond}</div><div class="muted">Video's afgerond</div></div>
         <div class="card stat"><div class="big">${d.ideeenOpVoorraad ?? 0}</div><div class="muted">Ideeën op voorraad</div></div>
         <div class="card stat"><div class="big">${d.openTodos}</div><div class="muted">Open to-do's</div></div>
+        ${d.totalen ? `
+          <div class="card stat"><div class="big">${eur(d.totalen.kostenPerMaand)}</div><div class="muted">Productiekosten p/m</div></div>
+          <div class="card stat"><div class="big">${nl(d.totalen.videosPerMaand, 0)}</div><div class="muted">Video's p/m gepland</div></div>
+          <div class="card stat"><div class="big">${nl(d.totalen.urenPerWeek, 0)}</div><div class="muted">Uur werk per week</div></div>` : ''}
       </div>
+      ${d.totalen?.perKanaal?.length ? `
+        <h3>💶 Kosten en capaciteit per kanaal</h3>
+        <div class="card">
+          ${d.totalen.perKanaal.map(k => `
+            <div class="reken-rij">
+              <span><b>${esc(k.naam)}</b></span>
+              <span class="muted">${nl(k.videosPerMaand, 1)} video's p/m · ${nl(k.urenPerWeek, 0)} uur p/w</span>
+              <span class="muted">${eur(k.kostprijsPerVideo, 2)} per video</span>
+              <span class="muted">break-even ${k.breakEvenViews == null ? '—' : nl(k.breakEvenViews, 0) + ' views'}</span>
+              <b class="${k.margePerMaand >= 0 ? 'goed' : 'slecht'}">${eur(k.margePerMaand)}</b>
+            </div>`).join('')}
+          <div class="reken-rij totaal">
+            <span><b>Alle kanalen samen</b></span>
+            <span class="muted">${eur(d.totalen.kostenPerMaand)} kosten p/m · ${eur(d.totalen.omzetPerMaand)} verwachte omzet</span>
+            <b class="${d.totalen.margePerMaand >= 0 ? 'goed' : 'slecht'}">${eur(d.totalen.margePerMaand)}</b>
+          </div>
+        </div>` : ''}
       ${d.ideeenAlarm?.length ? `
         <div class="card" style="border-color:var(--red)">
           <b>💡 Ideeënvoorraad kritiek — de pipeline dreigt op te drogen:</b>
@@ -587,21 +610,102 @@ function bindYoutubeActies() {
   }));
 }
 
+// ---------- kanaalformulier met schuifbalken ----------
+// Elke schuifbalk is een <input type="range"> met een leesbaar getal ernaast.
+// Bij elke beweging wordt het hele kanaal opnieuw doorgerekend met calc.js —
+// dezelfde functies die de server voor het dashboard gebruikt.
+function schuif(cls, label, o) {
+  const waarde = o.waarde ?? o.standaard ?? o.min;
+  return `
+    <div class="schuif">
+      <label>${label}<b class="schuif-uit" data-uit="${cls}">${toonWaarde(waarde, o)}</b></label>
+      <input type="range" class="${cls}" min="${o.min}" max="${o.max}" step="${o.step}"
+             value="${waarde}" data-eenheid="${o.eenheid || ''}" data-decimalen="${o.decimalen ?? 0}">
+      ${o.uitleg ? `<small class="muted">${o.uitleg}</small>` : ''}
+    </div>`;
+}
+
+function toonWaarde(v, o) {
+  const n = Number(v);
+  const tekst = nl(n, o.decimalen ?? 0);
+  return o.eenheid === '€' ? `€ ${tekst}` : `${tekst}${o.eenheid ? ' ' + o.eenheid : ''}`;
+}
+
+const nl = (n, dec = 0) => new Intl.NumberFormat('nl-NL', {
+  minimumFractionDigits: dec, maximumFractionDigits: dec
+}).format(Number.isFinite(Number(n)) ? Number(n) : 0);
+const eur = (n, dec = 0) => '€ ' + nl(n, dec);
+
 function kanaalForm(c) {
   const k = c.kpis || {};
+  const p = calc.productieVan(c);
   const cid = c.id || 'nieuw';
+  const kost = (key, label, max) => schuif(`f-kost-${key}`, label,
+    { min: 0, max, step: 5, waarde: p.kostenPerStap[key], eenheid: '€' });
+  const uur = (key, label) => schuif(`f-uur-${key}`, label,
+    { min: 0, max: 20, step: 0.5, waarde: p.urenPerStap[key], eenheid: 'uur', decimalen: 1 });
+
   return `
     <div data-kanaalform="${cid}">
       <div class="form-row">
         <div><label>Kanaalnaam *</label><input class="f-naam" value="${esc(c.naam || '')}"></div>
         <div><label>Onderwerp / niche</label><input class="f-onderwerp" value="${esc(c.onderwerp || '')}" placeholder="bijv. ruimtemysteries, faceless"></div>
-        <div><label>Uploadfrequentie per week * (NOOIT vergeten)</label><input class="f-freq" type="number" min="1" value="${k.uploadFrequentiePerWeek ?? ''}"></div>
         <div><label>Uploaddagen</label><input class="f-dagen" value="${esc(c.uploadDagen || '')}" placeholder="bijv. di + vr 17:00"></div>
-        <div><label>Doel AVD (minuten)</label><input class="f-avd" type="number" step="0.1" value="${k.avdMinuten ?? ''}"></div>
-        <div><label>Doel CTR (%)</label><input class="f-ctr" type="number" step="0.1" value="${k.ctrPct ?? ''}"></div>
-        <div><label>Levertijd per video (dagen)</label><input class="f-levertijd" type="number" value="${k.levertijdDagen ?? ''}"></div>
-        <div><label>Doel omzetgroei (% per maand)</label><input class="f-omzet" type="number" step="0.1" value="${k.omzetgroeiPctPerMaand ?? ''}"></div>
       </div>
+
+      <h4 class="blok-kop">📈 Ritme en doelen</h4>
+      <div class="schuif-rij">
+        ${schuif('f-freq', 'Uploadfrequentie per week *', {
+          min: 1, max: 14, step: 1, waarde: k.uploadFrequentiePerWeek || 2, eenheid: '× / week',
+          uitleg: 'Het getal waar al het andere aan hangt.' })}
+        ${schuif('f-levertijd', 'Levertijd per video', {
+          min: 1, max: 45, step: 1, waarde: k.levertijdDagen || 14, eenheid: 'dagen',
+          uitleg: 'Van idee tot upload. Bepaalt de deadlines per stap.' })}
+        ${schuif('f-avd', 'Doel gemiddelde kijktijd (AVD)', {
+          min: 0, max: 30, step: 0.5, waarde: k.avdMinuten ?? 4, eenheid: 'min', decimalen: 1 })}
+        ${schuif('f-ctr', 'Doel CTR', {
+          min: 0, max: 20, step: 0.1, waarde: k.ctrPct ?? 6, eenheid: '%', decimalen: 1 })}
+        ${schuif('f-omzet', 'Doel omzetgroei', {
+          min: 0, max: 50, step: 0.5, waarde: k.omzetgroeiPctPerMaand ?? 10, eenheid: '% / maand', decimalen: 1 })}
+      </div>
+
+      <h4 class="blok-kop">💶 Wat één video kost</h4>
+      <div class="schuif-rij">
+        ${kost('script', 'Script', 300)}
+        ${kost('voice', 'Voice / avatar', 300)}
+        ${kost('video', 'Video-edit', 600)}
+        ${kost('thumbnail', 'Thumbnail', 200)}
+        ${kost('upload', 'Upload / SEO', 200)}
+        ${schuif('f-vast', 'Vaste kosten per maand', {
+          min: 0, max: 2000, step: 10, waarde: p.vasteKostenPerMaand, eenheid: '€',
+          uitleg: 'Tools, abonnementen, stockmateriaal.' })}
+      </div>
+
+      <h4 class="blok-kop">⏱️ Hoeveel werk één video is</h4>
+      <div class="schuif-rij">
+        ${uur('script', 'Script')}
+        ${uur('voice', 'Voice / avatar')}
+        ${uur('video', 'Video-edit')}
+        ${uur('thumbnail', 'Thumbnail')}
+        ${uur('upload', 'Upload / SEO')}
+        ${schuif('f-uren-per-freelancer', 'Beschikbaar per freelancer', {
+          min: 4, max: 40, step: 2, waarde: p.urenPerFreelancerPerWeek, eenheid: 'uur / week',
+          uitleg: 'Waarmee wordt gerekend hoeveel mensen je nodig hebt.' })}
+      </div>
+
+      <h4 class="blok-kop">🎯 Aannames voor de terugverdientijd</h4>
+      <div class="schuif-rij">
+        ${schuif('f-rpm', 'RPM (opbrengst per 1.000 weergaven)', {
+          min: 0, max: 30, step: 0.25, waarde: p.rpm, eenheid: '€', decimalen: 2 })}
+        ${schuif('f-views', 'Verwachte weergaven per video', {
+          min: 0, max: 200000, step: 1000, waarde: p.verwachteViewsPerVideo, eenheid: 'views' })}
+        ${schuif('f-ideeratio', 'Deel van de ideeën dat doorgaat', {
+          min: 5, max: 100, step: 5, waarde: p.ideeGoedkeuringsPct, eenheid: '%',
+          uitleg: 'Bij 50% heb je twee ideeën nodig per video.' })}
+      </div>
+
+      <div class="rekenblok" data-rekenblok></div>
+
       <label>Titelformat / -structuur</label><input class="f-titelformat" value="${esc(c.titelFormat || '')}" placeholder="bijv. [Getal] + [onderwerp] + curiosity gap — max 55 tekens">
       <label>Thumbnailformat / -structuur</label><input class="f-thumbformat" value="${esc(c.thumbnailFormat || '')}" placeholder="bijv. 1 gezicht/object rechts, 3-4 woorden links, felle contrastkleur">
       <label>Concurrenten (komma-gescheiden)</label><input class="f-concurrenten" value="${esc((c.concurrenten || []).join(', '))}">
@@ -610,25 +714,99 @@ function kanaalForm(c) {
     </div>`;
 }
 
+/** Leest het formulier uit als kanaalobject — voor de live berekening én het opslaan. */
+function kanaalUitForm(form) {
+  const v = cls => form.querySelector('.' + cls)?.value;
+  const n = cls => { const x = Number(v(cls)); return Number.isFinite(x) ? x : null; };
+  const perStap = prefix => Object.fromEntries(calc.STAPPEN.map(s => [s.key, Number(v(`${prefix}-${s.key}`)) || 0]));
+  return {
+    naam: v('f-naam'),
+    onderwerp: v('f-onderwerp'),
+    titelFormat: v('f-titelformat'),
+    thumbnailFormat: v('f-thumbformat'),
+    concurrenten: (v('f-concurrenten') || '').split(',').map(s => s.trim()).filter(Boolean),
+    uploadDagen: v('f-dagen'),
+    notities: v('f-notities'),
+    kpis: {
+      uploadFrequentiePerWeek: n('f-freq'),
+      avdMinuten: n('f-avd'),
+      ctrPct: n('f-ctr'),
+      levertijdDagen: n('f-levertijd'),
+      omzetgroeiPctPerMaand: n('f-omzet')
+    },
+    productie: {
+      kostenPerStap: perStap('f-kost'),
+      urenPerStap: perStap('f-uur'),
+      vasteKostenPerMaand: n('f-vast'),
+      rpm: n('f-rpm'),
+      verwachteViewsPerVideo: n('f-views'),
+      ideeGoedkeuringsPct: n('f-ideeratio'),
+      urenPerFreelancerPerWeek: n('f-uren-per-freelancer')
+    }
+  };
+}
+
+/** Het paneel onder de schuifbalken: wat de gekozen instellingen betekenen. */
+function rekenblokHtml(kanaal) {
+  const { capaciteit: cap, kosten: g } = calc.doorrekenen(kanaal);
+  const winst = g.margePerMaand >= 0;
+  const bemensing = calc.STAPPEN.map(s => `
+    <div class="reken-rij">
+      <span>${s.label}</span>
+      <span class="muted">${nl(cap.urenPerWeek[s.key], 1)} uur/week</span>
+      <b>${cap.freelancersNodig[s.key]}×</b>
+    </div>`).join('');
+
+  return `
+    <div class="reken-kolommen">
+      <div>
+        <h5>Ritme</h5>
+        <div class="reken-groot">${nl(cap.perMaand, 1)}<small>video's per maand</small></div>
+        <div class="reken-rij"><span>Per jaar</span><b>${nl(cap.perJaar, 0)}</b></div>
+        <div class="reken-rij"><span>Ideeën nodig per maand</span><b>${nl(cap.ideeenPerMaand, 0)}</b></div>
+        <div class="reken-rij"><span>Tegelijk onderhanden</span><b>${cap.onderhandenWerk} video's</b></div>
+      </div>
+      <div>
+        <h5>Bemensing</h5>
+        <div class="reken-groot">${nl(cap.urenTotaalPerWeek, 1)}<small>uur werk per week</small></div>
+        ${bemensing}
+        <div class="reken-rij totaal"><span>Freelancers nodig</span><b>${cap.freelancersTotaal}</b></div>
+      </div>
+      <div>
+        <h5>Geld</h5>
+        <div class="reken-groot">${eur(g.kostprijsPerVideo, 2)}<small>kostprijs per video</small></div>
+        <div class="reken-rij"><span>Productiekosten per maand</span><b>${eur(g.perMaand)}</b></div>
+        <div class="reken-rij"><span>Per jaar</span><b>${eur(g.perJaar)}</b></div>
+        <div class="reken-rij"><span>Break-even</span><b>${g.breakEvenViews == null ? '—' : nl(g.breakEvenViews, 0) + ' views'}</b></div>
+        <div class="reken-rij"><span>Verwachte omzet per maand</span><b>${eur(g.omzetPerMaand)}</b></div>
+        <div class="reken-rij totaal"><span>Marge per maand</span>
+          <b class="${winst ? 'goed' : 'slecht'}">${eur(g.margePerMaand)}</b></div>
+      </div>
+    </div>
+    <p class="reken-conclusie ${winst ? 'goed' : 'slecht'}">
+      ${winst
+        ? `Bij ${nl(g.verwachteViewsPerVideo, 0)} weergaven per video houd je hier ${eur(g.margePerVideo, 2)} per video aan over — ${eur(g.margePerMaand)} per maand.`
+        : `Bij ${nl(g.verwachteViewsPerVideo, 0)} weergaven per video kost dit kanaal je ${eur(Math.abs(g.margePerMaand))} per maand. Je hebt ${g.breakEvenViews == null ? 'een hogere RPM' : nl(g.breakEvenViews, 0) + ' weergaven per video'} nodig om quitte te spelen.`}
+    </p>`;
+}
+
 function bindKanaalForms() {
   document.querySelectorAll('[data-kanaalform]').forEach(form => {
+    const herbereken = () => {
+      // Getal naast de schuifbalk bijwerken.
+      form.querySelectorAll('input[type=range]').forEach(r => {
+        const uit = form.querySelector(`[data-uit="${r.className}"]`);
+        if (uit) uit.textContent = toonWaarde(r.value, {
+          eenheid: r.dataset.eenheid, decimalen: Number(r.dataset.decimalen || 0)
+        });
+      });
+      form.querySelector('[data-rekenblok]').innerHTML = rekenblokHtml(kanaalUitForm(form));
+    };
+    form.addEventListener('input', e => { if (e.target.type === 'range') herbereken(); });
+    herbereken();
+
     form.querySelector('.f-save').addEventListener('click', async () => {
-      const body = {
-        naam: form.querySelector('.f-naam').value,
-        onderwerp: form.querySelector('.f-onderwerp').value,
-        titelFormat: form.querySelector('.f-titelformat').value,
-        thumbnailFormat: form.querySelector('.f-thumbformat').value,
-        concurrenten: form.querySelector('.f-concurrenten').value.split(',').map(s => s.trim()).filter(Boolean),
-        uploadDagen: form.querySelector('.f-dagen').value,
-        notities: form.querySelector('.f-notities').value,
-        kpis: {
-          uploadFrequentiePerWeek: form.querySelector('.f-freq').value || null,
-          avdMinuten: form.querySelector('.f-avd').value || null,
-          ctrPct: form.querySelector('.f-ctr').value || null,
-          levertijdDagen: form.querySelector('.f-levertijd').value || null,
-          omzetgroeiPctPerMaand: form.querySelector('.f-omzet').value || null
-        }
-      };
+      const body = kanaalUitForm(form);
       const cid = form.dataset.kanaalform;
       try {
         if (cid === 'nieuw') await api('/api/channels', { method: 'POST', body });

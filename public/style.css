@@ -165,3 +165,92 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; }
   .sidebar-footer { margin-top: 0; }
   main { padding: 1rem; }
 }
+
+/* ---------- schuifbalken en het rekenpaneel ---------- */
+.blok-kop {
+  margin: 1.4rem 0 .6rem;
+  padding-bottom: .35rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .95rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.schuif-rij {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: .9rem 1.4rem;
+}
+.schuif label {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  font-size: .85rem;
+  color: var(--muted);
+  margin-bottom: .2rem;
+}
+.schuif-uit {
+  margin-left: auto;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.schuif small { display: block; margin-top: .15rem; font-size: .75rem; }
+.schuif input[type=range] {
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.rekenblok {
+  margin: 1.4rem 0;
+  padding: 1rem 1.1rem;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.reken-kolommen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.4rem;
+}
+.reken-kolommen h5 {
+  margin: 0 0 .5rem;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+.reken-groot {
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: .6rem;
+  font-variant-numeric: tabular-nums;
+}
+.reken-groot small {
+  display: block;
+  font-size: .75rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.reken-rij {
+  display: flex;
+  gap: .6rem;
+  padding: .22rem 0;
+  font-size: .85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .04);
+}
+.reken-rij b { margin-left: auto; font-variant-numeric: tabular-nums; }
+.reken-rij.totaal { border-bottom: none; border-top: 1px solid var(--border); margin-top: .3rem; padding-top: .4rem; }
+.reken-rij b.goed, .reken-conclusie.goed { color: var(--green); }
+.reken-rij b.slecht, .reken-conclusie.slecht { color: var(--red); }
+.reken-conclusie {
+  margin: .9rem 0 0;
+  padding-top: .7rem;
+  border-top: 1px solid var(--border);
+  font-size: .88rem;
+}

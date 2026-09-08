@@ -13,6 +13,7 @@ import * as kalender from './kalender.js';
 import * as ideeen from './ideeen.js';
 import * as youtube from './youtube.js';
 import { notify } from './discord.js';
+import * as calc from '../public/calc.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -74,7 +75,38 @@ function valideerKanaal(body) {
       omzetgroeiPctPerMaand: k.omzetgroeiPctPerMaand != null ? Number(k.omzetgroeiPctPerMaand) : null
     },
     uploadDagen: String(body.uploadDagen || ''),
-    notities: String(body.notities || '')
+    notities: String(body.notities || ''),
+    productie: valideerProductie(body.productie)
+  };
+}
+
+// Tarieven, uren en aannames waarmee het kanaal wordt doorgerekend. Alles
+// optioneel: ontbreekt een waarde, dan valt calc.js terug op de standaard.
+function valideerProductie(p = {}) {
+  const nietNegatief = (v, standaard) => {
+    // Ontbreekt de waarde, dan geldt de standaard; onzin of een negatief
+    // bedrag ook. Zo kan een half ingevuld formulier de berekening nooit
+    // laten ontsporen.
+    if (v == null || v === '') return standaard;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : standaard;
+  };
+  const perStap = (bron, standaarden) => {
+    const uit = {};
+    for (const s of calc.STAPPEN) uit[s.key] = nietNegatief(bron?.[s.key], standaarden[s.key]);
+    return uit;
+  };
+  const S = calc.STANDAARD;
+  return {
+    kostenPerStap: perStap(p.kostenPerStap, S.kostenPerStap),
+    urenPerStap: perStap(p.urenPerStap, S.urenPerStap),
+    vasteKostenPerMaand: nietNegatief(p.vasteKostenPerMaand, S.vasteKostenPerMaand),
+    rpm: nietNegatief(p.rpm, S.rpm),
+    verwachteViewsPerVideo: nietNegatief(p.verwachteViewsPerVideo, S.verwachteViewsPerVideo),
+    // Een goedkeuringspercentage van 0 zou een deling door nul geven bij het
+    // berekenen van de benodigde ideeenvoorraad; 1% is het praktische minimum.
+    ideeGoedkeuringsPct: Math.min(100, Math.max(1, nietNegatief(p.ideeGoedkeuringsPct, S.ideeGoedkeuringsPct))),
+    urenPerFreelancerPerWeek: nietNegatief(p.urenPerFreelancerPerWeek, S.urenPerFreelancerPerWeek)
   };
 }
 
@@ -186,6 +218,9 @@ async function api(req, res, url) {
       ideeenOpVoorraad: db.ideeen.filter(i => i.status === 'nieuw' || i.status === 'goedgekeurd').length,
       // Kanalen met minder dan 2 weken ideeënvoorraad: hier droogt de pipeline op.
       ideeenAlarm: ideeen.voorraad().filter(v => v.status === 'kritiek'),
+      // Capaciteit en kosten over alle kanalen samen. Bevat tarieven, dus
+      // alleen voor admin en manager.
+      totalen: auth.magMinstens(user, 'manager') ? calc.bedrijfsTotalen(db.channels) : null,
       activity: auth.magMinstens(user, 'manager') ? db.activity.slice(0, 20) : []
     });
   }
@@ -198,8 +233,8 @@ async function api(req, res, url) {
       const veiligYt = yt ? { youtubeChannelId: yt.youtubeChannelId, youtubeNaam: yt.youtubeNaam, gekoppeldOp: yt.gekoppeldOp } : undefined;
       const basis = { ...zonderYt, ...(veiligYt ? { youtube: veiligYt } : {}) };
       if (auth.magMinstens(user, 'manager')) return basis;
-      // Freelancers zien geen omzet-KPI's en geen kanaalomzet.
-      const { kpis, youtubeStats, ...rest } = basis;
+      // Freelancers zien geen omzet-KPI's, geen kanaalomzet en geen tarieven.
+      const { kpis, youtubeStats, productie, ...rest } = basis;
       const { omzetgroeiPctPerMaand, ...kpiRest } = kpis || {};
       const veiligeStats = youtubeStats ? { ...youtubeStats, omzetUsd: undefined } : undefined;
       return { ...rest, kpis: kpiRest, ...(veiligeStats ? { youtubeStats: veiligeStats } : {}) };
