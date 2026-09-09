@@ -559,3 +559,44 @@ footer.colophon a { color: inherit; }
 /* Archive: an edition that lives behind beehiiv's paywall */
 .tag-locked { display: inline-block; margin-left: 10px; padding: 3px 9px; border-radius: 999px; background: rgba(20,20,24,.08); color: var(--ink-soft); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; vertical-align: middle; }
 .archive-note { max-width: 720px; margin: 0 auto 34px; text-align: center; color: var(--ink-soft); font-size: 15.5px; }
+
+/* ==========================================================================
+   LEGAL PAGES · colophon in the footer
+   ========================================================================== */
+
+.prose { max-width: 68ch; margin: 0 auto; }
+.prose h2 {
+  font-family: var(--serif); font-weight: 700; font-size: clamp(21px, 2.6vw, 27px);
+  margin: 44px 0 12px; line-height: 1.25;
+}
+.prose h2:first-child { margin-top: 0; }
+.prose h3 { font-family: var(--serif); font-weight: 700; font-size: 19px; margin: 26px 0 8px; }
+.prose p { margin-bottom: 15px; color: var(--ink-soft); }
+.prose p strong, .prose li strong { color: var(--ink); font-weight: 600; }
+.prose ul { margin: 0 0 15px 22px; color: var(--ink-soft); }
+.prose li { margin-bottom: 8px; }
+.prose .fill {
+  background: rgba(255,45,45,.1); color: var(--red); font-weight: 600;
+  padding: 1px 7px; border-radius: 4px; font-family: var(--sans); font-size: .92em;
+}
+.prose .updated {
+  font-family: var(--sans); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-faint); border-top: 1px solid var(--line); padding-top: 18px; margin-top: 44px;
+}
+.prose .box {
+  border: 2px solid var(--ink); border-radius: 6px; padding: 20px 22px;
+  background: var(--white); margin: 0 0 30px;
+}
+.prose .box p:last-child { margin-bottom: 0; }
+
+/* the business details, at the bottom of every page */
+.footer-legal {
+  border-top: 1px solid rgba(255,255,255,.12);
+  margin-top: 26px; padding-top: 20px;
+  font-size: 12.5px; line-height: 1.75; color: rgba(255,255,255,.45);
+}
+.footer-legal a { color: rgba(255,255,255,.7); }
+.colophon-legal {
+  margin-top: 14px; font-family: var(--sans); font-size: 11.5px; line-height: 1.7;
+  color: var(--ink-faint); text-transform: none; letter-spacing: 0; font-weight: 400;
+}
