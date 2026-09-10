@@ -51,14 +51,24 @@ than padded — see "What's weak or missing" at the end.
   quote was found and used — the pull-line in this section is an editorial
   line, not a quotation.
 
-## Blooper of the Week — the Infinity War goat
-- GamesRadar+ — "The first look at the Avengers: Infinity War gag reel
-  features dancing, swearing… and scene-stealing goats."
-- Looper — "The Best Avengers Blooper Makes Us Miss Chadwick Boseman Even
-  More" — scene description (T'Challa/Okoye/Bucky), Danai Gurira and
-  Chadwick Boseman's reactions, and Boseman's in-character ad-lib, all
-  drawn from the Avengers: Infinity War Blu-ray gag reel (2018 home
-  release). Confirmed as Blu-ray-only, not in the theatrical cut.
+## Blooper of the Week — the No Way Home hug
+Replaced the Infinity War goat after Guido pointed out its thumbnail was
+already carrying the free edition. The goat piece is not wrong; it is just
+not printed twice.
+
+- Gizmodo — "Spider-Man: No Way Home's Gag Reel Is Full of Spider-Stares
+  and Spider-Hugs."
+- CBR — "Spider-Man Gag Reel Footage Shows Andrew Garfield Cuddling Tobey
+  Maguire" — the take itself: Garfield comes round behind Maguire and puts
+  both arms over his shoulders during the back-cracking beat, and Maguire,
+  who cannot see him, goes immediately.
+- ScreenRant — "No Way Home Gag Reel Shows Holland, Maguire & Garfield
+  Having Fun On Set" — the rest of the reel (Holland and Jamie Foxx on the
+  stunt rigs; Garfield unable to retrieve his dropped mask because of the
+  wires on his back) and the March 2022 release with the digital and
+  4K/Blu-ray editions.
+- All three agree the hug is gag-reel-only. The back-cracking offer it
+  interrupts is in the finished film; the hug is not. The copy says so.
 
 ## Improvised or Scripted? — Taxi Driver
 - The Hollywood Reporter, Jan. 2024 — "Martin Scorsese Says Robert De Niro
@@ -113,30 +123,43 @@ own reasoning.
 
 ## What's weak or missing — read this before approving
 
-- **Fan Corner was dropped, not written.** YouTube access (both WebFetch
-  and site search) was blocked or unreliable in this session, so I could
-  not pull a real, verifiable comment with a real username from the
-  channel's actual videos. Rather than invent one, the section says so
-  plainly and skips this week. **Someone with real YouTube access should
-  add a real comment before sending, if possible** — or leave it as is.
-- **Video of the Week and Behind the Scenes/Blooper of the Week images**
-  use three YouTube thumbnails I could verify are real BloopUniverse
-  uploads because they're already linked from the live site
-  (editions/2026-08-26/index.html): "Hilarious Avengers Bloopers That
-  Broke The Rest of The Cast!" (dNIy_J2DQSI), "Jackie Chan Bloopers That
-  Broke The Rest Of The Cast" (QNkrlfH19b4), and "Marvel Takes Where The
-  Cast Went Completely Off Script" (WHkiABGAEHU). I could not confirm
-  whether any of these is literally this week's newest upload — YouTube
-  channel access was blocked — so "Video of the Week" is honestly framed
-  in the copy as a recurring favorite rather than claiming it's brand new.
-  **Please swap in the actual newest upload if it's a different video.**
-- **Front Page, the Deleted Scene rotating slot, and Guess the Movie carry
-  no image.** WebFetch was blocked for every press/image-hosting domain
+- **Fan Corner now runs a real comment** — resolved since the first
+  draft. The channel's own YouTube data was reachable through the NexLev
+  MCP tools in this session, where plain WebFetch to youtube.com is still
+  blocked. The quote is from **@MarjorieKunigisky**, posted September 4,
+  2026 on "Hilarious Avengers Bloopers That Broke The Rest of The Cast!"
+  (dNIy_J2DQSI). It is trimmed for length at one ellipsis and otherwise
+  printed word for word; the edition says it was trimmed. Nothing about
+  the commenter is claimed beyond what the comment itself states.
+- **Video of the Week is now genuinely this week's video** — also
+  resolved. The channel listing came back through NexLev, and the newest
+  upload is "Hilarious Marvel Unscripted Lines That Broke The Rest of The
+  Cast!" (9POnD4cw1R8), posted September 9, 2026, 11:01 long. That is what
+  the section now runs, and the copy dates it. The video it replaced
+  (WHkiABGAEHU, May 12) was never the newest; it was a stand-in.
+- **Four channel thumbnails, one of them shared with the free edition.**
+  Blooper of the Week now runs hFmO0sy5azE ("Hilarious Spiderman And
+  Captain America Bloopers EVER!"), the Deleted Scene slot gains
+  Q4sWSFaU8ks ("Hilarious Loki And Thor Bloopers That Were Too Good To
+  Cut!"), and Video of the Week runs 9POnD4cw1R8. All three are new to the
+  paid edition. The Jackie Chan thumbnail (QNkrlfH19b4) does still appear
+  in both editions, deliberately: it is the channel's only Jackie Chan
+  video, and the Behind the Scenes story is about Jackie Chan. Swapping it
+  for a thumbnail of something else would make the picture wrong to save a
+  repeat.
+- **Two link captions were reworded to stop over-claiming.** A
+  BloopUniverse compilation is not the studio gag reel the story
+  describes, so Blooper of the Week says "Related on the channel … a
+  BloopUniverse compilation, not the No Way Home reel itself" instead of
+  "Watch it". I have no way to see inside a video, so I cannot promise a
+  specific clip is in one.
+- **Front Page and Guess the Movie still carry no photograph.** WebFetch was blocked for every press/image-hosting domain
   I tried (Deadline, Wikipedia, Rotten Tomatoes, Rolling Stone, ScreenRant,
   KQED, NPR, YouTube), so I had no way to verify a real, working image URL
-  for these three spots without guessing — and a guessed URL that 404s is
-  worse than no image. These three sections currently run text-only by
-  design; add real stills before sending if you'd like the visual.
+  for these spots without guessing — and a guessed URL that 404s is worse
+  than no image. Both run text-only by design; add real stills before
+  sending if you'd like the visual. (The Deleted Scene slot is no longer
+  in this list: it now carries a channel thumbnail, as above.)
 - **The Behind the Scenes story (blooper-reel origin)** rests on
   WebSearch-returned summaries of IMDb/ScreenRant/NPR/KQED coverage, not
   on directly fetched original articles (WebFetch was blocked for npr.org
@@ -154,3 +177,29 @@ Deadline, Variety, The Hollywood Reporter, Collider, IndieWire, Rolling
 Stone, GQ (via Deadline), WWD, Wonderland Magazine, GamesRadar+, Looper,
 IMDb, ScreenRant, NPR, KQED, Fathom Entertainment, Marvel.com, and the
 official Infinity Vision ticketing site.
+
+## The artwork — generated, not sourced
+
+Guido asked for more pictures and some movement. Everything drawn for this
+edition is generated by `.github/scripts/make_assets.py` and carries no
+factual claim of any kind, which is the point: art that asserts nothing
+cannot assert anything false.
+
+- **Thirteen section icons**, each rendered twice — once on the paper
+  colour, once on white for the two panels that sit on white.
+- **`rule-filmstrip.gif`** — a film strip under the dateline, sprockets
+  travelling one pitch per loop.
+- **`clapper.gif`** — a clapperboard that snaps, in the Blooper of the
+  Week panel. It deliberately shows no take number and no scene number: a
+  slate reading "TAKE 4" would be a claim about a shoot, and I have no
+  source for one.
+
+Both animations hold a finished frame one, because Outlook plays no GIF
+and freezes there.
+
+**One thing to watch before scheduling.** These files are served from
+`bloopuniverse.com/assets/img/…`. They only exist there once this branch
+is merged and Cloudflare has deployed. Merge, load
+`https://bloopuniverse.com/assets/img/clapper.gif` in a browser to confirm
+it resolves, and only then schedule the edition in beehiiv — otherwise
+every icon in a paying subscriber's inbox is a broken-image box.

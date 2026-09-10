@@ -177,9 +177,53 @@ Google search, it does not belong here. Ask that question every week before you
 publish. This section is the answer to "why am I paying $9.99?"
 
 ### 15 · What We're Working On
-Three lines: next week's lead, the video in the edit, next week's rotating
-slot. Then the invitation to reply. It gives readers a reason to open next
-Friday, and the replies feed Fan Corner.
+Two lines: next week's lead and next week's rotating slot. Then the invitation
+to reply. It gives readers a reason to open next Friday, and the replies feed
+Fan Corner.
+
+It used to be three, with the video currently in the edit as the middle line.
+That one is gone. A Thursday session cannot see the edit bay, so the line was
+always a guess dressed as a plan — and asking readers to vote on a video that
+may not be getting made is a promise the paper can't keep.
+
+---
+
+## Pictures and motion
+
+A wall of type is accurate and unread. Every edition should break up its own
+text, and there are exactly two honest ways to do it.
+
+**Channel thumbnails.** Real, already-hosted, and free —
+`https://i.ytimg.com/vi/<videoId>/hq720.jpg` for any BloopUniverse upload.
+Get the video IDs from the channel itself rather than from memory. Two rules:
+the thumbnail has to be *about* what the section is about, and the link text
+must not claim more than you can check. A compilation on the channel is not
+the studio gag reel a story describes, so it gets "Related on the channel",
+not "Watch it". Nobody can see inside a video from here.
+
+**Generated artwork**, drawn by `.github/scripts/make_assets.py` — thirteen
+section icons, a film-strip rule, a clapperboard that snaps. Run it from the
+repository root; it is deterministic, so re-running changes nothing unless the
+script did.
+
+The artwork asserts nothing, and that is deliberate. A slate reading "TAKE 4"
+would be a claim about somebody's shoot. The one in this paper is blank.
+
+Four things the email format forces:
+
+- **PNG and GIF only.** SVG does not render in Gmail.
+- **Solid backgrounds, never transparency.** A client that repaints the page
+  dark leaves a solid PNG alone and turns a transparent one into a smear. That
+  is why each icon exists twice — `name.png` on the paper colour, and
+  `name-on-white.png` for the panels that sit on white. Using the wrong one
+  puts a visible beige square inside a white box.
+- **Frame one has to work alone.** Outlook plays no GIF at all; it freezes on
+  the first frame and leaves it there.
+- **Deploy before you schedule.** The artwork is served from
+  `bloopuniverse.com/assets/img/…` and only exists there once the branch is
+  merged and Cloudflare has deployed. Merge, open one of the URLs in a browser,
+  *then* schedule in beehiiv. Schedule first and every icon in a paying
+  subscriber's inbox is a broken-image box.
 
 ---
 
