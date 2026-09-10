@@ -126,6 +126,19 @@ conversation.
 **`title` is not the subject line.** beehiiv keeps them apart. Sending only
 `title` ships an edition with a blank subject.
 
+**Never hotlink `i.ytimg.com`.** What YouTube serves at
+`vi/<id>/hq720.jpg` is a 1280×720 JPEG of around a quarter-megabyte, and the
+email shows it 552px wide. Four of them made one edition carry 938KB of
+pictures; Guido's phone loaded the icons and gave up on the thumbnails. Run
+`python3 .github/scripts/fetch_thumbs.py <videoId> …` and point at
+`bloopuniverse.com/assets/img/thumbs/<videoId>.jpg` — same pictures, a third
+of the weight, and no third party in the delivery path of a paid product.
+
+**A merge does not reach beehiiv.** The post holds its own copy of the HTML,
+pasted into a Custom HTML block. Change the file, merge it, deploy it — the
+post is still the old one. Re-paste, then test. This cost a round of
+"it still doesn't work" that was really "you tested the same email twice".
+
 **The email HTML must stay email-safe.** Tables, inline styles, no webfonts,
 600px, no media queries or flexbox or grid. It breaks in Outlook otherwise.
 
