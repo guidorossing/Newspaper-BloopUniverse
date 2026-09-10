@@ -215,6 +215,12 @@ section icons, a film-strip rule, a clapperboard that snaps. Run it from the
 repository root; it is deterministic, so re-running changes nothing unless the
 script did.
 
+**The share card.** Every edition needs one, or a link to it previews as a
+grey box. `python3 .github/scripts/make_social_card.py <YYYY-MM-DD>
+--number "Vol. 1, No. N" --date "…" --headline "…"` draws the paper's own
+front page at 1200x630 — the size beehiiv asks for and the crop every link
+preview uses. Upload it under **Post thumbnail** on beehiiv's Web tab.
+
 The artwork asserts nothing, and that is deliberate. A slate reading "TAKE 4"
 would be a claim about somebody's shoot. The one in this paper is blank.
 
