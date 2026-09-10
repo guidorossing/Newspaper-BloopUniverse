@@ -1,4 +1,4 @@
-# Sources — The Bloop Times, Vol. 1, No. 2 (September 11, 2026)
+# Sources — The Bloop Times, Vol. 1, No. 1 (September 11, 2026)
 
 Written by a scheduled Claude session. Nothing has been sent. Every source
 below was found via live web search during this session; no fact, quote,
