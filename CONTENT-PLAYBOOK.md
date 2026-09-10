@@ -340,6 +340,36 @@ edition numbering counts them.
 Doing it by hand instead: beehiiv → new post → **Blank draft** → `/` →
 **Custom HTML** → paste `email.html` → audience **Premium only** → schedule.
 
+Four things that first hand-scheduled edition taught, all of them cheaper to
+read here than to rediscover:
+
+**beehiiv counts in Amsterdam time.** Verified on the edition-1 schedule
+dialog, which echoed back `GMT+2`. The readers are American, so every send
+time has to be converted — and because the conversion crosses midnight, the
+*day* shifts too. To land at 19:15 in New York on a Friday, type the
+**Saturday** at `1:15 AM GMT+2`. Getting this wrong sends a day early, which
+is exactly what nearly happened.
+
+**Turn off beehiiv's own header.** It wraps the post title, a subtitle, the
+author and the date around whatever you paste. The edition already opens with
+its own masthead and dateline, so leaving beehiiv's on prints the paper's name
+twice. Turn off all four; leave "Read online", which is the way out for a
+reader whose client blocks images. Leave "Show thumbnail on top in web" off
+for the same reason.
+
+**Upload the share card** under Post thumbnail on the Web tab, or every link
+to the edition previews as a grey box.
+
+**With no paid subscribers, publish Web only.** beehiiv refuses to schedule an
+email to zero recipients and greys out the Schedule button — the blocker is
+the audience, not the post. Switch "Publish to" to **Web only** and it
+schedules fine: the edition lands in the archive behind the paywall, which is
+where a prospective Insider should meet it anyway. Then the send time stops
+mattering (nobody is receiving it), so schedule it on the **date in the
+edition's own masthead** instead, in beehiiv's Amsterdam time, so the archive
+and the paper agree. Switch back to **Email and Web** — and to New York
+timing — the week the first subscriber arrives.
+
 The workflow needs two repository secrets, set once:
 `BEEHIIV_API_KEY` and `BEEHIIV_PUBLICATION_ID`. Run it in **probe** mode first
 — it prints the fields beehiiv actually uses, so the first real send isn't a
