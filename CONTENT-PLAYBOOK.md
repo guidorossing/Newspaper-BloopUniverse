@@ -232,6 +232,19 @@ just read what they're missing.
 `template/edition-template.html` is therefore only needed for an edition you
 deliberately publish free and public. The weekly job is the email.
 
+### How editions are numbered
+
+The Friday editions are numbered from **No. 1**, and the free sample copy is not
+numbered at all.
+
+That is deliberate. The sample is a specimen of the paper — permanently
+available, sent to everyone who signs up, unchanging. It isn't an instalment.
+Counting it would have meant the first edition anybody ever paid for arriving
+in their inbox labelled No. 2, which invites exactly one question you don't
+want a new subscriber asking: where is No. 1?
+
+`make_draft.py` therefore counts `drafts/` only and ignores `editions/`.
+
 ### Thursday: the edition arrives written
 
 A scheduled Claude session runs every Thursday at 06:00 UTC. It researches the
