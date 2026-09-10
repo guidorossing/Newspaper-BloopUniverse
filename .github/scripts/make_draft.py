@@ -21,11 +21,14 @@ def next_friday(today: dt.date) -> dt.date:
 
 
 def edition_number() -> tuple[int, int]:
-    """One more than everything already published or drafted. Simple counting
-    beats a calendar: skip a week and the numbering still stays honest."""
-    published = len(list((ROOT / "editions").glob("*/index.html")))
+    """One more than the Friday editions already drafted. Simple counting beats
+    a calendar: skip a week and the numbering still stays honest.
+
+    editions/ is deliberately not counted. It holds the free sample copy, which
+    is a specimen of the paper rather than an instalment of it — counting it
+    would make the first edition anyone paid for arrive as No. 2."""
     drafted = len(list((ROOT / "drafts").glob("*/email.html")))
-    number = published + drafted + 1
+    number = drafted + 1
     volume = ((number - 1) // EDITIONS_PER_VOLUME) + 1
     within = ((number - 1) % EDITIONS_PER_VOLUME) + 1
     return volume, within
