@@ -40,7 +40,7 @@ This is your free edition, on us. Five stories, all true, all sourced. Pour some
 
 *One of the most quoted lines in the entire MCU wasn't written by Marvel. It wasn't written by the director. It wasn't even written by Chris Hemsworth.*
 
-[IMAGE: https://i.ytimg.com/vi/dNIy_J2DQSI/hq720.jpg — caption: The gap between the take and the trailer]
+[IMAGE: https://bloopuniverse.com/assets/img/thumbs/dNIy_J2DQSI.jpg — caption: The gap between the take and the trailer]
 
 You know the moment. Thor is shoved into an arena on a garbage planet, braced for whatever horror comes through the gate — and out walks the Hulk. His face changes completely. He turns to a crowd that wants him dead and beams: **"He's a friend from work!"**
 
