@@ -193,9 +193,18 @@ may not be getting made is a promise the paper can't keep.
 A wall of type is accurate and unread. Every edition should break up its own
 text, and there are exactly two honest ways to do it.
 
-**Channel thumbnails.** Real, already-hosted, and free —
-`https://i.ytimg.com/vi/<videoId>/hq720.jpg` for any BloopUniverse upload.
-Get the video IDs from the channel itself rather than from memory. Two rules:
+**Channel thumbnails.** Get the video IDs from the channel itself rather than
+from memory, then run `python3 .github/scripts/fetch_thumbs.py <videoId> ...`
+and point the edition at `bloopuniverse.com/assets/img/thumbs/<videoId>.jpg`.
+
+Don't link `i.ytimg.com` directly, which is the obvious shortcut and what the
+first version of this edition did. What YouTube serves there is a 1280x720
+JPEG of around a quarter-megabyte, shown 552 px wide — four of them is nearly
+a megabyte of email, and it puts a third party in the delivery path of a paid
+product. The script fetches once and resizes; the edition then has a single
+origin for every picture in it.
+
+Two rules for the thumbnail itself:
 the thumbnail has to be *about* what the section is about, and the link text
 must not claim more than you can check. A compilation on the channel is not
 the studio gag reel a story describes, so it gets "Related on the channel",

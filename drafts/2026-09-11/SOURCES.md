@@ -197,6 +197,15 @@ cannot assert anything false.
 Both animations hold a finished frame one, because Outlook plays no GIF
 and freezes there.
 
+**The thumbnails are now self-hosted too.** The first version linked
+`i.ytimg.com/vi/<id>/hq720.jpg` directly. Those URLs are live — all four
+return 200 — but each one is a 1280x720 JPEG of 180-270 KB being displayed
+552 px wide: 938 KB of pictures in a single email, and a third party in the
+delivery path of a paid product. `.github/scripts/fetch_thumbs.py` now pulls
+them once, resizes to 828 px and saves them under `assets/img/thumbs/`. Same
+four videos, same pictures, 312 KB instead of 938 KB, and every image in the
+edition now comes from one origin.
+
 **One thing to watch before scheduling.** These files are served from
 `bloopuniverse.com/assets/img/…`. They only exist there once this branch
 is merged and Cloudflare has deployed. Merge, load
