@@ -147,11 +147,11 @@ To his credit, Smith has never dressed it up. He laid the whole thing out himsel
 
 New to the channel? These are the ones people keep coming back to.
 
-- **Avengers Bloopers That Broke The Rest Of The Cast** — our most-watched. Start with this one.
+- **Hilarious Avengers Bloopers That Broke The Rest of The Cast!** — our most-watched. Start with this one.
   [https://www.youtube.com/watch?v=dNIy_J2DQSI]
-- **Marvel Takes Where The Cast Went Completely Off Script** — improvisation, and what it costs a continuity supervisor.
+- **Hilarious Marvel Takes Where The Cast Went Completely Off Script!** — improvisation, and what it costs a continuity supervisor.
   [https://www.youtube.com/watch?v=WHkiABGAEHU]
-- **Jackie Chan Bloopers That Broke The Rest Of The Cast** — the man built a career on putting these in the credits.
+- **Hilarious Jackie Chan Bloopers That Broke The Rest Of The Cast!?** — the man built a career on putting these in the credits.
   [https://www.youtube.com/watch?v=QNkrlfH19b4]
 
 ---
