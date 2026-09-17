@@ -151,14 +151,28 @@ approving.
   — the copy says "on the channel now," not "posted this week." This
   video was not used in Vol. 1, No. 1.
 - **Practical effect on Fan Corner:** I could not pull any comment this
-  session, fresh or otherwise, without fabricating it. Rather than reuse
-  last edition's real comment (@MarjorieKunigisky) under an implied claim
-  of freshness, or invent a new one, the section runs a short, honest note
-  explaining the gap and asking readers to reply with a comment for next
-  week. This is a section left deliberately thin, per the one rule.
-- **What would fix this:** channel/YouTube tool access in next Thursday's
-  session, or Guido swapping in the actual newest video and a real
-  comment by hand before merging.
+  session, fresh or otherwise, without fabricating it. The section
+  originally ran a short note explaining the gap. **Update, post-merge:**
+  Guido asked for this fixed differently, since Video of the Week
+  couldn't be fixed either — he shared his own "Edit in Progress" board
+  (four videos currently being cut) and asked Fan Corner run a preview of
+  what's coming instead of a comment. Fan Corner now says three of those
+  are in the works — Breaking Bad bloopers, a Scarlett Johansson bloopers
+  reel, a new Marvel bloopers video — using the general descriptions he
+  gave (the board's actual card titles are working titles, not final, so
+  the copy deliberately doesn't quote them). No publish date is claimed,
+  on purpose: the playbook dropped an almost identical "video in the
+  edit" line from What We're Working On previously, precisely because a
+  Thursday session can't see the edit bay and a promised date is a
+  promise the paper can't keep. This is different in one respect —
+  Guido is the direct source here, not a guess — but the underlying
+  risk (a video in edit isn't guaranteed to ship on any particular week)
+  is the same, which is why the copy says "in the works," not "next
+  week." Source: Guido, via a screenshot of his production board, this
+  conversation, Sept. 17, 2026.
+- **What would still fix Video of the Week properly:** channel/YouTube
+  tool access in next Thursday's session, or Guido swapping in the
+  actual newest video by hand.
 
 ## The artwork
 No new artwork was generated this week. The edition reuses the existing,
