@@ -89,12 +89,24 @@ def compose(src: Path, qr_path: Path, caption: str, dest: Path,
         qr = Image.open(qr_path).convert("RGB").resize(
             (PLAIN_QR_SIZE, PLAIN_QR_SIZE), Image.NEAREST)
         qr = recolour(qr, ground)
-        block_h = PLAIN_QR_SIZE + PLAIN_CAPTION_GAP
-        top = (H - block_h) // 2
+
+        # Build the block on its own layer, then centre it by the bounding box
+        # of what is actually dark. A QR carries a quiet zone that reads as
+        # empty space, so centring the pasted rectangle leaves the block
+        # sitting visibly low against anything aligned beside it.
+        pad = 60
+        layer = Image.new("RGB", (PLAIN_QR_SIZE + pad * 2,
+                                  PLAIN_QR_SIZE + PLAIN_CAPTION_GAP + pad * 2), ground)
+        ld = ImageDraw.Draw(layer)
+        layer.paste(qr, (pad, pad))
+        ld.text((layer.width / 2, pad + PLAIN_QR_SIZE + PLAIN_CAPTION_GAP / 2 + 6),
+                caption, font=font, fill=INK, anchor="mm")
+
+        a = np.array(layer.convert("L"))
+        ys, xs = np.where(a < 200)
         cx = W - CARD_RIGHT_MARGIN - CARD_W // 2
-        im.paste(qr, (cx - PLAIN_QR_SIZE // 2, top))
-        d.text((cx, top + PLAIN_QR_SIZE + PLAIN_CAPTION_GAP // 2 + 6), caption,
-               font=font, fill=INK, anchor="mm")
+        im.paste(layer, (cx - (xs.min() + xs.max()) // 2,
+                         H // 2 - (ys.min() + ys.max()) // 2))
 
     if guides:  # a throwaway proof, never the file you upload
         g = ImageDraw.Draw(im)
