@@ -23,6 +23,7 @@ on a phone anyway: nobody scans the screen they are holding.
 import argparse
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 W, H = 2560, 1440
@@ -43,8 +44,25 @@ CARD_RIGHT_MARGIN = 60
 QR_SIZE = 248
 QR_TOP_PAD = 28
 
+# Without the card the QR sits straight on the artwork, so it gets a little
+# bigger to hold its own, and its baked-in paper background is repainted to
+# whatever the artwork's ground is — otherwise you have swapped a drawn box
+# for a beige one.
+PLAIN_QR_SIZE = 286
+PLAIN_CAPTION_GAP = 46
 
-def compose(src: Path, qr_path: Path, caption: str, dest: Path, guides: bool = False):
+
+def recolour(qr: Image.Image, ground: tuple) -> Image.Image:
+    """Repaint the QR's light modules to the ground colour, leaving the dark
+    ones alone. A QR has exactly two tones, so a single threshold splits them."""
+    a = np.array(qr.convert("RGB"))
+    light = a.sum(axis=2) > 330
+    a[light] = ground
+    return Image.fromarray(a)
+
+
+def compose(src: Path, qr_path: Path, caption: str, dest: Path,
+            guides: bool = False, card: bool = True):
     art = Image.open(src).convert("RGB")
 
     # scale to the full width; centre what that leaves on a field matched to
@@ -56,18 +74,27 @@ def compose(src: Path, qr_path: Path, caption: str, dest: Path, guides: bool = F
     im.paste(art, (0, (H - scaled_h) // 2))
     d = ImageDraw.Draw(im)
 
-    # the card
-    x1 = W - CARD_RIGHT_MARGIN - CARD_W
-    y1 = (H - CARD_H) // 2
-    x2, y2 = x1 + CARD_W, y1 + CARD_H
-    d.rounded_rectangle([x1, y1, x2, y2], radius=26, fill=PAPER, outline=INK, width=3)
-
-    qr = Image.open(qr_path).convert("RGB").resize((QR_SIZE, QR_SIZE), Image.NEAREST)
-    im.paste(qr, (x1 + (CARD_W - QR_SIZE) // 2, y1 + QR_TOP_PAD))
-
     font = ImageFont.truetype(SANS_BOLD, 30)
-    d.text(((x1 + x2) / 2, y1 + QR_TOP_PAD + QR_SIZE + 42), caption,
-           font=font, fill=INK, anchor="mm")
+
+    if card:
+        x1 = W - CARD_RIGHT_MARGIN - CARD_W
+        y1 = (H - CARD_H) // 2
+        x2, y2 = x1 + CARD_W, y1 + CARD_H
+        d.rounded_rectangle([x1, y1, x2, y2], radius=26, fill=PAPER, outline=INK, width=3)
+        qr = Image.open(qr_path).convert("RGB").resize((QR_SIZE, QR_SIZE), Image.NEAREST)
+        im.paste(qr, (x1 + (CARD_W - QR_SIZE) // 2, y1 + QR_TOP_PAD))
+        d.text(((x1 + x2) / 2, y1 + QR_TOP_PAD + QR_SIZE + 42), caption,
+               font=font, fill=INK, anchor="mm")
+    else:
+        qr = Image.open(qr_path).convert("RGB").resize(
+            (PLAIN_QR_SIZE, PLAIN_QR_SIZE), Image.NEAREST)
+        qr = recolour(qr, ground)
+        block_h = PLAIN_QR_SIZE + PLAIN_CAPTION_GAP
+        top = (H - block_h) // 2
+        cx = W - CARD_RIGHT_MARGIN - CARD_W // 2
+        im.paste(qr, (cx - PLAIN_QR_SIZE // 2, top))
+        d.text((cx, top + PLAIN_QR_SIZE + PLAIN_CAPTION_GAP // 2 + 6), caption,
+               font=font, fill=INK, anchor="mm")
 
     if guides:  # a throwaway proof, never the file you upload
         g = ImageDraw.Draw(im)
@@ -88,6 +115,8 @@ if __name__ == "__main__":
     ap.add_argument("--qr", default=str(DEFAULT_QR))
     ap.add_argument("--guides", action="store_true",
                     help="draw the desktop and mobile crops, for checking only")
+    ap.add_argument("--no-card", dest="card", action="store_false",
+                    help="QR and caption straight on the artwork, no panel")
     a = ap.parse_args()
-    p = compose(Path(a.src), Path(a.qr), a.caption, Path(a.dest), a.guides)
+    p = compose(Path(a.src), Path(a.qr), a.caption, Path(a.dest), a.guides, a.card)
     print(f"{p}  {p.stat().st_size/1024:.0f} KB")
