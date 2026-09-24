@@ -124,23 +124,38 @@ one.
 
 ## BloopUniverse Video of the Week and Fan Corner
 - Same access limitation as previous editions: WebFetch against
-  youtube.com/@BloopUniverse returns only footer/legal boilerplate, and a
-  direct WebFetch on the individual video URL redirected to a Google
-  bot-check page, which was not followed. No YouTube data tools were
-  available this session.
-- Via WebSearch, however, a real, previously unused BloopUniverse video
-  was confirmed: "Hilarious Marvel Bloopers So Bad They Had To Reshoot The
-  Scene!" (id E36PhoJAPeE). Indexed search results place its upload
-  around late August 2026 — not literally this week — so the copy says
-  "on the channel now," not "posted this week," consistent with how the
-  Sept. 18 edition handled the same limitation. Its thumbnail was fetched
-  and resized via `.github/scripts/fetch_thumbs.py` (committed to
-  `assets/img/thumbs/E36PhoJAPeE.jpg`).
-- This video plausibly is the "new Marvel bloopers video" the Sept. 18
-  edition's Fan Corner said was "in the works," per Guido's own
-  production-board description reported in that edition — the copy notes
-  this connection but doesn't overstate it as confirmed, since this
-  session can't verify the channel's internal production slate directly.
+  youtube.com/@BloopUniverse and against individual video URLs (both a
+  youtu.be short link and its youtube.com/watch redirect) returns only
+  footer/legal boilerplate every time, for every video ID tried this
+  session. No YouTube data tools were available.
+- This session first found a real, previously unused BloopUniverse video
+  via WebSearch ("Hilarious Marvel Bloopers So Bad They Had To Reshoot The
+  Scene!", id E36PhoJAPeE), but during review, Guido proposed swapping in
+  a different, newer video directly in conversation. The first link he
+  sent (id kTNyX43F9ew) came with a thumbnail that appeared to be an
+  AI-generated or manipulated image depicting a real, identifiable
+  actress's likeness in a non-consensual-looking, sexualized pose — this
+  was flagged back to Guido as something this paper won't run, and it was
+  dropped without being used anywhere in this repo. Guido then sent a
+  second link (id yBnkuxzhpAA) with an unrelated thumbnail (a genuine-
+  looking still from Captain America: Civil War's airport scene); this
+  one raised no such concern.
+- Because WebFetch/WebSearch could confirm neither video's title, channel
+  or live status, the title ("Marvel Cast Bloopers That Were Too Good To
+  Cut!") and live-status confirmation for yBnkuxzhpAA both come directly
+  from Guido, the channel's own owner, in this conversation — the same
+  standard of sourcing the Sept. 18 edition used for Guido's production-
+  board description of Fan Corner. Its thumbnail was fetched and resized
+  via `.github/scripts/fetch_thumbs.py` (committed to
+  `assets/img/thumbs/yBnkuxzhpAA.jpg`); the earlier E36PhoJAPeE thumbnail
+  was removed since it's no longer referenced anywhere in the edition.
+- The copy notes the thumbnail's Civil War reference as just that — a
+  thumbnail detail — rather than claiming knowledge of the video's actual
+  content, which this session still can't verify directly.
+- This is plausibly the "new Marvel bloopers video" the Sept. 18 edition's
+  Fan Corner said was "in the works," per Guido's own production-board
+  description reported in that edition; the copy says "likely," not
+  "confirmed," since Guido didn't explicitly draw that connection himself.
 - No real, fresh viewer comment could be pulled without fabricating one.
   Fan Corner instead runs a short honest note pointing to the two other
   videos ("in the works" per last edition) that aren't out yet, rather
