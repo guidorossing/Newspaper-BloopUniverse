@@ -334,8 +334,25 @@ edition numbering counts them.
    to **Premium only** and to send at the time you gave
 4. Open it in beehiiv and read it once. A scheduled post can be edited or
    cancelled right up to the moment it goes
-5. After it sends, add the edition to the top of `archive.html` with its
-   beehiiv URL
+5. Add the edition to the archive:
+
+   ```
+   python3 .github/scripts/make_social_card.py <YYYY-MM-DD> \
+       --number "Vol. 1, No. N" --date "…" --headline "…"
+   python3 .github/scripts/archive_entry.py <YYYY-MM-DD> --insert \
+       --headline "…" --teaser "…"
+   ```
+
+   This step was a sentence here for four weeks and nobody did it, so the
+   archive stood at one card while four editions had been published. It is a
+   script now. `archive_entry.py` works out the number, the date, the cover
+   and the beehiiv link on its own, and re-running it replaces a card rather
+   than stacking a second one; the headline and the teaser stay by hand,
+   because those are the sales copy.
+
+   Use the same headline on the card as on the cover, so the two agree, and
+   write the teaser to name the best three things without replacing the
+   edition.
 
 Doing it by hand instead: beehiiv → new post → **Blank draft** → `/` →
 **Custom HTML** → paste `email.html` → audience **Premium only** → schedule.
