@@ -33,6 +33,20 @@ Doe dit zelf, met een tweede e-mailadres, op je telefoon.
       linkt hij naar het goede formulier?
 - [ ] Komen de follow-ups bij dat tweede adres aan (dag 3, 7, 14)?
 
+## Stap 2b — Wat er op news.bloopuniverse.com niet klopt (screenshot 1 okt)
+- [ ] De knop zegt "Subscribe". Besluit in CLAUDE.md: nooit "Subscribe" voor
+      de gratis aanmelding. Wijzigen naar "Get your free edition" (beehiiv →
+      Website → het aanmeldblok).
+- [ ] De tekst zegt (voor zover leesbaar) "delivered straight to your inbox
+      every Friday". De gratis versie is één editie, geen wekelijkse mail.
+      Tekst aanpassen, anders belooft de pagina iets wat niet komt.
+- [ ] Alle drie de edities hebben een slotje. Een bezoeker ziet dus niets om
+      te lezen. Zet de gratis editie zichtbaar op de site, of link naar
+      bloopuniverse.com/editions/2026-08-26 vanaf de homepage.
+- [ ] No. 2 en No. 3 hebben het rode BU-logo als thumbnail. Alleen No. 1 heeft
+      een share card. Upload per post een kaart bij "Post thumbnail"
+      (assets/img/social/ in de repo).
+
 ## Stap 3 — Verkeer van YouTube (de echte hefboom)
 Je hebt ~5,4K abonnees. Die weten waarschijnlijk niet dat de krant bestaat.
 - [ ] Link in de **eerste regel** van elke videobeschrijving (tekst hieronder).
